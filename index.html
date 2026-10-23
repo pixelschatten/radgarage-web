@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Radgarage: Passende Teile für dein Fahrrad</title>
+<meta name="description" content="Die Radgarage kennt die Verschleißteile deines Fahrrads und zeigt Preise aus mehreren Shops. Jetzt auf die Warteliste.">
+<meta property="og:title" content="Radgarage">
+<meta property="og:description" content="Nie wieder googeln, was an dein Rad passt. Jetzt auf die Warteliste.">
+<meta property="og:image" content="https://radgarage.app/img/garage.jpg">
+<meta property="og:url" content="https://radgarage.app/">
+<link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+@font-face { font-family: "Manrope"; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url("fonts/manrope-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Manrope"; font-style: normal; font-weight: 200 800; font-display: swap;
+  src: url("fonts/manrope-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+/* Layout: Hero mit Botschaft und Eintragsfeld links, gefächerte App-Screens rechts; darunter drei Vorteile mit je einem Screen. Farben aus dem App-Schema „Bright“ (Eierschale), dunkel: „Dark“ (Anthrazit). */
+:root {
+  --bg: #F2EDE2;
+  --surface: #E6DFCF;
+  --surface2: #F8F4EA;
+  --text: #28241E;
+  --muted: #554D41;
+  --line: #D2C8B4;
+  --accent: #2E2A25;
+  --on-accent: #F7F3EA;
+  --warn-bg: #F5D3BF;
+  --warn: #8A2E0A;
+  --shadow: rgba(46, 42, 37, .16);
+  --font: "Manrope", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #1F2226; --surface: #2B2F34; --surface2: #363B41; --text: #EDEFF1; --muted: #B9BFC6;
+    --line: #4A5058; --accent: #E6E9EC; --on-accent: #1F2226; --warn-bg: #4D2D20; --warn: #FFB48C; --shadow: rgba(0, 0, 0, .4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #1F2226; --surface: #2B2F34; --surface2: #363B41; --text: #EDEFF1; --muted: #B9BFC6;
+    --line: #4A5058; --accent: #E6E9EC; --on-accent: #1F2226; --warn-bg: #4D2D20; --warn: #FFB48C; --shadow: rgba(0, 0, 0, .4);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--text); font-family: var(--font); font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1080px; margin: 0 auto; }
+.preview {
+  margin: 16px auto 0; max-width: 1080px; background: var(--warn-bg); color: var(--warn);
+  border-radius: 14px; padding: 10px 16px; font-size: 14px; font-weight: 600;
+}
+header { display: flex; align-items: center; justify-content: space-between; padding-block: 24px 8px; }
+.logo { font-weight: 800; font-size: 22px; letter-spacing: 0.18em; }
+.logo span { color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; margin-left: 10px; }
+.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center; padding-block: 32px 56px; }
+.hero > * { min-width: 0; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+h1 { font-size: clamp(36px, 5.4vw, 60px); line-height: 1.04; font-weight: 800; letter-spacing: -0.02em; margin: 10px 0 18px; text-wrap: balance; }
+.lead { font-size: 19px; color: var(--muted); max-width: 32em; margin: 0 0 28px; }
+form { display: flex; gap: 10px; flex-wrap: wrap; max-width: 520px; }
+label.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+input[type=email] {
+  flex: 1 1 220px; min-width: 0; font: inherit; font-size: 17px; padding: 15px 18px; border-radius: 16px;
+  border: 2px solid var(--line); background: var(--surface2); color: var(--text);
+}
+input[type=email]::placeholder { color: var(--muted); opacity: .75; }
+button {
+  font: inherit; font-weight: 700; font-size: 17px; padding: 15px 24px; border-radius: 16px; border: 0;
+  background: var(--accent); color: var(--on-accent); cursor: pointer; white-space: nowrap;
+}
+input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.fine { font-size: 14px; color: var(--muted); margin: 12px 0 0; max-width: 520px; }
+.msg { margin-top: 14px; background: var(--surface2); border-radius: 14px; padding: 12px 16px; font-size: 15px; max-width: 520px; }
+.fan { position: relative; height: 520px; }
+.fan img {
+  position: absolute; width: 46%; max-width: 100%; border-radius: 26px; top: 50%; left: 50%;
+  box-shadow: 0 18px 40px var(--shadow); border: 1px solid var(--line); transition: transform .5s ease;
+}
+.fan .a { transform: translate(-108%, -46%) rotate(-7deg); }
+.fan .b { transform: translate(-50%, -54%); z-index: 2; }
+.fan .c { transform: translate(8%, -46%) rotate(7deg); }
+.facts { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; }
+.chip { background: var(--surface); border-radius: 999px; padding: 6px 14px; font-size: 14px; font-weight: 600; }
+section.vorteile { padding-block: 24px 64px; display: grid; gap: 20px; }
+.v { display: grid; grid-template-columns: 1fr 260px; gap: 32px; align-items: center; background: var(--surface); border-radius: 28px; padding: 28px 32px; overflow: hidden; }
+.v > * { min-width: 0; }
+.v:nth-child(even) { grid-template-columns: 260px 1fr; }
+.v:nth-child(even) img { order: -1; }
+.v h2 { font-size: clamp(24px, 3vw, 32px); line-height: 1.15; margin: 6px 0 10px; font-weight: 800; text-wrap: balance; }
+.v p { margin: 0; max-width: 34em; }
+.v img { width: 100%; border-radius: 20px; border: 1px solid var(--line); display: block; max-height: 340px; object-fit: cover; object-position: top; }
+.example { font-size: 14px; color: var(--muted); margin-top: 12px; font-weight: 600; }
+.legal { padding-block: 8px 32px; max-width: 46em; font-size: 15px; }
+.legal h2 { font-size: 24px; font-weight: 800; margin: 0 0 8px; }
+.legal h3 { font-size: 16px; font-weight: 700; margin: 20px 0 4px; }
+.legal p { margin: 0 0 10px; }
+.todo { background: var(--warn-bg); color: var(--warn); border-radius: 6px; padding: 0 6px; font-weight: 600; }
+footer { border-top: 2px solid var(--line); padding-block: 24px 40px; display: flex; gap: 12px 24px; flex-wrap: wrap; justify-content: space-between; font-size: 14px; color: var(--muted); }
+footer nav { display: flex; gap: 20px; flex-wrap: wrap; }
+footer a { color: var(--text); font-weight: 600; }
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; gap: 24px; padding-block: 16px 40px; }
+  .fan { height: 380px; }
+  .v, .v:nth-child(even) { grid-template-columns: 1fr; padding: 24px 20px; }
+  .v:nth-child(even) img { order: 0; }
+  .v img { max-height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) { .fan img { transition: none; } }
+html { margin: 0; }
+body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="logo">RDGRG<span>Radgarage</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Bald für iPhone und Android</div>
+        <h1>Nie wieder googeln, was an dein Rad passt.</h1>
+        <p class="lead">Die Radgarage kennt die Teile deines Fahrrads. Modell wählen, und du siehst Kette, Bremsbeläge, Reifen und Co. mit Preisen aus mehreren Shops.</p>
+        <form id="warteliste" novalidate>
+          <label class="sr" for="email">Deine E-Mail</label>
+          <input type="email" id="email" name="email" placeholder="Deine E-Mail" autocomplete="email" required>
+          <button type="submit" id="eintragen">Auf die Warteliste</button>
+        </form>
+        <p class="fine">Wir schreiben dir zum Start, höchstens einmal im Monat. Du bestätigst deine Adresse per Mail und kannst dich jederzeit abmelden.</p>
+        <div class="msg" id="msg" hidden></div>
+        <div class="facts">
+          <span class="chip">MTB, Gravel, Rennrad, E-Bike</span>
+          <span class="chip">Preise aus mehreren Shops</span>
+          <span class="chip">Teil per Barcode scannen</span>
+        </div>
+      </div>
+      <div class="fan" aria-hidden="true">
+        <img class="a" src="img/rad.jpg" alt="">
+        <img class="b" src="img/garage.jpg" alt="">
+        <img class="c" src="img/teil.jpg" alt="">
+      </div>
+    </section>
+
+    <section class="vorteile">
+      <article class="v">
+        <div>
+          <div class="eyebrow">Deine Garage</div>
+          <h2>Alle Räder an einem Ort, vom Rennrad bis zum E-Bike.</h2>
+          <p>Hersteller, Modell und Baujahr wählen. Die Radgarage stellt die verbauten Verschleißteile automatisch zusammen.</p>
+          <div class="example">Beispiel: Cube Kathmandu Hybrid ONE 750, 2024</div>
+        </div>
+        <img src="img/garage.jpg" alt="Garage mit zwei Rädern und einem Hinweis, dass die Kette bald fällig ist">
+      </article>
+      <article class="v">
+        <div>
+          <div class="eyebrow">Passende Teile</div>
+          <h2>Originalteil und Alternativen, mit Preisen aus mehreren Shops.</h2>
+          <p>Statt nur einem Shop siehst du mehrere, und dazu Teile, die ebenfalls passen: günstiger, besser oder langlebiger.</p>
+          <div class="example">Beispiel: Shimano CUES CN-LG500, ca. 25 €</div>
+        </div>
+        <img src="img/teil.jpg" alt="Teil-Detail einer Kette mit Richtpreis und drei Shops">
+      </article>
+      <article class="v">
+        <div>
+          <div class="eyebrow">Rechtzeitig wechseln</div>
+          <h2>Die App zählt deine Kilometer und sagt Bescheid, wenn Kette oder Beläge fällig sind.</h2>
+          <p>Mit Teilelager und Werkzeugkasten weißt du außerdem, was schon in deiner Werkstatt liegt.</p>
+          <div class="example">Beispiel: 2.840 km von 3.000 km seit dem letzten Kettenwechsel</div>
+        </div>
+        <img src="img/rad.jpg" alt="Rad-Detail mit Kilometerstand und Verschleißbalken der Teile">
+      </article>
+    </section>
+    <section class="legal" id="impressum">
+      <h2>Impressum</h2>
+      <p>Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG)</p>
+      <p>Marino Scholz<br>Frundsbergstr. 37e<br>87719 Mindelheim</p>
+      <p>E-Mail: kontakt@radgarage.app</p>
+      <p>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV: Marino Scholz, Anschrift wie oben.</p>
+    </section>
+
+    <section class="legal" id="datenschutz">
+      <h2>Datenschutzerklärung</h2>
+      <h3>Wer verantwortlich ist</h3>
+      <p>Marino Scholz, Frundsbergstr. 37e, 87719 Mindelheim, E-Mail: kontakt@radgarage.app.</p>
+      <h3>Aufruf dieser Seite</h3>
+      <p>Die Seite liegt bei GitHub Pages (GitHub Inc., USA). Beim Aufruf verarbeitet GitHub technisch nötige Daten wie deine IP-Adresse, um die Seite auszuliefern und vor Angriffen zu schützen. Grundlage ist unser berechtigtes Interesse an einem sicheren Betrieb (Art. 6 Abs. 1 lit. f DSGVO). GitHub ist unter dem EU-US Data Privacy Framework zertifiziert. Schriften liegen auf unserem eigenen Server. Wir setzen keine Cookies und nutzen keine Analyse- oder Werbedienste.</p>
+      <h3>Warteliste</h3>
+      <p>Wenn du dich einträgst, speichern wir deine E-Mail-Adresse und, falls angegeben, die Marke deines Rads. Wir nutzen sie nur, um dich über den Start der Radgarage zu informieren, höchstens einmal im Monat. Du bekommst zuerst eine Mail mit Bestätigungslink (Double-Opt-in). Erst nach dem Klick stehst du auf der Liste. Grundlage ist deine Einwilligung (Art. 6 Abs. 1 lit. a DSGVO), die du jederzeit über den Abmeldelink in jeder Mail oder per E-Mail an uns widerrufen kannst. Für den Versand nutzen wir Brevo (Sendinblue SAS, Paris, Frankreich), mit dem ein Vertrag zur Auftragsverarbeitung besteht. Brevo protokolliert Zeitpunkt und IP-Adresse von Eintrag und Bestätigung als Nachweis. Nach Abmeldung löschen wir deine Adresse.</p>
+      <h3>Umfrage</h3>
+      <p>Die Umfrage läuft über Tally (Tally BV, Gent, Belgien), mit dem ein Vertrag zur Auftragsverarbeitung besteht. Sie ist anonym, wir fragen weder Namen noch E-Mail-Adresse ab.</p>
+      <h3>Deine Rechte</h3>
+      <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerspruch. Schreib uns dafür einfach eine E-Mail. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren, zum Beispiel beim Bayerischen Landesamt für Datenschutzaufsicht in Ansbach.</p>
+      <p class="fine">Stand: Oktober 2026</p>
+    </section>
+  </main>
+
+  <footer>
+    <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
+    <nav>
+      <a href="#warteliste">Zur Umfrage</a>
+      <a href="#impressum">Impressum</a>
+      <a href="#datenschutz">Datenschutz</a>
+    </nav>
+  </footer>
+</div>
+
+<script>
+document.getElementById('warteliste').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var input = document.getElementById('email');
+  var msg = document.getElementById('msg');
+  msg.hidden = false;
+  if (!input.value || !input.checkValidity()) {
+    msg.textContent = 'Bitte gib eine gültige E-Mail-Adresse ein, zum Beispiel name@beispiel.de.';
+    return;
+  }
+  msg.textContent = 'Die Anmeldung wird gerade eingerichtet. Schau bitte in ein paar Tagen wieder vorbei.';
+  input.value = '';
+});
+</script>
+
+</body>
+</html>

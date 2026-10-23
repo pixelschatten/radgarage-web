@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Danke! · Radgarage</title>
+<meta name="robots" content="noindex">
+<style>
+@font-face { font-family: "Manrope"; font-weight: 200 800; font-display: swap; src: url("fonts/manrope-latin.woff2") format("woff2"); }
+:root { --bg: #F2EDE2; --surface: #E6DFCF; --text: #28241E; --muted: #554D41; --accent: #2E2A25; --on-accent: #F7F3EA; }
+@media (prefers-color-scheme: dark) { :root { --bg: #1F2226; --surface: #2B2F34; --text: #EDEFF1; --muted: #B9BFC6; --accent: #E6E9EC; --on-accent: #1F2226; color-scheme: dark; } }
+body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: var(--bg); color: var(--text);
+  font-family: "Manrope", "Segoe UI", system-ui, sans-serif; font-size: 17px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+main { max-width: 34em; background: var(--surface); border-radius: 28px; padding: 32px; }
+.logo { font-weight: 800; letter-spacing: .18em; }
+h1 { font-size: 34px; line-height: 1.1; margin: 16px 0 12px; font-weight: 800; }
+p { margin: 0 0 20px; color: var(--muted); }
+a.btn { display: inline-block; background: var(--accent); color: var(--on-accent); text-decoration: none; font-weight: 700; padding: 14px 22px; border-radius: 16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="logo">RDGRG</div>
+  <h1>Danke, du stehst auf der Warteliste!</h1>
+  <p>Deine E-Mail-Adresse ist bestätigt. Wir melden uns, sobald die Radgarage startet, höchstens einmal im Monat.</p>
+  <a class="btn" href="/">Zurück zur Startseite</a>
+</main>
+</body>
+</html>
