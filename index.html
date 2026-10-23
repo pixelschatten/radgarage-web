@@ -81,6 +81,8 @@ input:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid 
 .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 #EMAIL, #RADMARKE { flex-basis: 100%; }
 button[disabled] { opacity: .6; cursor: progress; }
+.umfrage { font-size: 15px; margin: 14px 0 0; max-width: 520px; }
+.umfrage a { color: var(--text); font-weight: 700; }
 .msg { margin-top: 14px; background: var(--surface2); border-radius: 14px; padding: 12px 16px; font-size: 15px; max-width: 520px; }
 .fan { position: relative; height: 520px; }
 .fan img {
@@ -146,6 +148,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
         </form>
         <p class="fine">Wir schreiben dir zum Start, höchstens einmal im Monat. Du bestätigst deine Adresse per Mail und kannst dich jederzeit abmelden.</p>
         <div class="msg" id="msg" hidden></div>
+        <p class="umfrage">Noch nicht sicher? Hilf uns mit einer <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">2-Minuten-Umfrage</a>, anonym und ohne Anmeldung.</p>
         <div class="facts">
           <span class="chip">MTB, Gravel, Rennrad, E-Bike</span>
           <span class="chip">Preise aus mehreren Shops</span>
@@ -215,7 +218,7 @@ body { margin: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: en
   <footer>
     <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
     <nav>
-      <a href="#warteliste">Zur Umfrage</a>
+      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
       <a href="#impressum">Impressum</a>
       <a href="#datenschutz">Datenschutz</a>
     </nav>
