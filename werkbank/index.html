@@ -173,6 +173,21 @@ textarea { resize: vertical; font-size: 15px; }
 .dlg-box .aktion { padding: 12px 0; border-top: 1.5px solid var(--line); }
 .dlg-box .aktion:first-of-type { border-top: 0; }
 .chip.gut { background: var(--k4); }
+.status { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.status li { display: flex; gap: 10px; align-items: baseline; }
+.status li b { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; background: var(--ink); color: var(--bg); }
+.status li.offen b { background: var(--warn); }
+.status li small { display: block; color: var(--muted); }
+.codes { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 16px; font: 600 17px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .06em; padding: 12px 14px; border-radius: 14px; background: var(--bg); border: 1px solid var(--line); margin: 8px 0; }
+.pw-feld { display: flex; gap: 6px; }
+.pw-feld input { flex: 1; }
+.pw-auge { border: 1.5px solid var(--line); background: var(--bg); color: var(--text); border-radius: 12px; padding: 0 12px; font: inherit; font-size: 14px; cursor: pointer; }
+.staerke { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 4px; }
+.staerke span { display: block; height: 100%; width: 0; background: var(--warn); transition: width .2s; }
+.staerke span.gut { background: var(--ink); }
+.notfall { margin-top: 16px; }
+.notfall summary, #faktor-neu-box summary { cursor: pointer; font-weight: 700; }
+@media print { body * { visibility: hidden; } #codes-anzeige, #codes-anzeige * { visibility: visible; } #codes-anzeige { position: absolute; inset: 0; } #codes-anzeige .aktionen { display: none; } }
 .pill.gefahr { background: var(--warn); border-color: var(--warn); color: var(--bg); }
 .trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
 td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
@@ -255,12 +270,22 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
     <h2>Zweiter Faktor</h2>
     <p class="fine">Gib den 6-stelligen Code aus deiner Authenticator-App ein.</p>
     <form id="f-faktor">
+      <label id="faktor-wahl-feld" hidden>Gerät<select name="faktor" id="faktor-wahl"></select></label>
       <label>Code
         <input class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
       </label>
       <div class="aktionen"><button class="pill" type="submit">Anmelden</button></div>
       <div class="msg" role="status"></div>
     </form>
+    <details class="notfall" id="notfall">
+      <summary>Kein Zugriff auf die Authenticator-App?</summary>
+      <p class="fine">Gib einen deiner Wiederherstellungscodes ein. Jeder Code gilt nur einmal. Danach richtest du die Authenticator-App neu ein. Hast du keine Codes mehr, kann ein Admin den zweiten Faktor zurücksetzen.</p>
+      <form id="f-notfall" autocomplete="off">
+        <label>Wiederherstellungscode<input name="code" placeholder="XXXX-XXXX" maxlength="9" autocapitalize="characters" spellcheck="false" required></label>
+        <div class="aktionen"><button class="pill" type="submit">Code einlösen</button></div>
+        <div class="msg" role="status"></div>
+      </form>
+    </details>
   </section>
 
   <!-- Kein Zugang -->
@@ -476,15 +501,60 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 
     <!-- Kontosicherheit -->
     <section data-panel="konto" hidden>
-      <div class="raster">
+      <div class="t k4">
+        <h3>Sicherheit deines Kontos</h3>
+        <ul class="status" id="sicher-status"></ul>
+      </div>
+      <div class="raster" style="margin-top:14px">
+        <div class="t">
+          <h3>Authenticator-Apps</h3>
+          <p class="fine">Jede eingetragene App kann den zweiten Faktor liefern. Ein zweites Gerät (z. B. Tablet oder Passwort-Manager) ist der einfachste Schutz, falls das Handy verloren geht.</p>
+          <ul class="liste" id="faktoren"></ul>
+          <details id="faktor-neu-box" style="margin-top:12px">
+            <summary>Weiteres Gerät hinzufügen</summary>
+            <form id="f-faktor-neu" autocomplete="off">
+              <label><span class="pflicht">Name des Geräts</span><input name="name" maxlength="40" placeholder="z. B. iPad oder 1Password" required></label>
+              <div class="aktionen"><button class="pill" type="submit">QR-Code anzeigen</button></div>
+              <div class="msg" role="status"></div>
+            </form>
+            <div class="qr" id="faktor-neu-qr" hidden style="margin-top:12px">
+              <img alt="QR-Code für das neue Gerät">
+              <div>
+                <p class="fine">Scannen oder Schlüssel von Hand eintragen:</p>
+                <p><code></code></p>
+                <form id="f-faktor-neu-code" autocomplete="off">
+                  <label>Code vom neuen Gerät<input class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+                  <div class="aktionen"><button class="pill" type="submit">Bestätigen</button><button class="pill ghost" type="button" id="faktor-neu-abbrechen">Abbrechen</button></div>
+                  <div class="msg" role="status"></div>
+                </form>
+              </div>
+            </div>
+          </details>
+        </div>
+        <div class="t k3">
+          <h3>Wiederherstellungscodes</h3>
+          <p class="fine">Zehn Einmal-Codes für den Notfall, wenn keine Authenticator-App mehr greifbar ist. Bewahre sie getrennt vom Handy auf, etwa ausgedruckt oder im Passwort-Manager.</p>
+          <p id="codes-status" class="fine"></p>
+          <div id="codes-anzeige" hidden>
+            <div class="codes" id="codes-liste"></div>
+            <p class="fine"><strong>Nur jetzt sichtbar.</strong> Danach speichert der Server nur verschlüsselte Prüfwerte.</p>
+            <div class="aktionen"><button class="pill klein" type="button" id="codes-kopieren">Kopieren</button><button class="pill ghost klein" type="button" id="codes-laden">Als Datei</button><button class="pill ghost klein" type="button" id="codes-drucken">Drucken</button><button class="pill ghost klein" type="button" id="codes-fertig">Gesichert</button></div>
+          </div>
+          <div class="aktionen" style="margin-top:12px"><button class="pill" type="button" id="codes-neu">Codes erzeugen</button></div>
+          <div class="msg" role="status" id="msg-codes"></div>
+        </div>
+      </div>
+      <div class="raster" style="margin-top:14px">
         <div class="t">
           <h3>Passwort</h3>
-          <p class="fine">Mit Passwort meldest du dich ohne Code per E-Mail an. Der zweite Faktor aus der Authenticator-App bleibt trotzdem Pflicht. Hast du das Passwort vergessen, geht die Anmeldung per E-Mail-Code weiterhin, danach setzt du hier ein neues.</p>
+          <p class="fine">Mit Passwort meldest du dich ohne Code per E-Mail an, der zweite Faktor bleibt Pflicht. Vergessen? Die Anmeldung per E-Mail-Code geht weiterhin, danach setzt du hier ein neues.</p>
           <form id="f-passwort">
             <input type="email" name="email" autocomplete="username" hidden>
             <label><span class="pflicht">Neues Passwort</span><small>mindestens 12 Zeichen</small>
-              <input type="password" name="pw1" autocomplete="new-password" minlength="12" maxlength="72" required>
+              <span class="pw-feld"><input type="password" name="pw1" autocomplete="new-password" minlength="12" maxlength="72" required><button type="button" class="pw-auge" aria-label="Passwort zeigen">Zeigen</button></span>
             </label>
+            <div class="staerke" aria-hidden="true"><span id="pw-balken"></span></div>
+            <p class="fine" id="pw-staerke"></p>
             <label><span class="pflicht">Noch einmal</span>
               <input type="password" name="pw2" autocomplete="new-password" minlength="12" maxlength="72" required>
             </label>
@@ -492,10 +562,18 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
             <div class="msg" role="status"></div>
           </form>
         </div>
-        <div class="t k2">
-          <h3>Zweiter Faktor</h3>
-          <p class="fine">Eingerichtet mit deiner Authenticator-App. Ohne ihn lässt der Server keine Änderungen am Katalog zu, auch nicht in der App. Neues Handy? Dann setzt ein Admin den zweiten Faktor im Supabase-Dashboard zurück (Authentication, Nutzer, Faktoren) und du richtest ihn hier neu ein.</p>
+        <div class="t k5">
+          <h3>Automatisch abmelden</h3>
+          <p class="fine">Ohne Mausbewegung oder Eingabe meldet die Werkbank dich nach dieser Zeit ab. Gilt für diesen Browser.</p>
+          <label>Abmelden nach<select id="auto-ab"><option value="15">15 Minuten</option><option value="30" selected>30 Minuten</option><option value="60">1 Stunde</option><option value="240">4 Stunden</option></select></label>
         </div>
+      </div>
+      <div class="t" style="margin-top:14px">
+        <h3>Angemeldete Geräte</h3>
+        <p class="fine">Alle Sitzungen deines Kontos, auch aus der App. Unbekanntes Gerät? Beenden und Passwort ändern.</p>
+        <table><thead><tr><th>Gerät</th><th>Angemeldet</th><th>Zuletzt aktiv</th><th>IP</th><th></th></tr></thead><tbody id="sitzungen"></tbody></table>
+        <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="andere-ab">Alle anderen abmelden</button></div>
+        <div class="msg" role="status" id="msg-sitzungen"></div>
       </div>
     </section>
 
@@ -552,6 +630,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-8"></script>
+<script src="werkbank.js?v=2026-10-26-9"></script>
 </body>
 </html>

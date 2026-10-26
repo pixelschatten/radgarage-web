@@ -138,10 +138,14 @@
 
     const { data: faktoren, error: e2 } = await sb.auth.mfa.listFactors();
     if (e2) throw e2;
-    const bestaetigt = faktoren.totp.find((f) => f.status === 'verified');
-    if (bestaetigt) {
-      faktorId = bestaetigt.id;
+    const bestaetigt = faktoren.totp.filter((f) => f.status === 'verified');
+    if (bestaetigt.length) {
+      faktorId = bestaetigt[0].id;
       $('#f-faktor').reset();
+      $('#faktor-wahl').replaceChildren(...bestaetigt.map((f) => new Option(f.friendly_name || 'Authenticator', f.id)));
+      $('#faktor-wahl-feld').hidden = bestaetigt.length < 2;
+      $('#notfall').open = false;
+      $('#f-notfall').reset();
       return zeige('s-faktor');
     }
     await einrichten(faktoren.all);
@@ -166,12 +170,30 @@
   }
 
   async function faktorPruefen(form) {
+    if (form.faktor && form.faktor.value) faktorId = form.faktor.value;
     const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: faktorId, code: form.code.value.trim() });
     if (error) throw error;
     await werkbank();
   }
   $('#f-einrichten').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
   $('#f-faktor').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
+
+  // Notfall: Wiederherstellungscode löscht die Faktoren, danach neu einrichten
+  $('#f-notfall').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async () => {
+      const code = f.code.value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+      if (code.length !== 8) throw new Error('Ein Code hat 8 Zeichen, zum Beispiel ABCD-EFGH.');
+      const ok = await rpc('wiederherstellung_einloesen', { p_code: `${code.slice(0, 4)}-${code.slice(4)}` });
+      if (!ok) throw new Error('Dieser Code passt nicht oder wurde schon benutzt.');
+      await sb.auth.refreshSession();
+      const { data: faktoren, error } = await sb.auth.mfa.listFactors();
+      if (error) throw error;
+      await einrichten(faktoren.all);
+      meldung($('#f-einrichten .msg'), 'Code angenommen. Richte jetzt deine Authenticator-App neu ein und erzeuge danach neue Wiederherstellungscodes.');
+    });
+  });
 
   $('#abmelden').addEventListener('click', async () => {
     await sb.auth.signOut();
@@ -197,6 +219,8 @@
     tab('erfassen');
     ladeMarken();
     if (admin) ladeOffen();
+    letzteAktivitaet = Date.now();
+    pruefeCodes();
   }
 
   function tab(name) {
@@ -208,6 +232,7 @@
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'konten') ladeKonten();
+    if (name === 'konto') ladeSicherheit();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
   for (const b of $$('[data-neu-laden]')) b.addEventListener('click', ladeOffen);
@@ -1292,6 +1317,7 @@
     teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
     rolle: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
     konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
+    wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
   };
   let baustellen = [];
   let bsZeige = 30;
@@ -1459,6 +1485,8 @@
       if (k.premium) chip('Premium', 'gut');
       if (k.familie) chip(k.familie === 'besitzer' ? 'Familie gegründet' : 'In Familie');
       if (k.rolle) chip(k.rolle === 'admin' ? 'Admin' : 'Helfer');
+      if (k.zwei_faktor) chip('2FA', 'gut');
+      else if (k.rolle) chip('ohne 2FA', 'warn');
       if (!k.bestaetigt) chip('nicht bestätigt', 'warn');
       if (gesperrt(k)) chip('gesperrt', 'warn');
       links.append(chips);
@@ -1557,7 +1585,16 @@
         await rpc('konto_loeschen_admin', { p_nutzer: k.id });
       }, 'pill gefahr klein'));
 
+    const zweiFaktor = k.zwei_faktor
+      ? block('Zweiter Faktor', `${k.zwei_faktor} ${k.zwei_faktor === 1 ? 'Authenticator-App' : 'Authenticator-Apps'} eingetragen. Zurücksetzen hilft, wenn das Handy weg ist und keine Wiederherstellungscodes mehr da sind. Das Konto wird überall abgemeldet und richtet beim nächsten Werkbank-Login neu ein.`,
+        knopf('Zweiten Faktor zurücksetzen', async () => {
+          if (!window.confirm(`Zweiten Faktor von ${k.email} zurücksetzen? Hast du vorher geprüft, dass die Anfrage wirklich von dieser Person kommt?`)) return false;
+          await rpc('konto_2fa_zuruecksetzen', { p_nutzer: k.id });
+        }))
+      : null;
+
     const teile = [info, premium];
+    if (zweiFaktor && !ich) teile.push(zweiFaktor);
     if (!ich) teile.push(sperre);
     if (rolleBlock && !ich) teile.push(rolleBlock);
     if (!ich) teile.push(loeschen);
@@ -1594,18 +1631,268 @@
 
   // ----- Konto: Passwort -----
 
+  // ----- Konto: Sicherheit -----
+
+  let codesOffen = null;
+  let neuerFaktor = null;
+
+  async function ladeSicherheit() {
+    meldung($('#msg-codes'), '');
+    meldung($('#msg-sitzungen'), '');
+    const [faktoren, codes] = await Promise.all([
+      sb.auth.mfa.listFactors().then((r) => r.data ? r.data.totp.filter((f) => f.status === 'verified') : []),
+      rpc('wiederherstellung_status').catch(() => null),
+    ]);
+    codesOffen = codes ? codes.offen : null;
+    zeichneFaktoren(faktoren);
+    zeichneCodesStatus(codes);
+    zeichneStatus(faktoren, codes);
+    ladeSitzungen();
+  }
+
+  function zeichneStatus(faktoren, codes) {
+    const punkt = (ok, titel, text) => {
+      const li = document.createElement('li');
+      li.className = ok ? '' : 'offen';
+      const b = Object.assign(document.createElement('b'), { textContent: ok ? '✓' : '!' });
+      b.setAttribute('aria-label', ok ? 'erledigt' : 'offen');
+      const d = document.createElement('div');
+      d.append(Object.assign(document.createElement('strong'), { textContent: titel }), Object.assign(document.createElement('small'), { textContent: text }));
+      li.append(b, d);
+      return li;
+    };
+    const offen = codes ? codes.offen : 0;
+    $('#sicher-status').replaceChildren(
+      punkt(faktoren.length > 0, 'Zweiter Faktor', faktoren.length === 1 ? '1 Authenticator-App eingetragen' : `${faktoren.length} Authenticator-Apps eingetragen`),
+      punkt(offen >= 3 || faktoren.length > 1, 'Notfall-Zugang', offen ? `${offen} Wiederherstellungscodes übrig` + (faktoren.length > 1 ? ', dazu ein Ersatzgerät' : '') : (faktoren.length > 1 ? 'Ersatzgerät eingetragen, Codes fehlen noch' : 'Noch keine Wiederherstellungscodes')),
+      punkt(true, 'Automatisch abmelden', `nach ${$('#auto-ab').selectedOptions[0].textContent}`),
+      punkt(true, 'Sitzung nur in diesem Tab', 'Schließen des Tabs meldet dich ab'));
+  }
+
+  function zeichneFaktoren(faktoren) {
+    const ul = $('#faktoren');
+    ul.replaceChildren(...faktoren.map((f) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' }),
+        Object.assign(document.createElement('div'), { className: 'neben', textContent: `Eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Entfernen' });
+      b.disabled = faktoren.length < 2;
+      b.title = faktoren.length < 2 ? 'Das letzte Gerät lässt sich nicht entfernen. Füge zuerst ein anderes hinzu.' : '';
+      b.addEventListener('click', async () => {
+        if (!window.confirm(`„${f.friendly_name}“ entfernen? Codes von diesem Gerät gelten dann nicht mehr.`)) return;
+        b.disabled = true;
+        const { error } = await sb.auth.mfa.unenroll({ factorId: f.id });
+        if (error) { window.alert(fehlerText(error)); b.disabled = false; return; }
+        ladeSicherheit();
+      });
+      li.append(links, b);
+      return li;
+    }));
+  }
+
+  $('#f-faktor-neu').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async () => {
+      const { data: alle } = await sb.auth.mfa.listFactors();
+      for (const x of (alle ? alle.all : []).filter((x) => x.status !== 'verified')) await sb.auth.mfa.unenroll({ factorId: x.id });
+      const name = f.name.value.trim();
+      if ((alle ? alle.totp : []).some((x) => x.friendly_name === name)) throw new Error('Diesen Namen gibt es schon. Bitte einen anderen wählen.');
+      const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: name, issuer: 'Radgarage' });
+      if (error) throw error;
+      neuerFaktor = data.id;
+      const box = $('#faktor-neu-qr');
+      $('img', box).src = qrBild(data.totp.qr_code);
+      $('code', box).textContent = data.totp.secret;
+      box.hidden = false;
+      f.hidden = true;
+      $('#f-faktor-neu-code').reset();
+      $('#f-faktor-neu-code').code.focus();
+    });
+  });
+  $('#f-faktor-neu-code').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async () => {
+      const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: neuerFaktor, code: f.code.value.trim() });
+      if (error) throw error;
+      neuerFaktorZu(false);
+      ladeSicherheit();
+    });
+  });
+  async function neuerFaktorZu(aufraeumen) {
+    if (aufraeumen && neuerFaktor) await sb.auth.mfa.unenroll({ factorId: neuerFaktor });
+    neuerFaktor = null;
+    $('#faktor-neu-qr').hidden = true;
+    $('#f-faktor-neu').hidden = false;
+    $('#f-faktor-neu').reset();
+    $('#faktor-neu-box').open = false;
+  }
+  $('#faktor-neu-abbrechen').addEventListener('click', () => neuerFaktorZu(true));
+
+  // Wiederherstellungscodes
+  function zeichneCodesStatus(c) {
+    const t = $('#codes-status');
+    if (!c) { t.textContent = 'Status nicht abrufbar.'; return; }
+    if (!c.gesamt) {
+      t.textContent = 'Du hast noch keine Codes erzeugt.';
+      $('#codes-neu').textContent = 'Codes erzeugen';
+    } else {
+      t.textContent = `${c.offen} von ${c.gesamt} Codes übrig, erzeugt am ${new Date(c.erzeugt).toLocaleDateString('de-DE')}.` + (c.offen < 3 ? ' Erzeuge bald neue.' : '');
+      $('#codes-neu').textContent = 'Neue Codes erzeugen';
+    }
+  }
+  let letzteCodes = [];
+  $('#codes-neu').addEventListener('click', async () => {
+    if (codesOffen && !window.confirm('Neue Codes erzeugen? Die bisherigen gelten dann nicht mehr.')) return;
+    const b = $('#codes-neu');
+    b.disabled = true;
+    try {
+      letzteCodes = (await rpc('wiederherstellung_erzeugen')) || [];
+      $('#codes-liste').replaceChildren(...letzteCodes.map((c) => Object.assign(document.createElement('span'), { textContent: c })));
+      $('#codes-anzeige').hidden = false;
+      b.hidden = true;
+      const st = await rpc('wiederherstellung_status').catch(() => null);
+      codesOffen = st ? st.offen : null;
+      zeichneCodesStatus(st);
+      const { data } = await sb.auth.mfa.listFactors();
+      zeichneStatus(data ? data.totp.filter((f) => f.status === 'verified') : [], st);
+    } catch (e) {
+      meldung($('#msg-codes'), fehlerText(e), true);
+    }
+    b.disabled = false;
+  });
+  const codesText = () => `Radgarage Werkbank – Wiederherstellungscodes\n${email}\nErzeugt am ${new Date().toLocaleString('de-DE')}\nJeder Code gilt einmal.\n\n${letzteCodes.join('\n')}\n`;
+  $('#codes-kopieren').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(codesText()); meldung($('#msg-codes'), 'Kopiert.'); } catch { meldung($('#msg-codes'), 'Kopieren ging nicht, bitte markieren und von Hand kopieren.', true); }
+  });
+  $('#codes-laden').addEventListener('click', () => {
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(new Blob([codesText()], { type: 'text/plain' })), download: 'radgarage-wiederherstellungscodes.txt' });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  });
+  $('#codes-drucken').addEventListener('click', () => window.print());
+  $('#codes-fertig').addEventListener('click', () => {
+    letzteCodes = [];
+    $('#codes-liste').replaceChildren();
+    $('#codes-anzeige').hidden = true;
+    $('#codes-neu').hidden = false;
+    meldung($('#msg-codes'), '');
+  });
+
+  // Ohne Codes nach der Anmeldung einmal darauf hinweisen
+  async function pruefeCodes() {
+    const st = await rpc('wiederherstellung_status').catch(() => null);
+    if (st && st.offen === 0) {
+      meldung($('#hinweis-rolle'), `${$('#hinweis-rolle').textContent} Tipp: Lege unter „Konto“ Wiederherstellungscodes an, falls dein Handy einmal weg ist.`);
+    }
+  }
+
+  // Passwort
+  function pwStaerke(pw) {
+    if (!pw) return [0, ''];
+    let punkte = Math.min(pw.length, 24) / 24 * 50;
+    const arten = [/[a-z]/, /[A-Z]/, /[0-9]/, /[^A-Za-z0-9]/].filter((r) => r.test(pw)).length;
+    punkte += arten * 10;
+    if (/(.)\1{2,}/.test(pw)) punkte -= 15;
+    if (/^(?:passwort|password|radgarage|123456|qwertz|qwerty)/i.test(pw) || (email && pw.toLowerCase().includes(email.split('@')[0].toLowerCase()))) punkte -= 30;
+    punkte = Math.max(0, Math.min(100, punkte));
+    const text = pw.length < 12 ? `Noch ${12 - pw.length} Zeichen` : punkte >= 80 ? 'Stark' : punkte >= 60 ? 'Gut' : 'Schwach: länger machen oder Satz aus mehreren Wörtern nehmen';
+    return [punkte, text];
+  }
+  $('#f-passwort').pw1.addEventListener('input', (ev) => {
+    const [p, t] = pwStaerke(ev.target.value);
+    $('#pw-balken').style.width = p + '%';
+    $('#pw-balken').classList.toggle('gut', p >= 60 && ev.target.value.length >= 12);
+    $('#pw-staerke').textContent = t;
+  });
+  $('.pw-auge').addEventListener('click', (ev) => {
+    const f = $('#f-passwort');
+    const zeigen = f.pw1.type === 'password';
+    f.pw1.type = f.pw2.type = zeigen ? 'text' : 'password';
+    ev.target.textContent = zeigen ? 'Verbergen' : 'Zeigen';
+    ev.target.setAttribute('aria-label', zeigen ? 'Passwort verbergen' : 'Passwort zeigen');
+  });
   $('#f-passwort').addEventListener('submit', (ev) => {
     ev.preventDefault();
     const f = ev.target;
     mitKnopf(f, async (msg) => {
       if (f.pw1.value !== f.pw2.value) throw new Error('Die beiden Passwörter sind nicht gleich.');
       if (f.pw1.value.length < 12) throw new Error('Bitte mindestens 12 Zeichen.');
+      if (pwStaerke(f.pw1.value)[0] < 60) throw new Error('Das Passwort ist zu leicht zu erraten. Nimm ein längeres oder einen Satz aus mehreren Wörtern.');
       const { error } = await sb.auth.updateUser({ password: f.pw1.value });
       if (error) throw /different from the old/i.test(error.message) ? new Error('Das ist schon dein Passwort.') : error;
       f.reset();
+      f.pw1.dispatchEvent(new Event('input'));
       meldung(msg, 'Passwort gespeichert. Ab jetzt kannst du dich auch damit anmelden.');
     });
   });
+
+  // Sitzungen
+  function geraetAus(ua) {
+    if (!ua) return 'Unbekanntes Gerät';
+    if (/okhttp|Expo|CFNetwork|Darwin|ReactNative/i.test(ua) && !/Mozilla/.test(ua)) return /okhttp|Android/i.test(ua) ? 'Radgarage-App (Android)' : 'Radgarage-App (iPhone)';
+    const sys = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows' : /Linux/.test(ua) ? 'Linux' : '';
+    const br = /Edg\//.test(ua) ? 'Edge' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Browser';
+    return sys ? `${br} auf ${sys}` : br;
+  }
+  const zeitpunkt = (d) => (d ? `${new Date(d).toLocaleDateString('de-DE')} ${new Date(d).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` : '–');
+  async function ladeSitzungen() {
+    const tb = $('#sitzungen');
+    try {
+      const liste = ((await rpc('meine_sitzungen')) || []).sort((a, b) => (b.diese - a.diese) || String(b.zuletzt).localeCompare(String(a.zuletzt)));
+      tb.replaceChildren(...liste.map((x) => {
+        const tr = document.createElement('tr');
+        const td = (t, k) => Object.assign(document.createElement('td'), { textContent: t, className: k || '' });
+        const knopf = document.createElement('td');
+        knopf.className = 'knopf';
+        if (x.diese) knopf.textContent = 'Dieser Tab';
+        else {
+          const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Beenden' });
+          b.addEventListener('click', async () => {
+            b.disabled = true;
+            try { await rpc('meine_sitzung_beenden', { p_id: x.id }); ladeSitzungen(); } catch (e) { meldung($('#msg-sitzungen'), fehlerText(e), true); b.disabled = false; }
+          });
+          knopf.append(b);
+        }
+        tr.append(td(geraetAus(x.user_agent) + (x.aal === 'aal2' ? '' : ' (ohne 2. Faktor)')), td(zeitpunkt(x.erstellt), 'wann'), td(zeitpunkt(x.zuletzt), 'wann'), td(x.ip || '–', 'wann'), knopf);
+        return tr;
+      }));
+      $('#andere-ab').hidden = liste.filter((x) => !x.diese).length === 0;
+    } catch (e) {
+      tb.replaceChildren();
+      meldung($('#msg-sitzungen'), fehlerText(e), true);
+    }
+  }
+  $('#andere-ab').addEventListener('click', async () => {
+    if (!window.confirm('Alle anderen Geräte abmelden, auch die App auf deinem Handy?')) return;
+    const { error } = await sb.auth.signOut({ scope: 'others' });
+    if (error) meldung($('#msg-sitzungen'), fehlerText(error), true);
+    else { meldung($('#msg-sitzungen'), 'Alle anderen Geräte sind abgemeldet.'); ladeSitzungen(); }
+  });
+
+  // Automatisch abmelden nach Inaktivität (Einstellung pro Browser)
+  let letzteAktivitaet = Date.now();
+  try { const v = localStorage.getItem('werkbank-auto-ab'); if (v && $(`#auto-ab option[value="${v}"]`)) $('#auto-ab').value = v; } catch { /* ohne Speicher Standard */ }
+  $('#auto-ab').addEventListener('change', () => {
+    try { localStorage.setItem('werkbank-auto-ab', $('#auto-ab').value); } catch { /* egal */ }
+    ladeSicherheit();
+  });
+  for (const ev of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']) {
+    window.addEventListener(ev, () => { letzteAktivitaet = Date.now(); }, { passive: true });
+  }
+  setInterval(async () => {
+    if ($('#s-werkbank').hidden) return;
+    if (Date.now() - letzteAktivitaet < Number($('#auto-ab').value) * 60000) return;
+    await sb.auth.signOut();
+    rolle = null;
+    radTeile = [];
+    ergaenzenEnde();
+    dialogZu();
+    zeige('s-mail');
+    meldung($('#f-mail .msg'), 'Du wurdest nach längerer Pause automatisch abgemeldet.');
+  }, 30000);
 
   $('#f-neues-teil').addEventListener('submit', (ev) => {
     ev.preventDefault();
