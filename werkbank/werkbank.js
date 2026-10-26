@@ -730,7 +730,12 @@
     neben.className = 'neben';
     neben.append(Object.assign(document.createElement('span'), { className: 'marke', textContent: t.kategorie }));
     links.append(name, neben);
-    li.append(links, document.createElement('span'));
+    // Suche beim Shop, z. B. um Barcode oder Preis nachzuschlagen (Adresse wie in der Tabelle shops)
+    const shop = Object.assign(document.createElement('a'), {
+      className: 'pill ghost klein', target: '_blank', rel: 'noopener noreferrer', textContent: 'Bei Bike24 suchen',
+      href: 'https://www.bike24.de/suche?searchTerm=' + encodeURIComponent(`${t.marke} ${t.name}`),
+    });
+    li.append(links, shop);
 
     const eans = document.createElement('div');
     eans.className = 'eans';
