@@ -154,7 +154,7 @@
   async function einrichten(alle) {
     // Abgebrochene Einrichtungen aufräumen, sonst stapeln sie sich
     for (const f of alle.filter((x) => x.status !== 'verified')) await sb.auth.mfa.unenroll({ factorId: f.id });
-    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Radgarage Werkbank', issuer: 'Radgarage' });
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Authenticator-App', issuer: 'Radgarage' });
     if (error) throw error;
     faktorId = data.id;
     $('#qr').src = qrBild(data.totp.qr_code);
@@ -175,7 +175,17 @@
     if (error) throw error;
     await werkbank();
   }
-  $('#f-einrichten').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
+  $('#f-einrichten').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async () => {
+      const id = faktorId;
+      const name = f.name.value.trim();
+      await faktorPruefen(f);
+      // Name erst nach dem Bestätigen setzen, vorher darf der Faktor nicht umbenannt werden
+      if (name && name !== 'Authenticator-App') await rpc('faktor_umbenennen', { p_faktor: id, p_name: name }).catch(() => {});
+    });
+  });
   $('#f-faktor').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
 
   // Notfall: Wiederherstellungscode löscht die Faktoren, danach neu einrichten
@@ -1676,6 +1686,23 @@
       const links = document.createElement('div');
       links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' }),
         Object.assign(document.createElement('div'), { className: 'neben', textContent: `Eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
+      const umb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Umbenennen' });
+      umb.addEventListener('click', () => {
+        const form = formular([['name', 'Name der App oder des Geräts']], { name: f.friendly_name || '' }, 'Speichern');
+        form.name.maxLength = 40;
+        form.name.setAttribute('list', 'app-namen');
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          mitKnopf(form, async () => {
+            const name = form.name.value.trim();
+            if (!name) throw new Error('Bitte einen Namen eingeben.');
+            if (name !== f.friendly_name) await rpc('faktor_umbenennen', { p_faktor: f.id, p_name: name });
+            dialogZu();
+            ladeSicherheit();
+          });
+        });
+        dialog('Authenticator umbenennen', form);
+      });
       const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Entfernen' });
       b.disabled = faktoren.length < 2;
       b.title = faktoren.length < 2 ? 'Das letzte Gerät lässt sich nicht entfernen. Füge zuerst ein anderes hinzu.' : '';
@@ -1686,7 +1713,10 @@
         if (error) { window.alert(fehlerText(error)); b.disabled = false; return; }
         ladeSicherheit();
       });
-      li.append(links, b);
+      const akt = document.createElement('div');
+      akt.className = 'aktionen';
+      akt.append(umb, b);
+      li.append(links, akt);
       return li;
     }));
   }
