@@ -645,9 +645,16 @@
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext);
   }
 
-  function scanKnopf(wo, inp, danach) {
+  const ICON = {
+    scan: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9v6M11 9v6M14 9v6M17 9v6"/></svg>',
+    stift: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>',
+    raus: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 5h5v5M19 5l-8 8"/><path d="M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4"/></svg>',
+  };
+
+  function scanKnopf(wo, inp, danach, alsIcon) {
     if (!kameraMoeglich()) return;
-    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein scan-knopf', textContent: 'Scannen' });
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: alsIcon ? 'feld-icon scan-knopf' : 'pill ghost klein scan-knopf' });
+    if (alsIcon) { b.innerHTML = ICON.scan; b.title = 'Mit der Kamera scannen'; } else b.textContent = 'Scannen';
     b.setAttribute('aria-label', 'Barcode mit der Kamera scannen');
     b.addEventListener('click', async () => {
       const code = await scannen();
@@ -1050,14 +1057,16 @@
     links.append(name, neben);
     // Suche beim Shop, z. B. um Barcode oder Preis nachzuschlagen (Adresse wie in der Tabelle shops)
     const shop = Object.assign(document.createElement('a'), {
-      className: 'pill ghost klein', target: '_blank', rel: 'noopener noreferrer', textContent: 'Bei Bike24 suchen',
+      className: 'knopf-weich', target: '_blank', rel: 'noopener noreferrer', title: 'Bei Bike24 suchen',
       href: 'https://www.bike24.de/suche?searchTerm=' + encodeURIComponent(`${t.marke} ${t.name}`),
     });
+    shop.innerHTML = `<span>Bike24</span>${ICON.raus}`;
+    shop.setAttribute('aria-label', `${t.marke} ${t.name} bei Bike24 suchen`);
     const knoepfe = document.createElement('div');
-    knoepfe.className = 'aktionen';
-    knoepfe.style.justifyContent = 'flex-end';
+    knoepfe.className = 'karten-knoepfe';
     if (rolle === 'admin') {
-      const bearb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Bearbeiten' });
+      const bearb = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', title: 'Teil bearbeiten' });
+      bearb.innerHTML = `${ICON.stift}<span>Bearbeiten</span>`;
       bearb.addEventListener('click', () => teilBearbeiten(t));
       knoepfe.append(bearb);
     }
@@ -1093,11 +1102,18 @@
     };
     zeichneChips();
     const f = document.createElement('form');
+    f.className = 'ean-form';
     const inp = Object.assign(document.createElement('input'), { inputMode: 'numeric', maxLength: 14, placeholder: 'Barcode ergänzen', required: true, pattern: '[0-9]{8,14}' });
     inp.setAttribute('aria-label', `Barcode zu ${t.marke} ${t.name}`);
-    const b = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill ghost klein', textContent: 'Speichern' });
-    f.append(inp, b);
-    scanKnopf(f, inp, () => f.requestSubmit());
+    const feld = document.createElement('span');
+    feld.className = 'feld-mit-icon';
+    feld.append(inp);
+    scanKnopf(feld, inp, () => f.requestSubmit(), true);
+    const b = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill klein', textContent: 'Speichern' });
+    const pruefe = () => { b.disabled = !/^\d{8,14}$/.test(inp.value.replace(/\s/g, '')); };
+    inp.addEventListener('input', pruefe);
+    pruefe();
+    f.append(feld, b);
     f.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       b.disabled = true;
@@ -1118,7 +1134,7 @@
       } catch (e) {
         meldung(msg, fehlerText(e), true);
       } finally {
-        b.disabled = false;
+        pruefe();
       }
     });
     eans.append(chips, f, msg);
