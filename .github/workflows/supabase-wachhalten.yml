@@ -22,7 +22,6 @@ jobs:
         run: |
           antwort=$(curl -sS --fail-with-body --retry 3 --retry-delay 10 \
             "$SUPABASE_URL/rest/v1/raeder?select=id&limit=1" \
-            -H "apikey: $SUPABASE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_KEY")
+            -H "apikey: $SUPABASE_KEY")
           echo "Antwort: $antwort"
           echo "$antwort" | grep -q '"id"'
