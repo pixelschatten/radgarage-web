@@ -1,0 +1,28 @@
+# Hält das kostenlose Supabase-Projekt wach: Free-Projekte werden nach
+# einer Woche ohne Zugriff pausiert. Einmal täglich eine kleine Lese-Abfrage
+# auf den öffentlichen Katalog, mit dem öffentlichen Schlüssel aus der App.
+name: Supabase wachhalten
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SUPABASE_URL: https://axiirnfgtbmmjlfwlyfe.supabase.co
+      SUPABASE_KEY: sb_publishable_dBz5uK-7wYwKKL3O8Qd0MA_pYzxTP_2
+    steps:
+      - name: Katalog abfragen
+        run: |
+          antwort=$(curl -sS --fail-with-body --retry 3 --retry-delay 10 \
+            "$SUPABASE_URL/rest/v1/raeder?select=id&limit=1" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+          echo "Antwort: $antwort"
+          echo "$antwort" | grep -q '"id"'
