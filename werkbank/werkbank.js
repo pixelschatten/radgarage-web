@@ -220,6 +220,7 @@
     await sb.auth.signOut();
     rolle = null;
     radTeile = [];
+    $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
     ergaenzenEnde();
     zeige('s-mail');
   });
@@ -242,6 +243,40 @@
     if (admin) ladeOffen();
     letzteAktivitaet = Date.now();
     pruefeCodes();
+    ladeEigenesBild();
+  }
+
+  // ----- Profilbilder (legen die Nutzer in der App fest, Speicher „profilbilder“, privat) -----
+
+  // Rundes Bild, ohne Profilbild der erste Buchstabe der E-Mail-Adresse
+  function ava(mail, url, gross) {
+    const el = url ? Object.assign(document.createElement('img'), { src: url, alt: '', loading: 'lazy' }) : document.createElement('span');
+    el.className = 'ava' + (gross ? ' gross' : '');
+    if (!url) el.textContent = ((mail || '?').trim()[0] || '?').toUpperCase();
+    el.setAttribute('aria-hidden', 'true');
+    return el;
+  }
+
+  async function profilbildPfad(id) {
+    const { data, error } = await sb.storage.from('profilbilder').list(id, { limit: 1, sortBy: { column: 'name', order: 'desc' } });
+    if (error) throw error;
+    const f = (data || []).find((x) => x.id);
+    return f ? `${id}/${f.name}` : null;
+  }
+
+  async function ladeEigenesBild() {
+    let url = null;
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      const pfad = session && await profilbildPfad(session.user.id);
+      if (pfad) {
+        const { data } = await sb.storage.from('profilbilder').createSignedUrl(pfad, 3600);
+        url = data?.signedUrl || null;
+      }
+    } catch { /* ohne Bild geht es auch */ }
+    const el = ava(email, url);
+    el.id = 'wer-bild';
+    $('#wer-bild').replaceWith(el);
   }
 
   function tab(name) {
@@ -832,7 +867,7 @@
         if (weg) ergaenzen.weg.delete(t.id); else ergaenzen.weg.add(t.id);
         zeichneVorhanden();
       });
-      li.append(links, b);
+      li.append(zeile, b);
       return li;
     }));
   }
@@ -1806,6 +1841,7 @@
 
   const ANBIETER = { apple: 'Apple', google: 'Google', email: 'E-Mail' };
   let konten = [];
+  let bilder = {};
   let ktZeige = 50;
   const datum = (d) => (d ? new Date(d).toLocaleDateString('de-DE') : '–');
   const gesperrt = (k) => k.gesperrt_bis && new Date(k.gesperrt_bis) > new Date();
@@ -1816,6 +1852,12 @@
       [konten, helfer] = await Promise.all([rpc('konten_liste'), rpc('helfer_liste')]);
       konten = konten || [];
       helfer = helfer || [];
+      bilder = {};
+      const pfade = konten.map((k) => k.profilbild).filter(Boolean);
+      for (let i = 0; i < pfade.length; i += 100) {
+        const { data } = await sb.storage.from('profilbilder').createSignedUrls(pfade.slice(i, i + 100), 3600);
+        for (const b of data || []) if (b.signedUrl) bilder[b.path] = b.signedUrl;
+      }
     } catch (e) {
       konten = [];
       meldung($('#msg-konten'), fehlerText(e), true);
@@ -1856,7 +1898,10 @@
     const ul = $('#kt-liste');
     ul.replaceChildren(...liste.slice(0, ktZeige).map((k) => {
       const li = document.createElement('li');
+      const zeile = document.createElement('div');
+      zeile.className = 'mit-bild';
       const links = document.createElement('div');
+      zeile.append(ava(k.email, bilder[k.profilbild], true), links);
       links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: k.email || `Konto ${String(k.id).slice(0, 8)}` }),
         Object.assign(document.createElement('div'), { className: 'fine', textContent: `Seit ${datum(k.registriert)} · zuletzt ${datum(k.letzte_anmeldung)} · ${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'}` + helferText(k) }));
       const chips = document.createElement('div');
@@ -1873,7 +1918,7 @@
       links.append(chips);
       const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Verwalten' });
       b.addEventListener('click', () => kontoVerwalten(k));
-      li.append(links, b);
+      li.append(zeile, b);
       return li;
     }));
     if (!liste.length) ul.innerHTML = '<li class="leer">Keine Konten gefunden.</li>';
@@ -1956,7 +2001,7 @@
 
     const bestaetigen = Object.assign(document.createElement('input'), { type: 'text', placeholder: k.email || 'LÖSCHEN', autocomplete: 'off' });
     bestaetigen.setAttribute('aria-label', 'Zur Bestätigung E-Mail-Adresse eintippen');
-    const loeschen = block('Konto löschen', 'Löscht das Konto mit Garage, Einstellungen und hochgeladenen Dokumenten. Das lässt sich nicht rückgängig machen. '
+    const loeschen = block('Konto löschen', 'Löscht das Konto mit Garage, Einstellungen, Profilbild und hochgeladenen Dokumenten. Das lässt sich nicht rückgängig machen. '
       + (k.familie === 'besitzer' ? 'Die Familiengarage geht an das am längsten beigetretene Mitglied. ' : '')
       + 'Zur Bestätigung die E-Mail-Adresse eintippen.',
       bestaetigen, knopf('Endgültig löschen', async () => {
@@ -2006,6 +2051,14 @@
     }
     for (let i = 0; i < pfade.length; i += 100) {
       const { error } = await sb.storage.from('dokumente').remove(pfade.slice(i, i + 100));
+      if (error) throw error;
+    }
+    // Profilbilder darf ein bestätigter Admin ohne Freigabe sehen und löschen
+    const { data: bild, error: e1 } = await sb.storage.from('profilbilder').list(id, { limit: 100 });
+    if (e1) throw e1;
+    const bp = (bild || []).filter((f) => f.id).map((f) => `${id}/${f.name}`);
+    if (bp.length) {
+      const { error } = await sb.storage.from('profilbilder').remove(bp);
       if (error) throw error;
     }
   }
@@ -2298,6 +2351,7 @@
     await sb.auth.signOut();
     rolle = null;
     radTeile = [];
+    $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
     ergaenzenEnde();
     dialogZu();
     zeige('s-mail');
@@ -2341,7 +2395,7 @@
         b.disabled = true;
         try { await rpc('helfer_setzen', { p_email: h.email, p_rolle: null }); ladeKonten(); } catch (e) { meldung($('#msg-helfer'), fehlerText(e), true); b.disabled = false; }
       });
-      li.append(links, b);
+      li.append(zeile, b);
       return li;
     }));
     if (!ohne.length) ul.innerHTML = '<li class="leer">Keine offenen Einladungen.</li>';
