@@ -664,11 +664,18 @@
       .or(woerter.map((w) => `name.ilike.*${w}*,marke.ilike.*${w}*`).join(',')).limit(200);
     const kandidaten = (data || []).map((t) => {
       const hay = `${t.marke} ${t.name}`.toLowerCase();
-      let punkte = woerter.filter((w) => hay.includes(w)).length;
+      const treffer = woerter.filter((w) => hay.includes(w));
+      let punkte = treffer.length;
       // Modellnummern (mit Ziffern) zählen doppelt
-      punkte += woerter.filter((w) => /\d/.test(w) && w.length >= 3 && hay.includes(w)).length;
+      const nummer = woerter.some((w) => /\d/.test(w) && w.length >= 3 && hay.includes(w));
+      if (nummer) punkte += 1;
       if (kategorie && t.kategorie === kategorie) punkte += 1.5;
-      return { ...t, punkte };
+      // Sicher nur, wenn mehr als die Marke passt: Modellnummer oder die meisten Wörter der Zeile
+      const marke = t.marke.toLowerCase();
+      const ohneMarke = treffer.filter((w) => !marke.includes(w)).length;
+      const sicher = (kategorie ? !t.kategorie || t.kategorie === kategorie : true)
+        && ohneMarke >= 1 && (nummer || treffer.length >= Math.max(2, Math.ceil(woerter.length * 0.6)));
+      return { ...t, punkte, sicher };
     }).sort((a, b) => b.punkte - a.punkte || a.name.length - b.name.length).slice(0, 6);
     return { zeile, text, kategorie, kandidaten };
   }
@@ -687,8 +694,8 @@
     } finally {
       knopf.disabled = false;
     }
-    const sicher = einfuegenErgebnis.filter((e) => e.kandidaten[0] && e.kandidaten[0].punkte >= 2.5).length;
-    info.textContent = `${sicher} von ${zeilen.length} Zeilen sicher zugeordnet. Bitte kurz prüfen.`;
+    const sicher = einfuegenErgebnis.filter((e) => e.kandidaten.some((k) => k.sicher)).length;
+    info.textContent = `${sicher} von ${zeilen.length} Zeilen im Katalog gefunden${sicher < zeilen.length ? `, ${zeilen.length - sicher} als neue Teile vorbereitet` : ''}. Bitte kurz prüfen.`;
     $('#einfuegen-ergebnis').replaceChildren(...einfuegenErgebnis.map((e, i) => {
       const li = document.createElement('li');
       li.append(Object.assign(document.createElement('div'), { className: 'zeilentext', textContent: e.zeile }));
@@ -699,7 +706,8 @@
       for (const k of e.kandidaten) sel.append(new Option(`${k.marke} ${k.name} · ${k.kategorie}`, k.id));
       sel.append(new Option('＋ Neu im Katalog anlegen', NEU));
       const beste = e.kandidaten[0];
-      sel.value = beste && beste.punkte >= 2.5 ? beste.id : !beste || beste.punkte < 1.5 ? NEU : '';
+      const sicherer = e.kandidaten.find((k) => k.sicher);
+      sel.value = sicherer ? sicherer.id : NEU;
       // Felder für ein neues Teil, vorbelegt aus der Zeile (erstes Wort = Marke)
       const neu = Object.assign(document.createElement('div'), { className: 'neu-zeile' });
       const leer = e.text.indexOf(' ');
