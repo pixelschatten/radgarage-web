@@ -232,10 +232,51 @@ label .kopf { display: flex; justify-content: space-between; align-items: baseli
 .pill.gefahr { background: var(--warn); border-color: var(--warn); color: var(--bg); }
 .trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
 td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
+/* Statistik: Reihenfolge der Serienfarben fest, geprüft gegen surface2 hell und dunkel */
+:root { --c1: #2F6DB5; --c2: #C8642A; --c3: #7A5BC4; --c4: #2F8A5B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --c1: #5592D6; --c2: #D27A44; --c3: #8C7ADB; --c4: #3BA36D; } }
+:root[data-theme="dark"] { --c1: #5592D6; --c2: #D27A44; --c3: #8C7ADB; --c4: #3BA36D; }
+.st-kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.st-kopf h2 { margin: 0; }
+.segment { display: inline-flex; padding: 3px; gap: 2px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); }
+.segment button { font: 700 14px/1 var(--font); height: 34px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+.segment button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
+.st-gitter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.st-gitter .breit { grid-column: 1 / -1; }
+.st-abschnitt { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 26px 0 0; }
+.diagramm h3 { margin-bottom: 2px; }
+.diagramm .plot { position: relative; margin-top: 10px; }
+.diagramm svg { display: block; width: 100%; overflow: visible; }
+.diagramm svg text { font: 500 12px var(--font); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.diagramm svg text.wert { fill: var(--ink); font-weight: 700; }
+.diagramm .gitter { stroke: var(--line); stroke-width: 1; shape-rendering: crispEdges; }
+.diagramm .fadenkreuz { stroke: var(--muted); stroke-width: 1; shape-rendering: crispEdges; }
+.legende { display: flex; flex-wrap: wrap; gap: 4px 16px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.legende span { display: inline-flex; align-items: center; gap: 6px; }
+.legende i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.tipp { position: absolute; pointer-events: none; z-index: 5; min-width: 120px; padding: 8px 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--line); box-shadow: 0 8px 24px var(--shadow); font-size: 13px; color: var(--text); white-space: nowrap; }
+.tipp b { display: block; font-size: 12px; color: var(--muted); font-weight: 700; margin-bottom: 2px; }
+.tipp div { display: flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.tipp i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.tipp div span { margin-left: auto; padding-left: 12px; font-weight: 700; }
+details.als-tabelle { margin-top: 10px; font-size: 14px; }
+details.als-tabelle summary { cursor: pointer; color: var(--muted); font-weight: 700; font-size: 13px; }
+details.als-tabelle .tabelle-box { max-height: 260px; overflow: auto; margin-top: 6px; }
+details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-numeric: tabular-nums; }
+.balken-liste { display: grid; grid-template-columns: fit-content(40%) 1fr max-content; gap: 8px 10px; }
+.balken-reihe { grid-column: 1 / -1; display: grid; grid-template-columns: subgrid; align-items: center; font-size: 14px; padding: 2px 0; }
+.balken-name { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.balken-spur { position: relative; height: 16px; }
+.balken-spur.mit-spur::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--spur); background: var(--surface); border-radius: 0 4px 4px 0; }
+.balken-spur i { position: relative; display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.balken-wert { font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+.leer-plot { color: var(--muted); font-size: 14px; padding: 18px 0; }
+
 [hidden] { display: none !important; }
 
 @media (max-width: 860px) {
   .raster { grid-template-columns: 1fr; }
+  .st-gitter { grid-template-columns: 1fr; }
   .qr { grid-template-columns: 1fr; }
   .t { padding: 22px 18px; border-radius: 22px; }
 }
@@ -352,6 +393,7 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" class="nur-helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" class="nur-admin">Übersicht</button>
+      <button type="button" role="tab" data-tab="statistik" aria-selected="false" class="nur-admin">Statistik</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" class="nur-admin">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
@@ -531,6 +573,27 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       </div>
     </section>
 
+    <!-- Statistik (Admin): nur Summen, keine einzelnen Personen -->
+    <section data-panel="statistik" hidden>
+      <div class="st-kopf">
+        <h2>Statistik</h2>
+        <div class="segment" role="radiogroup" aria-label="Zeitraum" id="st-zeitraum">
+          <button type="button" role="radio" data-tage="30" aria-checked="false">30 Tage</button>
+          <button type="button" role="radio" data-tage="90" aria-checked="true">90 Tage</button>
+          <button type="button" role="radio" data-tage="365" aria-checked="false">1 Jahr</button>
+        </div>
+      </div>
+      <div class="msg" role="status" id="msg-statistik"></div>
+      <div class="kacheln" id="st-kacheln"></div>
+      <p class="st-abschnitt">Nutzer</p>
+      <div class="st-gitter" id="st-nutzer"></div>
+      <p class="st-abschnitt">Garagen</p>
+      <div class="st-gitter" id="st-garagen"></div>
+      <p class="st-abschnitt">Katalog und Mithilfe</p>
+      <div class="st-gitter" id="st-katalog"></div>
+      <p class="fine" style="margin-top:14px" id="st-stand"></p>
+    </section>
+
     <!-- Registrierte Konten (Admin) -->
     <section data-panel="konten" hidden>
       <div class="kacheln" id="kt-kacheln"></div>
@@ -674,6 +737,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-14"></script>
+<script src="werkbank.js?v=2026-10-26-15"></script>
 </body>
 </html>
