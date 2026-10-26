@@ -238,7 +238,7 @@
     $('#f-rad').baujahr.max = new Date().getFullYear() + 1;
     $('#f-passwort').email.value = email;
     zeige('s-werkbank');
-    tab('erfassen');
+    tabAusAdresse();
     ladeMarken();
     if (admin) ladeOffen();
     letzteAktivitaet = Date.now();
@@ -280,6 +280,10 @@
   }
 
   function tab(name) {
+    const knopf = $(`nav.tabs button[data-tab="${name}"]`);
+    if (!knopf || knopf.hidden) name = 'erfassen';
+    // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
+    if (location.hash.slice(1).split('/')[0] !== name) history.pushState(null, '', `#${name}`);
     for (const b of $$('nav.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
     for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
     if (name === 'freigaben') ladeOffen();
@@ -291,6 +295,12 @@
     if (name === 'konto') ladeSicherheit();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
+  function tabAusAdresse() {
+    const [name, unter] = location.hash.slice(1).split('/');
+    tab(name || 'erfassen');
+    if (name === 'freigaben') fgAnsichtSetzen(unter === 'app' ? 'app' : 'helfer');
+  }
+  window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
   for (const b of $$('[data-neu-laden]')) b.addEventListener('click', ladeOffen);
 
   async function ladeMarken() {
@@ -1370,6 +1380,7 @@
 
   function fgAnsichtSetzen(wahl) {
     fgAnsicht = wahl;
+    if (!$('[data-panel="freigaben"]').hidden) history.replaceState(null, '', wahl === 'app' ? '#freigaben/app' : '#freigaben');
     for (const b of $$('#fg-ansicht button')) b.setAttribute('aria-checked', String(b.dataset.ansicht === wahl));
     $('#offen').hidden = wahl !== 'helfer';
     $('#app-box').hidden = wahl !== 'app';
@@ -1638,8 +1649,13 @@
         if (nachher) nachher(neu);
       });
     });
+    const weg = loeschBlock('Rad löschen', 'Nur für Fehlerfassungen oder doppelte Räder. Die Teile bleiben im Katalog.',
+      `${data.hersteller} ${data.modell} (${data.baujahr}) endgültig aus dem Katalog löschen?`, 'katalog_rad_loeschen', id, async () => {
+        if (ergaenzen && ergaenzen.rad.id === id) { ergaenzenEnde(); radTeile = []; zeichneTeile(); meldung($('#f-rad .msg'), 'Rad gelöscht.'); }
+        if (!$('[data-panel="uebersicht"]').hidden) ladeUebersicht();
+      });
     dialog(`${data.hersteller} ${data.modell} (${data.baujahr}) ändern`,
-      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Die Kennung des Rads bleibt gleich, Garagen auf den Handys stimmen also weiter.' }), f);
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Die Kennung des Rads bleibt gleich, Garagen auf den Handys stimmen also weiter.' }), f, weg);
   }
 
   $('#rad-bearbeiten').addEventListener('click', () => {
@@ -1711,12 +1727,48 @@
       }, 300);
     });
     zus.append(such, ul, zmsg);
-    dialog(`${data.marke} ${data.name}`, f, zus);
+    const weg = loeschBlock('Teil löschen', 'Nur für Fehleinträge. Geht nur, wenn das Teil an keinem Rad hängt. Sonst lieber zusammenführen.',
+      `„${data.marke} ${data.name}“ endgültig aus dem Katalog löschen?`, 'katalog_teil_loeschen', t.id, async () => {
+        await ladeTeileliste(true);
+        meldung($('#tl-hinweis'), `${data.marke} ${data.name} ist gelöscht.`);
+      });
+    dialog(`${data.marke} ${data.name}`, f, zus, weg);
+  }
+
+  // Löschen mit zweiter Rückfrage, wenn der Eintrag in gesicherten Garagen steht
+  function loeschBlock(titel, text, frage, funktion, id, danach) {
+    const d = Object.assign(document.createElement('div'), { className: 'trenner' });
+    const lmsg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill gefahr klein', textContent: titel });
+    b.addEventListener('click', async () => {
+      if (!window.confirm(frage)) return;
+      b.disabled = true;
+      meldung(lmsg, '');
+      try {
+        try {
+          await rpc(funktion, { p_id: id });
+        } catch (e) {
+          const m = fehlerText(e);
+          if (!/gesicherten Garagen/.test(m)) throw e;
+          if (!window.confirm(`${m}.\n\nDort verschwindet es aus der Katalog-Liste, eigene Angaben der Nutzer bleiben. Trotzdem löschen?`)) return;
+          await rpc(funktion, { p_id: id, p_trotzdem: true });
+        }
+        dialogZu();
+        await danach();
+      } catch (e) {
+        meldung(lmsg, fehlerText(e), true);
+      } finally {
+        b.disabled = false;
+      }
+    });
+    d.append(Object.assign(document.createElement('strong'), { textContent: titel }), Object.assign(document.createElement('p'), { className: 'fine', textContent: text }), b, lmsg);
+    return d;
   }
 
   // ----- Übersicht, Baustellen, Verlauf -----
 
   const VERLAUF_TEXTE = {
+    teil_geloescht: 'Teil gelöscht', shop_geaendert: 'Shop geändert', shop_geloescht: 'Shop gelöscht',
     vorschlag_uebernommen: 'App-Vorschlag übernommen', vorschlag_abgelehnt: 'App-Vorschlag abgelehnt',
     rad_erfasst: 'Rad erfasst', rad_freigegeben: 'Rad freigegeben', rad_abgelehnt: 'Rad abgelehnt', rad_geloescht: 'Rad gelöscht',
     rad_geaendert: 'Rad geändert', ergaenzung_erfasst: 'Ergänzung erfasst', ergaenzung_uebernommen: 'Ergänzung übernommen',
@@ -1765,8 +1817,42 @@
     } catch (e) {
       meldung($('#msg-uebersicht'), fehlerText(e), true);
     }
-    ladeBaustellen();
     ladeVerlauf();
+    ladeShops();
+    await ladeBaustellen();
+    ladeAufgaben();
+  }
+
+  // Was gerade ansteht, mit Sprung an die richtige Stelle
+  async function ladeAufgaben() {
+    const box = $('#ue-aufgaben');
+    const [offen, app, stat] = await Promise.all([
+      ladeAlleOffenen().catch(() => null),
+      ladeApp().catch(() => null),
+      rpc('werkbank_statistik', { p_tage: 7 }).catch(() => null),
+    ]);
+    if (offen) helferOffen = offen.raeder.length + offen.ergaenzungen.length;
+    zahlenSetzen();
+    const wenig = baustellen.filter((r) => r.teile < 8).length;
+    const k = (stat && stat.konten) || {};
+    const appArten = (art) => appGruppen.filter((g) => g.art === art).length;
+    const punkte = [
+      [helferOffen, 'Von Helfern freigeben', 'Räder und Ergänzungen', () => { tab('freigaben'); fgAnsichtSetzen('helfer'); }],
+      [appArten('korrektur'), 'Korrekturen aus der App', 'Nutzer melden Fehler', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
+      [appGruppen.length - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
+      [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
+      [k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
+    ].filter(([n]) => n);
+    for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
+    box.replaceChildren(...punkte.map(([n, titel, unter, fn]) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'aufgabe' });
+      const text = document.createElement('span');
+      text.append(titel, Object.assign(document.createElement('small'), { textContent: unter }));
+      b.append(Object.assign(document.createElement('b'), { textContent: zahlDe(n) }), text);
+      b.addEventListener('click', fn);
+      return b;
+    }));
+    if (!punkte.length) box.innerHTML = '<p class="fine">Nichts offen. Zeit für neue Räder.</p>';
   }
 
   async function ladeBaustellen() {
@@ -1816,10 +1902,31 @@
   $('#bs-filter').addEventListener('change', () => { bsZeige = 30; zeichneBaustellen(); });
   $('#bs-mehr').addEventListener('click', () => { bsZeige += 30; zeichneBaustellen(); });
 
+  let verlauf = [];
+  for (const [art, text] of Object.entries(VERLAUF_TEXTE).sort((a, b) => a[1].localeCompare(b[1], 'de'))) $('#vl-art').append(new Option(text, art));
+  $('#vl-art').addEventListener('change', zeichneVerlauf);
+  $('#vl-suche').addEventListener('input', zeichneVerlauf);
+  const verlaufGefiltert = () => {
+    const art = $('#vl-art').value;
+    const such = $('#vl-suche').value.trim().toLowerCase();
+    return verlauf.filter((v) => (!art || v.art === art) && (!such || `${v.von || ''} ${v.text || ''}`.toLowerCase().includes(such)));
+  };
+
   async function ladeVerlauf() {
-    const tb = $('#ue-verlauf');
     try {
-      const liste = (await rpc('katalog_verlauf', { p_limit: vlLimit })) || [];
+      verlauf = (await rpc('katalog_verlauf', { p_limit: vlLimit })) || [];
+      $('#vl-mehr').hidden = verlauf.length < vlLimit || vlLimit >= 500;
+      zeichneVerlauf();
+    } catch (e) {
+      $('#ue-verlauf').innerHTML = '';
+      meldung($('#msg-uebersicht'), fehlerText(e), true);
+    }
+  }
+
+  function zeichneVerlauf() {
+    const tb = $('#ue-verlauf');
+    {
+      const liste = verlaufGefiltert();
       tb.replaceChildren(...liste.map((v) => {
         const tr = document.createElement('tr');
         const wann = new Date(v.wann);
@@ -1828,11 +1935,7 @@
           Object.assign(document.createElement('td'), { textContent: `${VERLAUF_TEXTE[v.art] || v.art}${v.text ? ': ' + v.text : ''}` }));
         return tr;
       }));
-      if (!liste.length) tb.innerHTML = '<tr><td colspan="3" class="fine">Noch keine Einträge.</td></tr>';
-      $('#vl-mehr').hidden = liste.length < vlLimit || vlLimit >= 500;
-    } catch (e) {
-      tb.innerHTML = '';
-      meldung($('#msg-uebersicht'), fehlerText(e), true);
+      if (!liste.length) tb.innerHTML = `<tr><td colspan="3" class="fine">${verlauf.length ? 'Keine passenden Einträge, „Mehr zeigen“ lädt ältere.' : 'Noch keine Einträge.'}</td></tr>`;
     }
   }
   $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
@@ -1889,12 +1992,18 @@
   }
 
   function zeichneKonten() {
+    const liste = kontenGefiltert();
+    $('#kt-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
+    zeichneKontenListe(liste);
+  }
+  function kontenGefiltert() {
     const such = $('#kt-suche').value.trim().toLowerCase();
     const filter = $('#kt-filter').value;
-    const liste = konten.filter((k) => (!such || (k.email || '').toLowerCase().includes(such) || String(k.id).startsWith(such))
+    return konten.filter((k) => (!such || (k.email || '').toLowerCase().includes(such) || String(k.id).startsWith(such))
       && (filter === 'premium' ? k.premium : filter === 'familie' ? k.familie : filter === 'rolle' ? k.rolle
         : filter === 'gesperrt' ? gesperrt(k) : filter === 'unbestaetigt' ? !k.bestaetigt : true));
-    $('#kt-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
+  }
+  function zeichneKontenListe(liste) {
     const ul = $('#kt-liste');
     ul.replaceChildren(...liste.slice(0, ktZeige).map((k) => {
       const li = document.createElement('li');
@@ -2345,9 +2454,16 @@
   for (const ev of ['mousemove', 'keydown', 'click', 'scroll', 'touchstart']) {
     window.addEventListener(ev, () => { letzteAktivitaet = Date.now(); }, { passive: true });
   }
+  $('#ab-bleiben').addEventListener('click', () => { letzteAktivitaet = Date.now(); $('#ab-warnung').hidden = true; });
   setInterval(async () => {
-    if ($('#s-werkbank').hidden) return;
-    if (Date.now() - letzteAktivitaet < Number($('#auto-ab').value) * 60000) return;
+    const warnung = $('#ab-warnung');
+    if ($('#s-werkbank').hidden) { warnung.hidden = true; return; }
+    const rest = Number($('#auto-ab').value) * 60000 - (Date.now() - letzteAktivitaet);
+    // Eine Minute vorher warnen, damit nichts Halbfertiges verloren geht
+    warnung.hidden = rest > 60000 || rest <= 0;
+    if (!warnung.hidden) $('#ab-text').textContent = `In ${Math.ceil(rest / 1000)} Sekunden wirst du automatisch abgemeldet.`;
+    if (rest > 0) return;
+    warnung.hidden = true;
     await sb.auth.signOut({ scope: 'local' });
     rolle = null;
     radTeile = [];
@@ -2356,7 +2472,7 @@
     dialogZu();
     zeige('s-mail');
     meldung($('#f-mail .msg'), 'Du wurdest nach längerer Pause automatisch abgemeldet.');
-  }, 30000);
+  }, 5000);
 
   $('#f-neues-teil').addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -2395,7 +2511,7 @@
         b.disabled = true;
         try { await rpc('helfer_setzen', { p_email: h.email, p_rolle: null }); ladeKonten(); } catch (e) { meldung($('#msg-helfer'), fehlerText(e), true); b.disabled = false; }
       });
-      li.append(zeile, b);
+      li.append(links, b);
       return li;
     }));
     if (!ohne.length) ul.innerHTML = '<li class="leer">Keine offenen Einladungen.</li>';
@@ -2697,6 +2813,7 @@
     } catch (e) {
       meldung($('#msg-statistik'), fehlerText(e), true);
     }
+    ladeSystem();
   }
 
   function zeichneStatistik() {
@@ -2839,6 +2956,280 @@
     stBreite = w;
     clearTimeout(window.stTimer);
     window.stTimer = setTimeout(zeichneStatistik, 150);
+  });
+
+
+
+  // ----- Shops (Admin) -----
+
+  let shops = [];
+  async function ladeShops() {
+    try {
+      const { data, error } = await sb.from('shops').select('id, name, suche, position').order('position');
+      if (error) throw error;
+      shops = data || [];
+      zeichneShops();
+    } catch (e) {
+      meldung($('#msg-shops'), fehlerText(e), true);
+    }
+  }
+  function zeichneShops() {
+    const ul = $('#shop-liste');
+    ul.replaceChildren(...shops.map((sh, i) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: `${i + 1}. ${sh.name}` }),
+        Object.assign(document.createElement('div'), { className: 'neben', textContent: sh.suche }));
+      const akt = Object.assign(document.createElement('div'), { className: 'karten-knoepfe' });
+      const k = (text, titel, fn, aus) => {
+        const b = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: text, title: titel, disabled: !!aus });
+        b.setAttribute('aria-label', titel);
+        b.addEventListener('click', fn);
+        akt.append(b);
+      };
+      const schieben = async (um) => {
+        const ids = shops.map((x) => x.id);
+        [ids[i], ids[i + um]] = [ids[i + um], ids[i]];
+        try { shops = (await rpc('shops_sortieren', { p_ids: ids })) || shops; zeichneShops(); } catch (e) { meldung($('#msg-shops'), fehlerText(e), true); }
+      };
+      k('↑', 'Nach oben', () => schieben(-1), i === 0);
+      k('↓', 'Nach unten', () => schieben(1), i === shops.length - 1);
+      const test = Object.assign(document.createElement('a'), { className: 'knopf-weich', textContent: 'Testen', target: '_blank', rel: 'noopener noreferrer',
+        href: sh.suche.replace('{q}', encodeURIComponent('Shimano CN-M8100')) });
+      akt.append(test);
+      k('Ändern', 'Shop ändern', () => shopDialog(sh));
+      li.append(links, akt);
+      return li;
+    }));
+    if (!shops.length) ul.innerHTML = '<li class="leer">Noch keine Shops.</li>';
+  }
+  function shopDialog(sh) {
+    const felder = [['name', 'Name'], ['suche', 'Such-Adresse mit {q}', 'url']];
+    const f = formular(felder, sh || { suche: 'https://' }, sh ? 'Speichern' : 'Hinzufügen');
+    f.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      mitKnopf(f, async () => {
+        const suche = f.suche.value.trim();
+        if (!/^https:\/\//.test(suche) || !suche.includes('{q}')) throw new Error('Die Adresse muss mit https:// beginnen und {q} enthalten, z. B. https://shop.de/suche?q={q}');
+        shops = (await rpc('shop_speichern', { p: { ...(sh ? { id: sh.id } : {}), name: f.name.value.trim(), suche } })) || shops;
+        dialogZu();
+        zeichneShops();
+      });
+    });
+    const teile = [Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Später kommen hier die Partner-Links (z. B. von Awin) hinein.' }), f];
+    if (sh) {
+      const weg = Object.assign(document.createElement('div'), { className: 'trenner' });
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill gefahr klein', textContent: 'Shop entfernen' });
+      const lmsg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+      b.addEventListener('click', async () => {
+        if (!window.confirm(`${sh.name} aus der App entfernen?`)) return;
+        try { shops = (await rpc('shop_loeschen', { p_id: sh.id })) || []; dialogZu(); zeichneShops(); } catch (e) { meldung(lmsg, fehlerText(e), true); }
+      });
+      weg.append(b, lmsg);
+      teile.push(weg);
+    }
+    dialog(sh ? `${sh.name} ändern` : 'Shop hinzufügen', ...teile);
+  }
+  $('#shop-neu').addEventListener('click', () => shopDialog(null));
+
+  // ----- Systemstatus in der Statistik -----
+  // Grenzen des kostenlosen Supabase-Tarifs (Stand 2026): 500 MB Datenbank, 1 GB Dateien, 50.000 aktive Nutzer im Monat
+
+  const GRENZEN = { db: 500 * 1024 * 1024, storage: 1024 * 1024 * 1024, mau: 50000 };
+  const BUCKETS = { profilbilder: 'Profilbilder', dokumente: 'Dokumente' };
+  function groesse(b) {
+    const n = Number(b || 0);
+    if (n < 1024 * 1024) return `${(n / 1024).toLocaleString('de-DE', { maximumFractionDigits: 0 })} kB`;
+    if (n < 1024 ** 3) return `${(n / 1024 / 1024).toLocaleString('de-DE', { maximumFractionDigits: 1 })} MB`;
+    return `${(n / 1024 ** 3).toLocaleString('de-DE', { maximumFractionDigits: 2 })} GB`;
+  }
+  async function ladeSystem() {
+    const ziel = $('#st-system');
+    ziel.replaceChildren();
+    let sys;
+    try { sys = await rpc('werkbank_system'); } catch (e) {
+      ziel.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: fehlerText(e) }));
+      return;
+    }
+    const speicher = (sys.storage || []).reduce((a, x) => a + Number(x.bytes || 0), 0);
+    const anteil = (a, b) => Math.max(0, Math.min(100, (a / b) * 100));
+    const prozentText = (a, b) => `${anteil(a, b).toLocaleString('de-DE', { maximumFractionDigits: anteil(a, b) < 1 ? 2 : 0 })} %`;
+    let c = karte(ziel, 'Belegung', 'Gegen die Grenzen des kostenlosen Tarifs. Ab etwa 80 % lohnt sich der Blick auf ein Upgrade.');
+    const zeilen = [
+      { label: 'Datenbank', wert: sys.db_bytes, max: GRENZEN.db, text: `${groesse(sys.db_bytes)} von 500 MB` },
+      { label: 'Dateien', wert: speicher, max: GRENZEN.storage, text: `${groesse(speicher)} von 1 GB` },
+      { label: 'Aktive Nutzer (30 Tage)', wert: sys.mau_30, max: GRENZEN.mau, text: `${zahlDe(sys.mau_30)} von 50.000` },
+    ];
+    const warn = zeilen.some((z) => anteil(z.wert, z.max) >= 80);
+    // Jede Zeile hat ihre eigene Einheit, deshalb als Anteil an der jeweiligen Grenze
+    balken(c.plot, zeilen.map((z) => ({ ...z, wert: anteil(z.wert, z.max), max: 100, tippName: prozentText(z.wert, z.max) })), warn ? 'var(--warn)' : SERIE[3]);
+    tabelle(c.det, ['', 'Belegt', 'Grenze', 'Anteil'], zeilen.map((z) => [z.label, z.label.startsWith('Aktive') ? zahlDe(z.wert) : groesse(z.wert), z.label.startsWith('Aktive') ? '50.000' : groesse(z.max), prozentText(z.wert, z.max)]));
+    const tabs = (sys.tabellen || []).map((x) => ({ label: x.name, wert: Number(x.bytes || 0), text: groesse(x.bytes), tippName: `${zahlDe(x.zeilen)} Zeilen` }));
+    c = karte(ziel, 'Größte Tabellen', `${zahlDe(sys.auth_konten)} Konten insgesamt`);
+    balken(c.plot, tabs, SERIE[0]);
+    tabelle(c.det, ['Tabelle', 'Größe', 'Zeilen'], (sys.tabellen || []).map((x) => [x.name, groesse(x.bytes), zahlDe(x.zeilen)]));
+    const st = (sys.storage || []).map((x) => ({ label: BUCKETS[x.bucket] || x.bucket, wert: Number(x.bytes || 0), text: `${groesse(x.bytes)} · ${zahlDe(x.dateien)} ${Number(x.dateien) === 1 ? 'Datei' : 'Dateien'}`, tippName: 'Größe' }));
+    if (st.length) {
+      c = karte(ziel, 'Dateien nach Bereich', 'Profilbilder und Dokumente der Nutzer');
+      balken(c.plot, st, SERIE[2]);
+      tabelle(c.det, ['Bereich', 'Dateien', 'Größe'], (sys.storage || []).map((x) => [BUCKETS[x.bucket] || x.bucket, zahlDe(x.dateien), groesse(x.bytes)]));
+    }
+  }
+
+  // ---------- CSV-Export ----------
+  // Semikolon und BOM, damit Excel mit deutschen Einstellungen Umlaute und Spalten richtig liest
+
+  function csvLaden(name, kopf, zeilen) {
+    const feld = (v) => {
+      const t = v == null ? '' : Array.isArray(v) ? v.join(' ') : String(v);
+      return /[";\n\r]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t;
+    };
+    const text = [kopf, ...zeilen].map((z) => z.map(feld).join(';')).join('\r\n');
+    const a = Object.assign(document.createElement('a'), {
+      href: URL.createObjectURL(new Blob(['﻿' + text], { type: 'text/csv;charset=utf-8' })),
+      download: `radgarage-${name}-${new Date().toISOString().slice(0, 10)}.csv`,
+    });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // Ganze Tabelle seitenweise holen (Supabase liefert höchstens 1000 Zeilen am Stück)
+  async function alleZeilen(tabelle, spalten, sortierung) {
+    const out = [];
+    for (let von = 0; ; von += 1000) {
+      const { data, error } = await sb.from(tabelle).select(spalten).order(sortierung).range(von, von + 999);
+      if (error) throw error;
+      out.push(...data);
+      if (data.length < 1000) return out;
+    }
+  }
+
+  function csvKnopf(id, fn) {
+    $(id).addEventListener('click', async () => {
+      const b = $(id);
+      const text = b.textContent;
+      b.disabled = true;
+      b.textContent = 'Lade …';
+      try { await fn(); } catch (e) { window.alert(fehlerText(e)); } finally { b.disabled = false; b.textContent = text; }
+    });
+  }
+  csvKnopf('#csv-raeder', async () => {
+    const r = await alleZeilen('raeder', 'id, hersteller, reihe, modell, baujahr, kategorie, uvp_eur, quelle, geprueft, geaendert', 'id');
+    csvLaden('raeder', ['ID', 'Marke', 'Reihe', 'Modell', 'Modelljahr', 'Radart', 'UVP', 'Quelle', 'Geprüft', 'Geändert'],
+      r.map((x) => [x.id, x.hersteller, x.reihe, x.modell, x.baujahr, x.kategorie, x.uvp_eur, x.quelle, x.geprueft ? 'ja' : 'nein', x.geaendert]));
+  });
+  csvKnopf('#csv-teile', async () => {
+    const t = await alleZeilen('teile', 'id, marke, name, kategorie, merkmale, richtpreis_eur, ean, geprueft, geaendert', 'id');
+    csvLaden('teile', ['ID', 'Marke', 'Name', 'Kategorie', 'Merkmale', 'Richtpreis', 'Barcodes', 'Geprüft', 'Geändert'],
+      t.map((x) => [x.id, x.marke, x.name, x.kategorie, x.merkmale, x.richtpreis_eur, x.ean, x.geprueft ? 'ja' : 'nein', x.geaendert]));
+  });
+  csvKnopf('#csv-zuordnung', async () => {
+    const [r, t, z] = await Promise.all([
+      alleZeilen('raeder', 'id, hersteller, modell, baujahr', 'id'),
+      alleZeilen('teile', 'id, marke, name, kategorie', 'id'),
+      alleZeilen('rad_teile', 'rad_id, teil_id, position', 'rad_id'),
+    ]);
+    const rad = new Map(r.map((x) => [x.id, x]));
+    const teil = new Map(t.map((x) => [x.id, x]));
+    z.sort((a, b) => a.rad_id.localeCompare(b.rad_id) || a.position - b.position);
+    csvLaden('raeder-teile', ['Rad-ID', 'Rad', 'Modelljahr', 'Kategorie', 'Teil-ID', 'Teil'], z.map((x) => {
+      const a = rad.get(x.rad_id) || {};
+      const b = teil.get(x.teil_id) || {};
+      return [x.rad_id, `${a.hersteller || ''} ${a.modell || ''}`.trim(), a.baujahr, b.kategorie, x.teil_id, `${b.marke || ''} ${b.name || ''}`.trim()];
+    }));
+  });
+  csvKnopf('#csv-verlauf', async () => {
+    if (vlLimit < 500) { vlLimit = 500; await ladeVerlauf(); }
+    csvLaden('verlauf', ['Wann', 'Wer', 'Art', 'Text', 'Rad-ID', 'Teil-ID'],
+      verlaufGefiltert().map((v) => [v.wann, v.von, VERLAUF_TEXTE[v.art] || v.art, v.text, v.rad_id, v.teil_id]));
+  });
+  csvKnopf('#csv-konten', async () => {
+    csvLaden('konten', ['E-Mail', 'Anmeldung über', 'Registriert', 'Zuletzt angemeldet', 'Bestätigt', 'Premium', 'Familie', 'Räder', 'Rolle', '2FA', 'Gesperrt bis'],
+      kontenGefiltert().map((k) => [k.email, (k.anbieter || []).map((a) => ANBIETER[a] || a), k.registriert, k.letzte_anmeldung, k.bestaetigt ? 'ja' : 'nein',
+        k.premium || '', k.familie || '', k.raeder || 0, k.rolle || '', k.zwei_faktor ? 'ja' : 'nein', gesperrt(k) ? k.gesperrt_bis : '']));
+  });
+
+  // ---------- Suche über alles (Strg+K oder /) ----------
+
+  let sucheNr = 0;
+  function sucheOeffnen() {
+    if ($('#s-werkbank').hidden) return;
+    const admin = rolle === 'admin';
+    const feld = Object.assign(document.createElement('input'), { type: 'search', placeholder: admin ? 'Rad, Teil, Barcode oder E-Mail' : 'Rad, Teil oder Barcode', autocomplete: 'off' });
+    const box = document.createElement('div');
+    let timer = null;
+    feld.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => sucheLos(feld.value, box), 200); });
+    feld.addEventListener('keydown', (ev) => {
+      const knoepfe = $$('button', box);
+      if (!knoepfe.length || !['ArrowDown', 'ArrowUp', 'Enter'].includes(ev.key)) return;
+      ev.preventDefault();
+      let i = knoepfe.findIndex((b) => b.getAttribute('aria-selected') === 'true');
+      if (ev.key === 'Enter') { (knoepfe[i] || knoepfe[0]).click(); return; }
+      i = ev.key === 'ArrowDown' ? Math.min(knoepfe.length - 1, i + 1) : Math.max(0, i - 1);
+      knoepfe.forEach((b, j) => b.setAttribute('aria-selected', String(j === i)));
+      knoepfe[i].scrollIntoView({ block: 'nearest' });
+    });
+    dialog('Suchen', feld, box, Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Pfeiltasten wählen, Enter öffnet, Esc schließt.' }));
+  }
+
+  async function sucheLos(text, box) {
+    const nr = ++sucheNr;
+    const woerter = woerterAus(text).slice(0, 4);
+    if (!woerter.length) { box.replaceChildren(); return; }
+    const ziffern = text.replace(/\D/g, '');
+    const admin = rolle === 'admin';
+    let qr = sb.from('raeder').select('id, hersteller, modell, baujahr, kategorie').limit(8);
+    for (const w of woerter) qr = qr.or(`hersteller.ilike.*${w}*,modell.ilike.*${w}*,id.ilike.*${w}*`);
+    let qt = sb.from('teile').select('id, marke, name, kategorie, ean').limit(8);
+    if (ziffern.length >= 8 && ziffern.length === text.trim().length) qt = qt.contains('ean', [ziffern]);
+    else for (const w of woerter) qt = qt.or(`marke.ilike.*${w}*,name.ilike.*${w}*,id.ilike.*${w}*`);
+    const [r, t] = await Promise.all([qr, qt]);
+    if (admin && !konten.length) { try { konten = (await rpc('konten_liste')) || []; } catch { /* ohne Konten weiter */ } }
+    if (nr !== sucheNr) return;
+    const such = text.trim().toLowerCase();
+    const k = admin && such.length >= 2 ? konten.filter((x) => (x.email || '').toLowerCase().includes(such)).slice(0, 6) : [];
+    const gruppe = (titel, eintraege) => {
+      if (!eintraege.length) return null;
+      const d = Object.assign(document.createElement('div'), { className: 'suche-gruppe' });
+      const ul = Object.assign(document.createElement('ul'), { className: 'treffer' });
+      for (const [haupt, neben, fn] of eintraege) {
+        const li = document.createElement('li');
+        const b = Object.assign(document.createElement('button'), { type: 'button' });
+        b.append(Object.assign(document.createElement('span'), { textContent: haupt }), Object.assign(document.createElement('small'), { textContent: neben }));
+        b.addEventListener('click', () => { dialogZu(); fn(); });
+        li.append(b);
+        ul.append(li);
+      }
+      d.append(Object.assign(document.createElement('h4'), { textContent: titel }), ul);
+      return d;
+    };
+    const teile = [...$$('nav.tabs button')].some((b) => b.dataset.tab === 'teile' && !b.hidden);
+    const teilen = [
+      gruppe('Räder', (r.data || []).map((x) => [`${x.hersteller} ${x.modell} (${x.baujahr})`, `${x.kategorie} · ergänzen`, async () => {
+        tab('erfassen');
+        await ergaenzenStart(x);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }])),
+      gruppe('Teile', (t.data || []).map((x) => [`${x.marke} ${x.name}`, `${x.kategorie}${x.ean && x.ean.length ? ` · ${x.ean.length} Barcode${x.ean.length > 1 ? 's' : ''}` : ''}`, () => {
+        if (admin) { teilBearbeiten(x); return; }
+        if (teile) { tab('teile'); $('#tl-suche').value = `${x.marke} ${x.name}`; ladeTeileliste(true); }
+      }])),
+      gruppe('Konten', k.map((x) => [x.email, `${datum(x.registriert)} · ${x.raeder || 0} ${x.raeder === 1 ? 'Rad' : 'Räder'}`, () => { tab('konten'); kontoVerwalten(x); }])),
+    ].filter(Boolean);
+    box.replaceChildren(...teilen);
+    if (!teilen.length) box.replaceChildren(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Nichts gefunden.' }));
+    const erstes = $('button', box);
+    if (erstes) erstes.setAttribute('aria-selected', 'true');
+  }
+  $('#suche-auf').addEventListener('click', sucheOeffnen);
+  document.addEventListener('keydown', (ev) => {
+    const tippt = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName);
+    if ((ev.key === 'k' && (ev.ctrlKey || ev.metaKey)) || (ev.key === '/' && !tippt)) {
+      ev.preventDefault();
+      if ($('#dlg').hidden) sucheOeffnen();
+    }
   });
 
   // ---------- Start ----------
