@@ -1389,7 +1389,7 @@
         const tr = document.createElement('tr');
         const wann = new Date(v.wann);
         tr.append(Object.assign(document.createElement('td'), { className: 'wann', textContent: `${wann.toLocaleDateString('de-DE')} ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` }),
-          Object.assign(document.createElement('td'), { textContent: v.von || 'Skript' }),
+          Object.assign(document.createElement('td'), { textContent: v.von || '–' }),
           Object.assign(document.createElement('td'), { textContent: `${VERLAUF_TEXTE[v.art] || v.art}${v.text ? ': ' + v.text : ''}` }));
         return tr;
       }));
