@@ -23,6 +23,21 @@
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
   const SCHRITTE = ['s-mail', 's-code', 's-einrichten', 's-faktor', 's-nein', 's-werkbank'];
 
+  // Design: automatisch wie das Gerät, Bright oder Dark (wie in der App)
+  const DESIGN_FARBE = { light: '#F2EDE2', dark: '#1F2226' };
+  function designSetzen(wahl) {
+    const root = document.documentElement;
+    if (wahl === 'light' || wahl === 'dark') root.dataset.theme = wahl;
+    else delete root.dataset.theme;
+    try { if (wahl === 'auto') localStorage.removeItem('werkbank-design'); else localStorage.setItem('werkbank-design', wahl); } catch { /* ohne Speicher nur für jetzt */ }
+    for (const b of $$('.design button')) b.setAttribute('aria-checked', String(b.dataset.design === wahl));
+    const dunkel = wahl === 'dark' || (wahl === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    $('meta[name="theme-color"]').content = DESIGN_FARBE[dunkel ? 'dark' : 'light'];
+  }
+  for (const b of $$('.design button')) b.addEventListener('click', () => designSetzen(b.dataset.design));
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!document.documentElement.dataset.theme) designSetzen('auto'); });
+  designSetzen(document.documentElement.dataset.theme || 'auto');
+
   let email = '';
   let rolle = null; // 'helfer' | 'admin'
   let faktorId = null;
@@ -1828,21 +1843,30 @@
     if (/(.)\1{2,}/.test(pw)) punkte -= 15;
     if (/^(?:passwort|password|radgarage|123456|qwertz|qwerty)/i.test(pw) || (email && pw.toLowerCase().includes(email.split('@')[0].toLowerCase()))) punkte -= 30;
     punkte = Math.max(0, Math.min(100, punkte));
-    const text = pw.length < 12 ? `Noch ${12 - pw.length} Zeichen` : punkte >= 80 ? 'Stark' : punkte >= 60 ? 'Gut' : 'Schwach: länger machen oder Satz aus mehreren Wörtern nehmen';
+    const text = pw.length < 12 ? `Noch ${12 - pw.length} ${12 - pw.length === 1 ? 'Zeichen' : 'Zeichen'}` : punkte >= 80 ? 'Stark' : punkte >= 60 ? 'Gut' : 'Zu schwach';
     return [punkte, text];
   }
-  $('#f-passwort').pw1.addEventListener('input', (ev) => {
-    const [p, t] = pwStaerke(ev.target.value);
-    $('#pw-balken').style.width = p + '%';
-    $('#pw-balken').classList.toggle('gut', p >= 60 && ev.target.value.length >= 12);
-    $('#pw-staerke').textContent = t;
-  });
+  function pwAnzeigen() {
+    const f = $('#f-passwort');
+    const [p, t] = pwStaerke(f.pw1.value);
+    const lang = f.pw1.value.length >= 12;
+    $('#pw-balken').style.width = (f.pw1.value ? Math.max(p, 6) : 0) + '%';
+    $('#pw-balken').className = lang && p >= 80 ? 'gut' : lang && p >= 60 ? 'mittel' : '';
+    $('#pw-staerke').textContent = f.pw1.value ? t : 'Noch 12 Zeichen';
+    const g = $('#pw-gleich');
+    const gleich = f.pw2.value && f.pw2.value === f.pw1.value;
+    g.textContent = !f.pw2.value ? '' : gleich ? 'passt' : 'anders';
+    g.className = 'pw-gleich' + (!f.pw2.value ? '' : gleich ? ' ok' : ' nein');
+  }
+  $('#f-passwort').pw1.addEventListener('input', pwAnzeigen);
+  $('#f-passwort').pw2.addEventListener('input', pwAnzeigen);
   $('.pw-auge').addEventListener('click', (ev) => {
     const f = $('#f-passwort');
+    const b = ev.currentTarget;
     const zeigen = f.pw1.type === 'password';
     f.pw1.type = f.pw2.type = zeigen ? 'text' : 'password';
-    ev.target.textContent = zeigen ? 'Verbergen' : 'Zeigen';
-    ev.target.setAttribute('aria-label', zeigen ? 'Passwort verbergen' : 'Passwort zeigen');
+    b.setAttribute('aria-pressed', String(zeigen));
+    b.setAttribute('aria-label', zeigen ? 'Passwörter verbergen' : 'Passwörter zeigen');
   });
   $('#f-passwort').addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -1854,7 +1878,7 @@
       const { error } = await sb.auth.updateUser({ password: f.pw1.value });
       if (error) throw /different from the old/i.test(error.message) ? new Error('Das ist schon dein Passwort.') : error;
       f.reset();
-      f.pw1.dispatchEvent(new Event('input'));
+      pwAnzeigen();
       meldung(msg, 'Passwort gespeichert. Ab jetzt kannst du dich auch damit anmelden.');
     });
   });
