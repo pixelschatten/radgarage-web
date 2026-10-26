@@ -206,6 +206,7 @@
     if (name === 'eigene') ladeEigene();
     if (name === 'helfer') ladeHelfer();
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
+    if (name === 'uebersicht') ladeUebersicht();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
   for (const b of $$('[data-neu-laden]')) b.addEventListener('click', ladeOffen);
@@ -1005,7 +1006,16 @@
       className: 'pill ghost klein', target: '_blank', rel: 'noopener noreferrer', textContent: 'Bei Bike24 suchen',
       href: 'https://www.bike24.de/suche?searchTerm=' + encodeURIComponent(`${t.marke} ${t.name}`),
     });
-    li.append(links, shop);
+    const knoepfe = document.createElement('div');
+    knoepfe.className = 'aktionen';
+    knoepfe.style.justifyContent = 'flex-end';
+    if (rolle === 'admin') {
+      const bearb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Bearbeiten' });
+      bearb.addEventListener('click', () => teilBearbeiten(t));
+      knoepfe.append(bearb);
+    }
+    knoepfe.append(shop);
+    li.append(links, knoepfe);
 
     const eans = document.createElement('div');
     eans.className = 'eans';
@@ -1118,6 +1128,279 @@
     $('#tl-suche').value = `${t.marke} ${t.name}`;
     ladeTeileliste(true);
   });
+
+  // ----- Dialog -----
+
+  function dialog(titel, ...inhalt) {
+    $('#dlg-titel').textContent = titel;
+    $('#dlg-inhalt').replaceChildren(...inhalt);
+    $('#dlg').hidden = false;
+    const erstes = $('#dlg-inhalt input, #dlg-inhalt select');
+    if (erstes) setTimeout(() => erstes.focus(), 0);
+  }
+  function dialogZu() { $('#dlg').hidden = true; $('#dlg-inhalt').replaceChildren(); }
+  $('#dlg').addEventListener('click', (ev) => { if (ev.target === $('#dlg')) dialogZu(); });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('#dlg').hidden) dialogZu(); });
+
+  // Kleines Formular aus Feldbeschreibungen: [name, Beschriftung, Typ, Optionen]
+  function formular(felder, werte, knopfText) {
+    const f = document.createElement('form');
+    f.autocomplete = 'off';
+    for (const [name, text, typ, optionen] of felder) {
+      const label = document.createElement('label');
+      label.append(Object.assign(document.createElement('span'), { textContent: text }));
+      let feld;
+      if (typ === 'select') {
+        feld = document.createElement('select');
+        const wert = werte[name] == null ? '' : String(werte[name]);
+        for (const o of (wert && !optionen.includes(wert) ? [wert, ...optionen] : optionen)) feld.append(new Option(o, o));
+      } else {
+        feld = Object.assign(document.createElement('input'), { type: typ || 'text' });
+        if (typ === 'number') feld.step = '0.01';
+      }
+      feld.name = name;
+      feld.value = werte[name] == null ? '' : String(werte[name]);
+      label.append(feld);
+      f.append(label);
+    }
+    const akt = document.createElement('div');
+    akt.className = 'aktionen';
+    akt.append(Object.assign(document.createElement('button'), { type: 'submit', className: 'pill', textContent: knopfText }),
+      Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
+    f.append(akt, Object.assign(document.createElement('div'), { className: 'msg', role: 'status' }));
+    return f;
+  }
+
+  // Nur geänderte Felder schicken; leere Zahl/Quelle heißt leeren
+  function aenderungen(f, alt, felder) {
+    const p = {};
+    for (const [name, , typ] of felder) {
+      const roh = f[name].value.trim();
+      const neu = typ === 'number' ? (roh === '' ? null : Number(roh)) : (roh === '' && (name === 'quelle' || name === 'merkmale') ? null : roh);
+      const vorher = alt[name] == null ? null : (typ === 'number' ? Number(alt[name]) : String(alt[name]));
+      if (neu !== vorher && !(neu === null && vorher === '')) p[name] = neu;
+    }
+    return p;
+  }
+
+  // ----- Rad bearbeiten -----
+
+  const RADARTEN = ['Rennrad', 'Gravel', 'MTB', 'E-MTB', 'Trekking', 'E-Trekking', 'E-City', 'Fitness'];
+
+  async function radBearbeiten(id, nachher) {
+    const { data, error } = await sb.from('raeder').select('id, hersteller, reihe, modell, baujahr, kategorie, uvp_eur, quelle').eq('id', id).maybeSingle();
+    if (error || !data) { window.alert(error ? fehlerText(error) : 'Rad nicht gefunden.'); return; }
+    const alt = { ...data, uvp: data.uvp_eur };
+    const felder = [['hersteller', 'Marke'], ['modell', 'Voller Modellname (Reihe + Ausstattung)'], ['reihe', 'Modellreihe'],
+      ['baujahr', 'Modelljahr', 'number'], ['kategorie', 'Radart', 'select', RADARTEN], ['uvp', 'UVP in €', 'number'], ['quelle', 'Quelle', 'url']];
+    const f = formular(felder, alt, 'Speichern');
+    f.baujahr.step = '1';
+    f.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      mitKnopf(f, async () => {
+        const p = aenderungen(f, alt, felder);
+        if (!Object.keys(p).length) { dialogZu(); return; }
+        if (p.baujahr != null) p.baujahr = Math.round(p.baujahr);
+        const neu = await rpc('katalog_rad_aendern', { p: { id, ...p } });
+        dialogZu();
+        if (nachher) nachher(neu);
+      });
+    });
+    dialog(`${data.hersteller} ${data.modell} (${data.baujahr}) ändern`,
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Die Kennung des Rads bleibt gleich, Garagen auf den Handys stimmen also weiter.' }), f);
+  }
+
+  $('#rad-bearbeiten').addEventListener('click', () => {
+    if (!ergaenzen) return;
+    radBearbeiten(ergaenzen.rad.id, (r) => {
+      ergaenzen.rad.name = `${r.hersteller} ${r.modell} (${r.baujahr})`;
+      $('#ergaenzen-name').textContent = ergaenzen.rad.name;
+      meldung($('#f-rad .msg'), 'Rad-Daten gespeichert.');
+    });
+  });
+
+  // ----- Teil bearbeiten und zusammenführen -----
+
+  async function teilBearbeiten(t) {
+    const { data, error } = await sb.from('teile').select('id, marke, name, kategorie, richtpreis_eur, merkmale, ean').eq('id', t.id).maybeSingle();
+    if (error || !data) { window.alert(error ? fehlerText(error) : 'Teil nicht gefunden.'); return; }
+    const alt = { ...data, preis: data.richtpreis_eur };
+    const felder = [['marke', 'Marke'], ['name', 'Name'], ['kategorie', 'Kategorie', 'select', TEIL_KATEGORIEN],
+      ['preis', 'Richtpreis in €', 'number'], ['merkmale', 'Merkmale (z. B. 12-fach, 40-622)']];
+    const f = formular(felder, alt, 'Speichern');
+    f.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      mitKnopf(f, async () => {
+        const p = aenderungen(f, alt, felder);
+        if (!Object.keys(p).length) { dialogZu(); return; }
+        await rpc('katalog_teil_aendern', { p: { id: t.id, ...p } });
+        dialogZu();
+        ladeTeileliste(true);
+      });
+    });
+
+    // Zusammenführen: dieses Teil ist doppelt und geht in einem anderen auf
+    const zus = document.createElement('div');
+    zus.className = 'trenner';
+    zus.append(Object.assign(document.createElement('strong'), { textContent: 'Doppelt im Katalog?' }),
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Wähle das Teil, das bleiben soll. Räder und Barcodes wandern dorthin, dieser Eintrag wird gelöscht.' }));
+    const such = Object.assign(document.createElement('input'), { type: 'search', placeholder: 'Anderes Teil suchen' });
+    such.setAttribute('aria-label', 'Teil suchen, das bleiben soll');
+    const ul = Object.assign(document.createElement('ul'), { className: 'treffer' });
+    const zmsg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+    let timer = null;
+    such.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        const woerter = woerterAus(such.value);
+        if (!woerter.length) { ul.replaceChildren(); return; }
+        let q = sb.from('teile').select('id, marke, name, kategorie').neq('id', t.id).limit(10);
+        for (const w of woerter) q = q.or(`marke.ilike.*${w}*,name.ilike.*${w}*`);
+        const { data: treffer } = await q;
+        ul.replaceChildren(...(treffer || []).map((x) => {
+          const li = document.createElement('li');
+          const b = Object.assign(document.createElement('button'), { type: 'button' });
+          b.append(Object.assign(document.createElement('span'), { textContent: `${x.marke} ${x.name}` }),
+            Object.assign(document.createElement('small'), { textContent: x.kategorie }));
+          b.addEventListener('click', async () => {
+            if (!window.confirm(`„${data.marke} ${data.name}“ in „${x.marke} ${x.name}“ aufgehen lassen?\n\nRäder und Barcodes wandern dorthin, „${data.marke} ${data.name}“ wird gelöscht.`)) return;
+            try {
+              const r = await rpc('katalog_teile_zusammenfuehren', { p_behalten: x.id, p_weg: t.id });
+              dialogZu();
+              await ladeTeileliste(true);
+              meldung($('#tl-hinweis'), `Zusammengeführt. ${r && r.raeder != null ? r.raeder + ' Räder hängen jetzt an ' + x.marke + ' ' + x.name + '.' : ''}`);
+            } catch (e) {
+              meldung(zmsg, fehlerText(e), true);
+            }
+          });
+          li.append(b);
+          return li;
+        }));
+      }, 300);
+    });
+    zus.append(such, ul, zmsg);
+    dialog(`${data.marke} ${data.name}`, f, zus);
+  }
+
+  // ----- Übersicht, Baustellen, Verlauf -----
+
+  const VERLAUF_TEXTE = {
+    rad_erfasst: 'Rad erfasst', rad_freigegeben: 'Rad freigegeben', rad_abgelehnt: 'Rad abgelehnt', rad_geloescht: 'Rad gelöscht',
+    rad_geaendert: 'Rad geändert', ergaenzung_erfasst: 'Ergänzung erfasst', ergaenzung_uebernommen: 'Ergänzung übernommen',
+    ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
+    teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
+    rolle: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
+  };
+  let baustellen = [];
+  let bsZeige = 30;
+  let vlLimit = 50;
+  let markenGeladen = false;
+
+  async function ladeUebersicht() {
+    meldung($('#msg-uebersicht'), '');
+    try {
+      const u = await rpc('katalog_uebersicht');
+      const zahl = (n) => Number(n || 0).toLocaleString('de-DE');
+      const anteil = u.teile ? Math.round((u.teile_mit_ean / u.teile) * 100) : 0;
+      const kachel = (farbe, titel, wert, unter) => {
+        const d = document.createElement('div');
+        d.className = `kachel ${farbe}`;
+        d.append(Object.assign(document.createElement('div'), { className: 'eyebrow', textContent: titel }),
+          Object.assign(document.createElement('div'), { className: 'zahl-gross', textContent: wert }),
+          Object.assign(document.createElement('p'), { className: 'fine', textContent: unter }));
+        return d;
+      };
+      $('#ue-kacheln').replaceChildren(
+        kachel('k1', 'Räder', zahl(u.raeder), `${(u.marken || []).length} Marken`),
+        kachel('k5', 'Teile', zahl(u.teile), 'im Katalog'),
+        kachel('k4', 'Mit Barcode', `${anteil} %`, `${zahl(u.teile_mit_ean)} Teile`),
+        kachel('k3', 'Offen', zahl((u.offen_raeder || 0) + (u.offen_ergaenzungen || 0)), `${zahl(u.offen_raeder)} Räder, ${zahl(u.offen_ergaenzungen)} Ergänzungen`));
+      const marken = (u.marken || []).slice().sort((a, b) => b.raeder - a.raeder);
+      $('#ue-marken').replaceChildren(...marken.map((m) => {
+        const tr = document.createElement('tr');
+        for (const v of [m.hersteller, zahl(m.raeder), Number(m.teile_schnitt || 0).toLocaleString('de-DE', { maximumFractionDigits: 1 })]) {
+          tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+        }
+        return tr;
+      }));
+      if (!markenGeladen) {
+        for (const m of marken.map((x) => x.hersteller).sort((a, b) => a.localeCompare(b, 'de'))) $('#bs-marke').append(new Option(m, m));
+        markenGeladen = true;
+      }
+    } catch (e) {
+      meldung($('#msg-uebersicht'), fehlerText(e), true);
+    }
+    ladeBaustellen();
+    ladeVerlauf();
+  }
+
+  async function ladeBaustellen() {
+    try {
+      baustellen = (await rpc('katalog_baustellen', { p_marke: $('#bs-marke').value || null })) || [];
+    } catch (e) {
+      baustellen = [];
+      meldung($('#msg-uebersicht'), fehlerText(e), true);
+    }
+    bsZeige = 30;
+    zeichneBaustellen();
+  }
+
+  function zeichneBaustellen() {
+    const filter = $('#bs-filter').value;
+    const liste = baustellen.filter((r) => (filter === 'wenig' ? r.teile < 8 : filter === 'quelle' ? !r.quelle : filter === 'uvp' ? !r.uvp : true));
+    $('#bs-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
+    const ul = $('#bs-liste');
+    ul.replaceChildren(...liste.slice(0, bsZeige).map((r) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: `${r.hersteller} ${r.modell} (${r.baujahr})` }));
+      const neben = document.createElement('div');
+      neben.className = 'eans';
+      neben.append(Object.assign(document.createElement('span'), { className: 'chip' + (r.teile < 8 ? ' warn' : ''), textContent: `${r.teile} Teile` }));
+      if (!r.quelle) neben.append(Object.assign(document.createElement('span'), { className: 'chip warn', textContent: 'ohne Quelle' }));
+      if (!r.uvp) neben.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'ohne UVP' }));
+      links.append(neben);
+      const akt = document.createElement('div');
+      akt.className = 'aktionen';
+      const erg = Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'Ergänzen' });
+      erg.addEventListener('click', async () => {
+        tab('erfassen');
+        await ergaenzenStart(r);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      const dat = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Daten' });
+      dat.addEventListener('click', () => radBearbeiten(r.id, () => ladeBaustellen()));
+      akt.append(erg, dat);
+      li.append(links, akt);
+      return li;
+    }));
+    if (!liste.length) ul.innerHTML = '<li class="leer">Keine Baustellen. Sehr gut.</li>';
+    $('#bs-mehr').hidden = liste.length <= bsZeige;
+  }
+  $('#bs-marke').addEventListener('change', ladeBaustellen);
+  $('#bs-filter').addEventListener('change', () => { bsZeige = 30; zeichneBaustellen(); });
+  $('#bs-mehr').addEventListener('click', () => { bsZeige += 30; zeichneBaustellen(); });
+
+  async function ladeVerlauf() {
+    const tb = $('#ue-verlauf');
+    try {
+      const liste = (await rpc('katalog_verlauf', { p_limit: vlLimit })) || [];
+      tb.replaceChildren(...liste.map((v) => {
+        const tr = document.createElement('tr');
+        const wann = new Date(v.wann);
+        tr.append(Object.assign(document.createElement('td'), { className: 'wann', textContent: `${wann.toLocaleDateString('de-DE')} ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` }),
+          Object.assign(document.createElement('td'), { textContent: v.von || 'Skript' }),
+          Object.assign(document.createElement('td'), { textContent: `${VERLAUF_TEXTE[v.art] || v.art}${v.text ? ': ' + v.text : ''}` }));
+        return tr;
+      }));
+      if (!liste.length) tb.innerHTML = '<tr><td colspan="3" class="fine">Noch keine Einträge.</td></tr>';
+      $('#vl-mehr').hidden = liste.length < vlLimit || vlLimit >= 500;
+    } catch (e) {
+      tb.innerHTML = '';
+      meldung($('#msg-uebersicht'), fehlerText(e), true);
+    }
+  }
+  $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
 
   // ----- Konto: Passwort -----
 

@@ -160,6 +160,18 @@ textarea { resize: vertical; font-size: 15px; }
 .scanner { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .78); display: grid; place-items: center; padding: 16px; }
 .scanner-box { width: min(520px, 100%); display: grid; gap: 12px; justify-items: center; color: #fff; text-align: center; }
 .scanner video { width: 100%; border-radius: 20px; background: #000; aspect-ratio: 4 / 3; object-fit: cover; outline: 3px solid rgba(255, 255, 255, .6); outline-offset: -40px; }
+.kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
+.kachel { border-radius: 22px; padding: 18px 20px; color: var(--ink); }
+.kachel .zahl-gross { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; margin: 6px 0 2px; }
+.kachel .fine { margin: 0; }
+.chip.warn { background: var(--warn-bg); color: var(--warn); padding-right: 10px; }
+#bs-liste li { cursor: default; }
+#bs-liste .aktionen { justify-content: flex-end; }
+.dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+.dlg-box { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); }
+.dlg-box form { margin-top: 10px; }
+.trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
+td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 [hidden] { display: none !important; }
 
 @media (max-width: 860px) {
@@ -262,6 +274,7 @@ textarea { resize: vertical; font-size: 15px; }
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" class="nur-helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="helfer" aria-selected="false" class="nur-admin">Helfer</button>
+      <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" class="nur-admin">Übersicht</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
 
@@ -274,7 +287,7 @@ textarea { resize: vertical; font-size: 15px; }
           <form id="f-rad" autocomplete="off">
             <div class="ergaenzen-kopf k3" id="ergaenzen-kopf" hidden>
               <div><div class="eyebrow">Ergänzung zu</div><strong id="ergaenzen-name"></strong></div>
-              <button class="pill ghost klein" type="button" id="ergaenzen-ende">Doch neues Rad</button>
+              <div class="aktionen"><button class="pill ghost klein nur-admin" type="button" id="rad-bearbeiten">Rad-Daten ändern</button><button class="pill ghost klein" type="button" id="ergaenzen-ende">Doch neues Rad</button></div>
             </div>
             <fieldset id="rad-felder">
             <details class="vorlage" id="vorlage">
@@ -412,6 +425,34 @@ textarea { resize: vertical; font-size: 15px; }
       </div>
     </section>
 
+    <!-- Übersicht, Baustellen, Verlauf (Admin) -->
+    <section data-panel="uebersicht" hidden>
+      <div class="kacheln" id="ue-kacheln"></div>
+      <div class="msg" role="status" id="msg-uebersicht"></div>
+      <div class="raster" style="margin-top:14px">
+        <div class="t">
+          <h3>Baustellen <span class="opt" id="bs-zahl"></span></h3>
+          <p class="fine">Räder mit den wenigsten Teilen zuerst. Antippen öffnet das Rad zum Ergänzen.</p>
+          <div class="zeile">
+            <label>Marke<select id="bs-marke"><option value="">Alle Marken</option></select></label>
+            <label>Zeigen<select id="bs-filter"><option value="">Alle</option><option value="wenig">Weniger als 8 Teile</option><option value="quelle">Ohne Quelle</option><option value="uvp">Ohne UVP</option></select></label>
+          </div>
+          <ul class="liste" id="bs-liste" style="margin-top:12px"></ul>
+          <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="bs-mehr" hidden>Weitere zeigen</button></div>
+        </div>
+        <div class="t k2">
+          <h3>Marken</h3>
+          <table><thead><tr><th>Marke</th><th>Räder</th><th>Teile je Rad</th></tr></thead><tbody id="ue-marken"></tbody></table>
+        </div>
+      </div>
+      <div class="t" style="margin-top:14px">
+        <h3>Verlauf</h3>
+        <p class="fine">Die letzten Änderungen am Katalog, aus Werkbank und App.</p>
+        <table><thead><tr><th>Wann</th><th>Wer</th><th>Was</th></tr></thead><tbody id="ue-verlauf"></tbody></table>
+        <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="vl-mehr">Mehr zeigen</button></div>
+      </div>
+    </section>
+
     <!-- Kontosicherheit -->
     <section data-panel="konto" hidden>
       <div class="raster">
@@ -474,6 +515,12 @@ textarea { resize: vertical; font-size: 15px; }
   </main>
 </div>
 
+<div class="dlg" id="dlg" hidden role="dialog" aria-modal="true" aria-labelledby="dlg-titel">
+  <div class="dlg-box t">
+    <h3 id="dlg-titel"></h3>
+    <div id="dlg-inhalt"></div>
+  </div>
+</div>
 <div class="scanner" id="scanner" hidden role="dialog" aria-modal="true" aria-label="Barcode scannen">
   <div class="scanner-box">
     <video id="scanner-video" playsinline muted></video>
@@ -484,6 +531,6 @@ textarea { resize: vertical; font-size: 15px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-5"></script>
+<script src="werkbank.js?v=2026-10-26-7"></script>
 </body>
 </html>
