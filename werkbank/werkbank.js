@@ -139,7 +139,7 @@
 
     rolle = await rpc('helfer_rolle');
     if (rolle !== 'helfer' && rolle !== 'admin') {
-      await sb.auth.signOut();
+      await sb.auth.signOut({ scope: 'local' });
       return zeige('s-nein');
     }
 
@@ -217,7 +217,7 @@
   });
 
   $('#abmelden').addEventListener('click', async () => {
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: 'local' });
     rolle = null;
     radTeile = [];
     $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
@@ -2348,7 +2348,7 @@
   setInterval(async () => {
     if ($('#s-werkbank').hidden) return;
     if (Date.now() - letzteAktivitaet < Number($('#auto-ab').value) * 60000) return;
-    await sb.auth.signOut();
+    await sb.auth.signOut({ scope: 'local' });
     rolle = null;
     radTeile = [];
     $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
