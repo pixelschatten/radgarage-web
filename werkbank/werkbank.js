@@ -23,20 +23,16 @@
   const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
   const SCHRITTE = ['s-mail', 's-code', 's-einrichten', 's-faktor', 's-nein', 's-werkbank'];
 
-  // Design: automatisch wie das Gerät, Bright oder Dark (wie in der App)
+  // Design wie in der App: Bright (Standard) oder Dark
   const DESIGN_FARBE = { light: '#F2EDE2', dark: '#1F2226' };
   function designSetzen(wahl) {
-    const root = document.documentElement;
-    if (wahl === 'light' || wahl === 'dark') root.dataset.theme = wahl;
-    else delete root.dataset.theme;
-    try { if (wahl === 'auto') localStorage.removeItem('werkbank-design'); else localStorage.setItem('werkbank-design', wahl); } catch { /* ohne Speicher nur für jetzt */ }
+    document.documentElement.dataset.theme = wahl;
+    try { localStorage.setItem('werkbank-design', wahl); } catch { /* ohne Speicher nur für jetzt */ }
     for (const b of $$('.design button')) b.setAttribute('aria-checked', String(b.dataset.design === wahl));
-    const dunkel = wahl === 'dark' || (wahl === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    $('meta[name="theme-color"]').content = DESIGN_FARBE[dunkel ? 'dark' : 'light'];
+    $('meta[name="theme-color"]').content = DESIGN_FARBE[wahl];
   }
   for (const b of $$('.design button')) b.addEventListener('click', () => designSetzen(b.dataset.design));
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!document.documentElement.dataset.theme) designSetzen('auto'); });
-  designSetzen(document.documentElement.dataset.theme || 'auto');
+  designSetzen(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 
   let email = '';
   let rolle = null; // 'helfer' | 'admin'
