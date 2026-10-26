@@ -192,8 +192,14 @@ textarea { resize: vertical; font-size: 15px; }
 .kachel .zahl-gross { font-family: var(--display); font-weight: 800; font-size: 34px; line-height: 1; margin: 6px 0 2px; }
 .kachel .fine { margin: 0; }
 .chip.warn { background: var(--warn-bg); color: var(--warn); padding-right: 10px; }
-#bs-liste li { cursor: default; }
-#bs-liste .aktionen { justify-content: flex-end; }
+#bs-liste { gap: 4px; }
+#bs-liste li { cursor: default; padding: 6px 6px 6px 12px; border-radius: 10px; gap: 4px 10px; }
+#bs-liste li .name { font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+#bs-liste li .chip { font-size: 12px; padding: 1px 8px; font-weight: 600; }
+#bs-liste .aktionen { justify-content: flex-end; gap: 4px; flex-wrap: nowrap; }
+#bs-liste .aktionen button { padding: 5px 12px; font-size: 13px; }
+#bs-liste.offen { max-height: 440px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+#ue-marken td { padding: 6px 8px; font-size: 14px; }
 .dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
 .dlg-box { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); }
 .dlg-box form { margin-top: 10px; }
@@ -587,11 +593,12 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
             <label>Zeigen<select id="bs-filter"><option value="">Alle</option><option value="wenig">Weniger als 8 Teile</option><option value="quelle">Ohne Quelle</option><option value="uvp">Ohne UVP</option></select></label>
           </div>
           <ul class="liste" id="bs-liste" style="margin-top:12px"></ul>
-          <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="bs-mehr" hidden>Weitere zeigen</button></div>
+          <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="bs-auf" hidden aria-expanded="false" aria-controls="bs-liste"></button><button class="pill ghost klein" type="button" id="bs-mehr" hidden>Weitere 30</button></div>
         </div>
         <div class="t k2">
           <h3>Marken</h3>
           <table><thead><tr><th>Marke</th><th>Räder</th><th>Teile je Rad</th></tr></thead><tbody id="ue-marken"></tbody></table>
+          <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="mk-auf" hidden aria-expanded="false" aria-controls="ue-marken"></button></div>
           <p class="fine" style="margin-top:14px">Katalog als Tabelle für Excel oder Numbers:</p>
           <div class="aktionen"><button class="knopf-weich" type="button" id="csv-raeder">Räder (CSV)</button><button class="knopf-weich" type="button" id="csv-teile">Teile (CSV)</button><button class="knopf-weich" type="button" id="csv-zuordnung">Räder mit Teilen (CSV)</button></div>
         </div>
@@ -799,6 +806,6 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-1"></script>
+<script src="werkbank.js?v=2026-10-27-2"></script>
 </body>
 </html>

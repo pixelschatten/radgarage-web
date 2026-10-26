@@ -1780,6 +1780,10 @@
   };
   let baustellen = [];
   let bsZeige = 30;
+  let bsOffen = false;
+  let mkOffen = false;
+  const KURZ_BS = 5;
+  const KURZ_MK = 6;
   let vlLimit = 50;
   let markenGeladen = false;
 
@@ -1803,13 +1807,15 @@
         kachel('k4', 'Mit Barcode', `${anteil} %`, `${zahl(u.teile_mit_ean)} Teile`),
         kachel('k3', 'Offen', zahl((u.offen_raeder || 0) + (u.offen_ergaenzungen || 0)), `${zahl(u.offen_raeder)} Räder, ${zahl(u.offen_ergaenzungen)} Ergänzungen`));
       const marken = (u.marken || []).slice().sort((a, b) => b.raeder - a.raeder);
-      $('#ue-marken').replaceChildren(...marken.map((m) => {
+      $('#ue-marken').replaceChildren(...marken.map((m, i) => {
         const tr = document.createElement('tr');
         for (const v of [m.hersteller, zahl(m.raeder), Number(m.teile_schnitt || 0).toLocaleString('de-DE', { maximumFractionDigits: 1 })]) {
           tr.append(Object.assign(document.createElement('td'), { textContent: v }));
         }
+        tr.dataset.extra = i >= KURZ_MK ? '1' : '';
         return tr;
       }));
+      markenZeigen();
       if (!markenGeladen) {
         for (const m of marken.map((x) => x.hersteller).sort((a, b) => a.localeCompare(b, 'de'))) $('#bs-marke').append(new Option(m, m));
         markenGeladen = true;
@@ -1840,7 +1846,7 @@
       [helferOffen, 'Von Helfern freigeben', 'Räder und Ergänzungen', () => { tab('freigaben'); fgAnsichtSetzen('helfer'); }],
       [appArten('korrektur'), 'Korrekturen aus der App', 'Nutzer melden Fehler', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
       [appGruppen.length - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
-      [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
+      [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
       [k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
     ].filter(([n]) => n);
     for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
@@ -1866,17 +1872,27 @@
     zeichneBaustellen();
   }
 
+  // Marken-Tabelle: erst die größten, Rest zum Ausklappen
+  function markenZeigen() {
+    const zeilen = $$('#ue-marken tr');
+    for (const tr of zeilen) tr.hidden = !mkOffen && tr.dataset.extra === '1';
+    const b = $('#mk-auf');
+    b.hidden = zeilen.length <= KURZ_MK;
+    b.textContent = mkOffen ? 'Einklappen' : `Alle ${zeilen.length} Marken zeigen`;
+    b.setAttribute('aria-expanded', String(mkOffen));
+  }
+  $('#mk-auf').addEventListener('click', () => { mkOffen = !mkOffen; markenZeigen(); });
+
   function zeichneBaustellen() {
     const filter = $('#bs-filter').value;
     const liste = baustellen.filter((r) => (filter === 'wenig' ? r.teile < 8 : filter === 'quelle' ? !r.quelle : filter === 'uvp' ? !r.uvp : true));
     $('#bs-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
     const ul = $('#bs-liste');
-    ul.replaceChildren(...liste.slice(0, bsZeige).map((r) => {
+    ul.replaceChildren(...liste.slice(0, bsOffen ? bsZeige : KURZ_BS).map((r) => {
       const li = document.createElement('li');
       const links = document.createElement('div');
-      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: `${r.hersteller} ${r.modell} (${r.baujahr})` }));
-      const neben = document.createElement('div');
-      neben.className = 'eans';
+      const neben = Object.assign(document.createElement('div'), { className: 'name' });
+      neben.append(Object.assign(document.createElement('span'), { textContent: `${r.hersteller} ${r.modell} (${r.baujahr})` }));
       neben.append(Object.assign(document.createElement('span'), { className: 'chip' + (r.teile < 8 ? ' warn' : ''), textContent: `${r.teile} Teile` }));
       if (!r.quelle) neben.append(Object.assign(document.createElement('span'), { className: 'chip warn', textContent: 'ohne Quelle' }));
       if (!r.uvp) neben.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'ohne UVP' }));
@@ -1896,8 +1912,19 @@
       return li;
     }));
     if (!liste.length) ul.innerHTML = '<li class="leer">Keine Baustellen. Sehr gut.</li>';
-    $('#bs-mehr').hidden = liste.length <= bsZeige;
+    ul.classList.toggle('offen', bsOffen);
+    $('#bs-mehr').hidden = !bsOffen || liste.length <= bsZeige;
+    const auf = $('#bs-auf');
+    auf.hidden = liste.length <= KURZ_BS;
+    auf.textContent = bsOffen ? 'Einklappen' : `Alle ${liste.length.toLocaleString('de-DE')} zeigen`;
+    auf.setAttribute('aria-expanded', String(bsOffen));
   }
+  $('#bs-auf').addEventListener('click', () => {
+    bsOffen = !bsOffen;
+    bsZeige = 30;
+    zeichneBaustellen();
+    if (!bsOffen) $('#bs-liste').closest('.t').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
   $('#bs-marke').addEventListener('change', ladeBaustellen);
   $('#bs-filter').addEventListener('change', () => { bsZeige = 30; zeichneBaustellen(); });
   $('#bs-mehr').addEventListener('click', () => { bsZeige += 30; zeichneBaustellen(); });
