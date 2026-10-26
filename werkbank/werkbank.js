@@ -35,7 +35,29 @@
   designSetzen(document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light');
 
   let email = '';
-  let rolle = null; // 'helfer' | 'admin'
+  let rolle = null; // 'superadmin' | 'admin' | 'support' | 'helfer'
+  let rechte = new Set();
+  const darf = (r) => rechte.has(r);
+  const ROLLEN = { superadmin: 'Super-Admin', admin: 'Admin', support: 'Support', helfer: 'Helfer' };
+  // Spiegel der Rechte-Matrix auf dem Server (meine_rolle liefert sie mit, das hier ist nur der Rückfall)
+  const RECHTE_JE_ROLLE = {
+    superadmin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'konten_sehen', 'konten_betreuen', 'konten_verwalten', 'rollen', 'system'],
+    admin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'rollen'],
+    support: ['statistik', 'konten_sehen', 'konten_betreuen'],
+    helfer: ['katalog_erfassen'],
+  };
+  const RECHTE_TEXT = [
+    ['katalog_erfassen', 'Räder und Teile erfassen', 'Bei Helfern wartet alles auf Freigabe.'],
+    ['katalog_pflegen', 'Katalog pflegen', 'Sofort live, Freigaben, App-Vorschläge, Bearbeiten und Löschen, Shops, Übersicht.'],
+    ['statistik', 'Statistik', 'Zusammengefasste Zahlen, keine einzelnen Personen.'],
+    ['konten_sehen', 'Konten sehen', 'Liste der Konten mit Profilbild. Nur mit zweitem Faktor.'],
+    ['konten_betreuen', 'Konten betreuen', 'Sperren, zweiten Faktor zurücksetzen.'],
+    ['konten_verwalten', 'Konten verwalten', 'Konten löschen, Premium schenken.'],
+    ['rollen', 'Rollen vergeben', 'Super-Admin: alle Rollen. Admin: nur Helfer.'],
+    ['system', 'Systemstatus', 'Speicher und Grenzen von Supabase.'],
+  ];
+  // Welche Rollen jemand vergeben darf
+  const vergebbar = () => (rolle === 'superadmin' ? ['helfer', 'support', 'admin'] : darf('rollen') ? ['helfer'] : []);
   let faktorId = null;
   let radTeile = []; // { teil_id, name, kategorie, ean } oder { neu: {...}, name, kategorie, ean }
   // Beim Ergänzen eines vorhandenen Rads: { rad, vorhanden: [{ id, name, kategorie }], weg: Set }. radTeile sind dann die neuen Teile.
@@ -137,8 +159,8 @@
     email = session.user.email || email;
     $('#wer-mail').textContent = email;
 
-    rolle = await rpc('helfer_rolle');
-    if (rolle !== 'helfer' && rolle !== 'admin') {
+    await rolleLaden();
+    if (!rechte.size) {
       await sb.auth.signOut({ scope: 'local' });
       return zeige('s-nein');
     }
@@ -219,6 +241,7 @@
   $('#abmelden').addEventListener('click', async () => {
     await sb.auth.signOut({ scope: 'local' });
     rolle = null;
+    rechte = new Set();
     radTeile = [];
     $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
     ergaenzenEnde();
@@ -227,20 +250,35 @@
 
   // ---------- Werkbank ----------
 
+  async function rolleLaden() {
+    let info;
+    try {
+      info = await rpc('meine_rolle');
+    } catch {
+      // Ältere Server-Seite ohne meine_rolle: Rolle wie bisher, Rechte aus der Matrix
+      const alt = await rpc('helfer_rolle');
+      info = { rolle: alt, rechte: RECHTE_JE_ROLLE[alt] || [] };
+    }
+    rolle = info && RECHTE_JE_ROLLE[info.rolle] ? info.rolle : null;
+    rechte = new Set(rolle ? info.rechte || RECHTE_JE_ROLLE[rolle] : []);
+  }
+
   async function werkbank() {
-    const admin = rolle === 'admin';
-    for (const el of $$('.nur-admin')) el.hidden = !admin;
-    for (const el of $$('.nur-helfer')) el.hidden = admin;
-    $('#f-neues-teil').closest('.t').hidden = !admin;
-    $('#hinweis-rolle').textContent = admin
-      ? 'Du bist Admin: Was du speicherst, ist sofort im Katalog.'
+    // Nach dem zweiten Faktor neu fragen, erst dann gelten Konten-Rechte
+    try { await rolleLaden(); } catch { /* Stand vom Login behalten */ }
+    for (const el of $$('[data-recht]')) el.hidden = !el.dataset.recht.split(' ').some(darf);
+    for (const el of $$('[data-nur-rolle]')) el.hidden = el.dataset.nurRolle !== rolle;
+    $('#wer-rolle').textContent = ROLLEN[rolle] || '';
+    $('#hinweis-rolle').textContent = darf('katalog_pflegen')
+      ? `Du bist ${ROLLEN[rolle]}: Was du speicherst, ist sofort im Katalog.`
       : 'Was du speicherst, sieht in der App erst jemand, wenn es freigegeben ist.';
+    zeichneMeineRolle();
     $('#f-rad').baujahr.max = new Date().getFullYear() + 1;
     $('#f-passwort').email.value = email;
     zeige('s-werkbank');
     tabAusAdresse();
     ladeMarken();
-    if (admin) ladeOffen();
+    if (darf('katalog_pflegen')) ladeOffen();
     letzteAktivitaet = Date.now();
     pruefeCodes();
     ladeEigenesBild();
@@ -281,7 +319,7 @@
 
   function tab(name) {
     const knopf = $(`nav.tabs button[data-tab="${name}"]`);
-    if (!knopf || knopf.hidden) name = 'erfassen';
+    if (!knopf || knopf.hidden) name = ['erfassen', 'uebersicht', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || 'konto';
     // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
     if (location.hash.slice(1).split('/')[0] !== name) history.pushState(null, '', `#${name}`);
     for (const b of $$('nav.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
@@ -297,7 +335,7 @@
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
   function tabAusAdresse() {
     const [name, unter] = location.hash.slice(1).split('/');
-    tab(name || 'erfassen');
+    tab(name || '');
     if (name === 'freigaben') fgAnsichtSetzen(unter === 'app' ? 'app' : 'helfer');
   }
   window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
@@ -447,7 +485,7 @@
         meldung(msg, ergebnis && ergebnis.live
           ? `Die Ergänzung zu ${name} ist jetzt im Katalog.`
           : `Die Ergänzung zu ${name} ist gespeichert und wartet auf die Freigabe.`);
-        if (rolle === 'admin') ladeOffen();
+        if (darf('katalog_pflegen')) ladeOffen();
         return;
       }
       const fehlt = fehlendePflichtteile();
@@ -480,7 +518,7 @@
       meldung(msg, ergebnis && ergebnis.live
         ? `${name} ist jetzt im Katalog.`
         : `${name} ist gespeichert und wartet auf die Freigabe.`);
-      if (rolle === 'admin') ladeOffen();
+      if (darf('katalog_pflegen')) ladeOffen();
     });
   });
 
@@ -636,6 +674,7 @@
   }
 
   let einfuegenErgebnis = [];
+  const NEU = '__neu';
   $('#einfuegen-los').addEventListener('click', async () => {
     const zeilen = $('#einfuegen').value.split(/\n/).map((z) => z.trim()).filter((z) => z.length >= 3).slice(0, 40);
     const info = $('#einfuegen-info');
@@ -658,10 +697,27 @@
       sel.setAttribute('aria-label', `Katalogteil für ${e.text}`);
       sel.append(new Option('Nicht übernehmen', ''));
       for (const k of e.kandidaten) sel.append(new Option(`${k.marke} ${k.name} · ${k.kategorie}`, k.id));
+      sel.append(new Option('＋ Neu im Katalog anlegen', NEU));
       const beste = e.kandidaten[0];
-      sel.value = beste && beste.punkte >= 2.5 ? beste.id : '';
-      li.append(sel);
-      if (!e.kandidaten.length) li.append(Object.assign(document.createElement('div'), { className: 'zeilentext', textContent: 'Nichts gefunden. Unten unter „Neu anlegen“ eintragen.' }));
+      sel.value = beste && beste.punkte >= 2.5 ? beste.id : !beste || beste.punkte < 1.5 ? NEU : '';
+      // Felder für ein neues Teil, vorbelegt aus der Zeile (erstes Wort = Marke)
+      const neu = Object.assign(document.createElement('div'), { className: 'neu-zeile' });
+      const leer = e.text.indexOf(' ');
+      const feld = (name, wert, platz) => {
+        const inp = Object.assign(document.createElement('input'), { name, value: wert, placeholder: platz, maxLength: name === 'marke' ? 40 : 80 });
+        inp.setAttribute('aria-label', `${platz} für ${e.text}`);
+        return inp;
+      };
+      const kat = document.createElement('select');
+      kat.name = 'kategorie';
+      kat.setAttribute('aria-label', `Kategorie für ${e.text}`);
+      kat.append(new Option('Kategorie wählen', ''), ...TEIL_KATEGORIEN.map((k) => new Option(k, k)));
+      kat.value = e.kategorie && TEIL_KATEGORIEN.includes(e.kategorie) ? e.kategorie : '';
+      neu.append(feld('marke', leer > 0 ? e.text.slice(0, leer) : '', 'Marke'), feld('name', leer > 0 ? e.text.slice(leer + 1) : e.text, 'Name'), kat);
+      const zeigeNeu = () => { neu.hidden = sel.value !== NEU; };
+      sel.addEventListener('change', zeigeNeu);
+      zeigeNeu();
+      li.append(sel, neu);
       return li;
     }));
     $('#einfuegen-fertig').hidden = !einfuegenErgebnis.length;
@@ -669,8 +725,18 @@
 
   $('#einfuegen-uebernehmen').addEventListener('click', () => {
     let n = 0;
-    for (const sel of $$('#einfuegen-ergebnis select')) {
+    const fehlt = [];
+    for (const sel of $$('#einfuegen-ergebnis select[data-i]')) {
       const e = einfuegenErgebnis[Number(sel.dataset.i)];
+      if (sel.value === NEU) {
+        const z = sel.closest('li');
+        const neu = { marke: $('[name=marke]', z).value.trim(), name: $('[name=name]', z).value.trim(), kategorie: $('[name=kategorie]', z).value };
+        if (!neu.marke || !neu.name || !neu.kategorie) { fehlt.push(e.text); continue; }
+        if (radTeile.some((x) => x.neu && `${x.neu.marke} ${x.neu.name}`.toLowerCase() === `${neu.marke} ${neu.name}`.toLowerCase())) continue;
+        radTeile.push({ neu, name: `${neu.marke} ${neu.name}`, kategorie: neu.kategorie, ean: '' });
+        n += 1;
+        continue;
+      }
       const t = e && e.kandidaten.find((k) => k.id === sel.value);
       if (!t || radTeile.some((x) => x.teil_id === t.id)) continue;
       if (ergaenzen && ergaenzen.vorhanden.some((x) => x.id === t.id)) continue;
@@ -678,6 +744,12 @@
       n += 1;
     }
     zeichneTeile();
+    if (fehlt.length) {
+      $('#einfuegen-info').textContent = `${n} Teile übernommen. Bei ${fehlt.length} neuen Teilen fehlen noch Marke, Name oder Kategorie, sie stehen noch unten.`;
+      // Nur die unvollständigen Zeilen stehen lassen
+      for (const sel of $$('#einfuegen-ergebnis select[data-i]')) if (!(sel.value === NEU && fehlt.includes(einfuegenErgebnis[Number(sel.dataset.i)].text))) sel.closest('li').remove();
+      return;
+    }
     $('#einfuegen-info').textContent = `${n} Teile übernommen.`;
     $('#einfuegen-ergebnis').replaceChildren();
     $('#einfuegen-fertig').hidden = true;
@@ -1444,7 +1516,7 @@
     shop.setAttribute('aria-label', `${t.marke} ${t.name} bei Bike24 suchen`);
     const knoepfe = document.createElement('div');
     knoepfe.className = 'karten-knoepfe';
-    if (rolle === 'admin') {
+    if (darf('katalog_pflegen')) {
       const bearb = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', title: 'Teil bearbeiten' });
       bearb.innerHTML = `${ICON.stift}<span>Bearbeiten</span>`;
       bearb.addEventListener('click', () => teilBearbeiten(t));
@@ -1461,7 +1533,7 @@
     const zeichneChips = () => {
       chips.replaceChildren(...(t.ean || []).map((code) => {
         const c = Object.assign(document.createElement('span'), { className: 'chip', textContent: code });
-        if (rolle === 'admin') {
+        if (darf('katalog_pflegen')) {
           const x = Object.assign(document.createElement('button'), { type: 'button', textContent: '×', title: 'Barcode entfernen' });
           x.setAttribute('aria-label', `Barcode ${code} entfernen`);
           x.addEventListener('click', async () => {
@@ -1774,7 +1846,7 @@
     rad_geaendert: 'Rad geändert', ergaenzung_erfasst: 'Ergänzung erfasst', ergaenzung_uebernommen: 'Ergänzung übernommen',
     ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
     teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
-    rolle: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
+    rolle: 'Rolle gesetzt', rolle_gesetzt: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
     konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
     wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
   };
@@ -1847,7 +1919,7 @@
       [appArten('korrektur'), 'Korrekturen aus der App', 'Nutzer melden Fehler', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
       [appGruppen.length - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
       [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
-      [k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
+      [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
     ].filter(([n]) => n);
     for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
     box.replaceChildren(...punkte.map(([n, titel, unter, fn]) => {
@@ -1979,7 +2051,7 @@
   async function ladeKonten() {
     meldung($('#msg-konten'), '');
     try {
-      [konten, helfer] = await Promise.all([rpc('konten_liste'), rpc('helfer_liste')]);
+      [konten, helfer] = await Promise.all([darf('konten_sehen') ? rpc('konten_liste') : [], darf('rollen') ? rpc('helfer_liste') : []]);
       konten = konten || [];
       helfer = helfer || [];
       bilder = {};
@@ -2046,7 +2118,7 @@
       for (const a of k.anbieter || []) chip(ANBIETER[a] || a);
       if (k.premium) chip('Premium', 'gut');
       if (k.familie) chip(k.familie === 'besitzer' ? 'Familie gegründet' : 'In Familie');
-      if (k.rolle) chip(k.rolle === 'admin' ? 'Admin' : 'Helfer');
+      if (k.rolle) chip(ROLLEN[k.rolle] || k.rolle);
       if (k.zwei_faktor) chip('2FA', 'gut');
       else if (k.rolle) chip('ohne 2FA', 'warn');
       if (!k.bestaetigt) chip('nicht bestätigt', 'warn');
@@ -2121,16 +2193,20 @@
           await rpc('konto_sperren', { p_nutzer: k.id, p_bis: bis.toISOString() });
         }));
 
+    // Admins vergeben nur Helfer, der Super-Admin alles außer Super-Admin
+    const wahl = vergebbar();
+    const rolleAenderbar = k.email && wahl.length && k.rolle !== 'superadmin' && (!k.rolle || wahl.includes(k.rolle));
     const rolleWahl = document.createElement('select');
     rolleWahl.setAttribute('aria-label', 'Rolle in der Werkbank');
     rolleWahl.style.width = 'auto';
-    for (const [w, t] of [['', 'Keine'], ['helfer', 'Helfer'], ['admin', 'Admin']]) rolleWahl.append(new Option(t, w));
+    for (const w of ['', ...wahl]) rolleWahl.append(new Option(w ? ROLLEN[w] : 'Keine', w));
     rolleWahl.value = k.rolle || '';
-    const rolleBlock = k.email
-      ? block('Rolle in der Werkbank', 'Admins sehen auch diese Kontenverwaltung.', rolleWahl, knopf('Übernehmen', async () => {
+    const rolleBlock = rolleAenderbar
+      ? block('Rolle in der Werkbank', 'Was jede Rolle darf, steht unter „Rollen und Rechte“.', rolleWahl, knopf('Übernehmen', async () => {
         const neu = rolleWahl.value || null;
         if (neu === (k.rolle || null)) return false;
-        if (neu === 'admin' && !window.confirm(`${k.email} zum Admin machen? Admins dürfen auch Konten verwalten und löschen.`)) return false;
+        if (neu === 'admin' && !window.confirm(`${k.email} zum Admin machen? Admins stellen Einträge sofort live, geben frei und löschen im Katalog.`)) return false;
+        if (neu === 'support' && !window.confirm(`${k.email} zum Support machen? Support sieht alle Konten, kann sperren und den zweiten Faktor zurücksetzen.`)) return false;
         await rpc('helfer_setzen', { p_email: k.email, p_rolle: neu });
       }))
       : null;
@@ -2155,12 +2231,18 @@
         }))
       : null;
 
-    const teile = [info, premium];
-    if (zweiFaktor && !ich) teile.push(zweiFaktor);
-    if (!ich) teile.push(sperre);
-    if (rolleBlock && !ich) teile.push(rolleBlock);
-    if (!ich) teile.push(loeschen);
-    else teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Das ist dein eigenes Konto. Sperren, Rolle und Löschen gehen hier nicht.' }));
+    // Das Super-Admin-Konto und das eigene sind vor Änderungen durch die Werkbank geschützt
+    const geschuetzt = ich || k.rolle === 'superadmin';
+    const teile = [info];
+    if (darf('konten_verwalten')) teile.push(premium);
+    else teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: `Premium: ${k.premium ? 'aktiv' : 'nicht aktiv'}.` }));
+    if (!geschuetzt && darf('konten_betreuen')) {
+      if (zweiFaktor) teile.push(zweiFaktor);
+      teile.push(sperre);
+    }
+    if (rolleBlock && !geschuetzt) teile.push(rolleBlock);
+    if (!geschuetzt && darf('konten_verwalten')) teile.push(loeschen);
+    if (geschuetzt) teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: ich ? 'Das ist dein eigenes Konto. Sperren, Rolle und Löschen gehen hier nicht.' : 'Das ist das Konto des Super-Admins. Sperren, Rolle und Löschen gehen hier nicht.' }));
     const zu = document.createElement('div');
     zu.className = 'aktionen';
     zu.append(Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Schließen', onclick: dialogZu }));
@@ -2493,6 +2575,7 @@
     warnung.hidden = true;
     await sb.auth.signOut({ scope: 'local' });
     rolle = null;
+    rechte = new Set();
     radTeile = [];
     $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
     ergaenzenEnde();
@@ -2523,7 +2606,10 @@
   let helfer = [];
   function zeichneHelferOhneKonto() {
     const mitKonto = new Set(konten.map((k) => (k.email || '').toLowerCase()));
-    const ohne = helfer.filter((h) => !mitKonto.has(h.email.toLowerCase()));
+    // Ohne Kontenliste (Admin) zeigen wir alle vergebenen Rollen
+    const alle = !darf('konten_sehen');
+    const ohne = alle ? helfer : helfer.filter((h) => !mitKonto.has(h.email.toLowerCase()));
+    $('#helfer-ohne-titel').textContent = alle ? 'Vergebene Rollen' : 'Freigeschaltet, aber noch ohne Konto';
     const zahl = helfer.length;
     $('#helfer-zusammenfassung').textContent = `${zahl} ${zahl === 1 ? 'Rolle' : 'Rollen'} vergeben` + (ohne.length ? `, ${ohne.length} noch ohne Konto` : '');
     const ul = $('#helfer-ohne');
@@ -2531,17 +2617,18 @@
       const li = document.createElement('li');
       const links = document.createElement('div');
       links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: h.email }),
-        Object.assign(document.createElement('div'), { className: 'neben', textContent: `${h.rolle === 'admin' ? 'Admin' : 'Helfer'} seit ${datum(h.seit)}` }));
+        Object.assign(document.createElement('div'), { className: 'neben', textContent: `${ROLLEN[h.rolle] || h.rolle} seit ${datum(h.seit)}` }));
       const b = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Zurückziehen' });
       b.addEventListener('click', async () => {
         if (!window.confirm(`Freischaltung für ${h.email} zurückziehen?`)) return;
         b.disabled = true;
         try { await rpc('helfer_setzen', { p_email: h.email, p_rolle: null }); ladeKonten(); } catch (e) { meldung($('#msg-helfer'), fehlerText(e), true); b.disabled = false; }
       });
-      li.append(links, b);
+      if (h.aenderbar !== false && vergebbar().includes(h.rolle)) li.append(links, b);
+      else li.append(links);
       return li;
     }));
-    if (!ohne.length) ul.innerHTML = '<li class="leer">Keine offenen Einladungen.</li>';
+    if (!ohne.length) ul.innerHTML = alle ? '<li class="leer">Noch keine Rollen vergeben.</li>' : '<li class="leer">Keine offenen Einladungen.</li>';
   }
 
   $('#f-helfer').addEventListener('submit', (ev) => {
@@ -2554,7 +2641,7 @@
       knopf.disabled = true;
       try {
         await rpc('helfer_setzen', { p_email: mail, p_rolle: r });
-        meldung($('#msg-helfer'), `${mail} ist jetzt ${r === 'admin' ? 'Admin' : 'Helfer'}. Gilt ab der nächsten Anmeldung.`);
+        meldung($('#msg-helfer'), `${mail} ist jetzt ${ROLLEN[r]}. Gilt ab der nächsten Anmeldung.`);
         f.reset();
         ladeKonten();
       } catch (e) {
@@ -2563,6 +2650,64 @@
         knopf.disabled = false;
       }
     })();
+  });
+
+  // ----- Rollen und Rechte -----
+
+  const ROLLEN_TEXT = {
+    helfer: 'Helfer: Einträge warten auf Freigabe',
+    support: 'Support: Konten sehen und betreuen',
+    admin: 'Admin: Katalog sofort live, Freigaben, Helfer vergeben',
+  };
+  function zeichneMeineRolle() {
+    const sel = $('#f-helfer').rolle;
+    sel.replaceChildren(...vergebbar().map((r) => new Option(ROLLEN_TEXT[r], r)));
+    $('#helfer-titel').textContent = rolle === 'superadmin' ? 'Rollen vergeben' : 'Katalog-Helfer freischalten';
+    // Rechte-Tabelle: Zeilen = Rechte, Spalten = Rollen
+    const reihen = ['superadmin', 'admin', 'support', 'helfer'];
+    const kopf = document.createElement('tr');
+    kopf.append(Object.assign(document.createElement('th'), { textContent: 'Recht' }), ...reihen.map((r) => Object.assign(document.createElement('th'), { textContent: ROLLEN[r] })));
+    $('#rechte-kopf').replaceChildren(kopf);
+    $('#rechte-tabelle').replaceChildren(...RECHTE_TEXT.map(([recht, titel, text]) => {
+      const tr = document.createElement('tr');
+      const td = document.createElement('td');
+      td.append(Object.assign(document.createElement('strong'), { textContent: titel }), Object.assign(document.createElement('div'), { className: 'fine', textContent: text }));
+      tr.append(td, ...reihen.map((r) => {
+        const hat = RECHTE_JE_ROLLE[r].includes(recht);
+        const z = Object.assign(document.createElement('td'), { className: hat ? 'ja' : 'nein', textContent: hat ? '✓' : '–' });
+        z.setAttribute('aria-label', hat ? 'ja' : 'nein');
+        return z;
+      }));
+      return tr;
+    }));
+    // Konto-Tab: deine Rolle
+    $('#meine-rolle-name').textContent = ROLLEN[rolle] || '–';
+    $('#meine-rechte').replaceChildren(...RECHTE_TEXT.filter(([r]) => darf(r)).map(([, titel, text]) => {
+      const li = document.createElement('li');
+      li.append(Object.assign(document.createElement('strong'), { textContent: titel }), ` – ${text}`);
+      return li;
+    }));
+  }
+
+  // Statistik als PDF: Druckdialog nur mit dem Statistik-Tab, immer hell
+  $('#st-pdf').addEventListener('click', () => {
+    const vorher = document.documentElement.getAttribute('data-theme');
+    const titel = document.title;
+    const heute = new Date().toISOString().slice(0, 10);
+    $('#st-druck-kopf').textContent = `Radgarage · letzte ${stTage === 365 ? '12 Monate' : stTage + ' Tage'} · erstellt ${new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}`;
+    document.documentElement.setAttribute('data-theme', 'light');
+    document.body.classList.add('druck-statistik');
+    document.title = `Radgarage-Statistik-${heute}`;
+    const zurueck = () => {
+      document.body.classList.remove('druck-statistik');
+      if (vorher) document.documentElement.setAttribute('data-theme', vorher); else document.documentElement.removeAttribute('data-theme');
+      document.title = titel;
+      window.removeEventListener('afterprint', zurueck);
+    };
+    window.addEventListener('afterprint', zurueck);
+    // Diagramme kurz neu zeichnen, damit sie die helle Palette übernehmen
+    if (stDaten) zeichneStatistik();
+    setTimeout(() => window.print(), 50);
   });
 
   // ---------- Statistik (Admin) ----------
@@ -2840,7 +2985,7 @@
     } catch (e) {
       meldung($('#msg-statistik'), fehlerText(e), true);
     }
-    ladeSystem();
+    if (darf('system')) ladeSystem();
   }
 
   function zeichneStatistik() {
@@ -3183,7 +3328,7 @@
   let sucheNr = 0;
   function sucheOeffnen() {
     if ($('#s-werkbank').hidden) return;
-    const admin = rolle === 'admin';
+    const admin = darf('konten_sehen');
     const feld = Object.assign(document.createElement('input'), { type: 'search', placeholder: admin ? 'Rad, Teil, Barcode oder E-Mail' : 'Rad, Teil oder Barcode', autocomplete: 'off' });
     const box = document.createElement('div');
     let timer = null;
@@ -3206,7 +3351,7 @@
     const woerter = woerterAus(text).slice(0, 4);
     if (!woerter.length) { box.replaceChildren(); return; }
     const ziffern = text.replace(/\D/g, '');
-    const admin = rolle === 'admin';
+    const admin = darf('konten_sehen');
     let qr = sb.from('raeder').select('id, hersteller, modell, baujahr, kategorie').limit(8);
     for (const w of woerter) qr = qr.or(`hersteller.ilike.*${w}*,modell.ilike.*${w}*,id.ilike.*${w}*`);
     let qt = sb.from('teile').select('id, marke, name, kategorie, ean').limit(8);
@@ -3234,13 +3379,13 @@
     };
     const teile = [...$$('nav.tabs button')].some((b) => b.dataset.tab === 'teile' && !b.hidden);
     const teilen = [
-      gruppe('Räder', (r.data || []).map((x) => [`${x.hersteller} ${x.modell} (${x.baujahr})`, `${x.kategorie} · ergänzen`, async () => {
+      darf('katalog_erfassen') && gruppe('Räder', (r.data || []).map((x) => [`${x.hersteller} ${x.modell} (${x.baujahr})`, `${x.kategorie} · ergänzen`, async () => {
         tab('erfassen');
         await ergaenzenStart(x);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }])),
       gruppe('Teile', (t.data || []).map((x) => [`${x.marke} ${x.name}`, `${x.kategorie}${x.ean && x.ean.length ? ` · ${x.ean.length} Barcode${x.ean.length > 1 ? 's' : ''}` : ''}`, () => {
-        if (admin) { teilBearbeiten(x); return; }
+        if (darf('katalog_pflegen')) { teilBearbeiten(x); return; }
         if (teile) { tab('teile'); $('#tl-suche').value = `${x.marke} ${x.name}`; ladeTeileliste(true); }
       }])),
       gruppe('Konten', k.map((x) => [x.email, `${datum(x.registriert)} · ${x.raeder || 0} ${x.raeder === 1 ? 'Rad' : 'Räder'}`, () => { tab('konten'); kontoVerwalten(x); }])),
