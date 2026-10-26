@@ -162,6 +162,13 @@ button[disabled] { opacity: .6; cursor: progress; }
 .reihe figcaption small { display: block; font-weight: 600; color: var(--ink2); font-size: 13px; }
 .reihe .phone { max-width: 220px; }
 
+/* Finanzierung */
+.finanz { padding-block: 0 14px; }
+.finanz .kopf { grid-column: span 12; display: block; padding: 10px 6px 4px; }
+.finanz .t { grid-column: span 4; display: flex; flex-direction: column; gap: 10px; }
+.finanz h3 { margin: 0; font-size: 20px; }
+@media (max-width: 900px) { .finanz .t { grid-column: span 12; } }
+
 /* Schluss */
 .schluss { padding-block: 0 40px; }
 .schluss .t { grid-column: span 12; text-align: center; padding: 48px 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
@@ -386,6 +393,25 @@ body { padding-top: env(safe-area-inset-top, 0px); }
       </div>
     </section>
 
+    <section class="finanz bento" aria-labelledby="g-titel">
+      <div class="kopf">
+        <div class="eyebrow">Transparent</div>
+        <h2 id="g-titel">So finanziert sich Radgarage.</h2>
+      </div>
+      <div class="t k2">
+        <h3>Gratis im Alltag</h3>
+        <p>Bis zu drei Räder, Teilekatalog, Verschleiß und Wartungsheft kosten nichts. Kein Abo.</p>
+      </div>
+      <div class="t k3">
+        <h3>Premium einmalig</h3>
+        <p>Für mehr Räder, Familiengarage und Sonderdesigns zahlst du einmal 4,99 €. Unsere Tester bekommen Premium geschenkt.</p>
+      </div>
+      <div class="t k4">
+        <h3>Gekennzeichnete Partnerlinks</h3>
+        <p>Einige Links zu Shops und Fahrradversicherungen werden Partnerlinks sein. Kaufst du darüber, bekommen wir eine kleine Provision, dein Preis bleibt gleich. Deine Daten geben wir nicht an Partner weiter.</p>
+      </div>
+    </section>
+
     <section class="schluss bento" aria-labelledby="s-titel">
       <div class="t k1">
         <div class="eyebrow">Bald für iPhone und Android</div>
@@ -400,6 +426,7 @@ body { padding-top: env(safe-area-inset-top, 0px); }
     <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
     <nav>
       <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="impressum.html">Impressum</a>
       <a href="datenschutz.html">Datenschutz</a>
     </nav>
