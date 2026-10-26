@@ -145,6 +145,21 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
 .eans input { padding: 6px 10px; font-size: 14px; border-radius: 10px; width: 170px; }
 .eans .ean-msg { font-size: 13px; color: var(--muted); }
 .eans .ean-msg.fehler { color: var(--warn); }
+details.vorlage { border: 2px dashed var(--line); border-radius: 16px; padding: 10px 14px; }
+details.vorlage summary { font-weight: 800; cursor: pointer; }
+details.vorlage[open] { display: grid; gap: 8px; }
+.pflicht-check { border-radius: 14px; padding: 10px 14px; font-size: 14px; background: var(--surface); color: var(--text); }
+.pflicht-check strong { display: block; margin-bottom: 2px; }
+.pflicht-check.ok { background: var(--k4); color: var(--ink); }
+textarea { resize: vertical; font-size: 15px; }
+#einfuegen-ergebnis li { grid-template-columns: 1fr; }
+#einfuegen-ergebnis .zeilentext { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
+#einfuegen-ergebnis select { padding: 8px 10px; font-size: 14px; }
+.scan-knopf { flex: none; }
+.pill.light { background: #fff; color: #28241E; }
+.scanner { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .78); display: grid; place-items: center; padding: 16px; }
+.scanner-box { width: min(520px, 100%); display: grid; gap: 12px; justify-items: center; color: #fff; text-align: center; }
+.scanner video { width: 100%; border-radius: 20px; background: #000; aspect-ratio: 4 / 3; object-fit: cover; outline: 3px solid rgba(255, 255, 255, .6); outline-offset: -40px; }
 [hidden] { display: none !important; }
 
 @media (max-width: 860px) {
@@ -262,6 +277,12 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
               <button class="pill ghost klein" type="button" id="ergaenzen-ende">Doch neues Rad</button>
             </div>
             <fieldset id="rad-felder">
+            <details class="vorlage" id="vorlage">
+              <summary>Bestehendes Rad als Vorlage nehmen</summary>
+              <p class="fine">Übernimmt Marke, Modellreihe, Radart und alle Teile. Danach nur noch Jahr, Ausstattung und die Unterschiede ändern.</p>
+              <input type="search" id="vorlage-suche" placeholder="z. B. Canyon Grail 2024" autocomplete="off" aria-label="Rad als Vorlage suchen">
+              <ul class="treffer" id="vorlage-liste"></ul>
+            </details>
             <div class="zeile">
               <label><span class="pflicht">Marke</span>
                 <input name="hersteller" list="marken" required maxlength="40" placeholder="z. B. Canyon">
@@ -306,6 +327,7 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
             </div>
             <h3 style="margin-top:6px"><span id="teile-titel">Teile am Rad</span> <span class="opt" id="teile-zahl"></span></h3>
             <ul class="liste" id="rad-teile"><li class="leer">Noch keine Teile. Unter „Teil hinzufügen“ suchen oder neu anlegen. Barcode ist immer freiwillig.</li></ul>
+            <div class="pflicht-check" id="pflicht-check" hidden></div>
             <label id="notiz-feld" hidden><span>Notiz zur Ergänzung <small>freiwillig</small></span>
               <input name="notiz" maxlength="300" placeholder="z. B. laut Datenblatt 2025">
             </label>
@@ -321,6 +343,15 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
           </label>
           <ul class="treffer" id="treffer"></ul>
           <p class="fine" id="such-info"></p>
+          <details class="neu-teil" id="einfuegen-box">
+            <summary>Teileliste einfügen</summary>
+            <p class="fine">Ausstattung von der Herstellerseite kopieren und hier einfügen, eine Zeile je Teil. Die Werkbank sucht zu jeder Zeile das passende Katalogteil.</p>
+            <textarea id="einfuegen" rows="8" placeholder="Schaltwerk: Shimano GRX RD-RX822&#10;Kette: Shimano CN-M8100&#10;Reifen: Schwalbe G-One RS 40-622"></textarea>
+            <div class="aktionen" style="margin-top:10px"><button class="pill" type="button" id="einfuegen-los">Zuordnen</button></div>
+            <p class="fine" id="einfuegen-info"></p>
+            <ul class="liste" id="einfuegen-ergebnis"></ul>
+            <div class="aktionen" style="margin-top:10px" hidden id="einfuegen-fertig"><button class="pill" type="button" id="einfuegen-uebernehmen">Ausgewählte zum Rad</button></div>
+          </details>
           <details class="neu-teil" id="neu-teil">
             <summary>Teil fehlt im Katalog? Neu anlegen</summary>
             <form id="f-teil" autocomplete="off">
@@ -443,8 +474,16 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
   </main>
 </div>
 
+<div class="scanner" id="scanner" hidden role="dialog" aria-modal="true" aria-label="Barcode scannen">
+  <div class="scanner-box">
+    <video id="scanner-video" playsinline muted></video>
+    <p id="scanner-text">Barcode in den Rahmen halten …</p>
+    <button class="pill light" type="button" id="scanner-zu">Abbrechen</button>
+  </div>
+</div>
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
-<script src="werkbank.js?v=2026-10-26-4"></script>
+<script src="zxing.js?v=0.21.3" defer></script>
+<script src="werkbank.js?v=2026-10-26-5"></script>
 </body>
 </html>
