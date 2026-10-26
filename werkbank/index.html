@@ -224,6 +224,11 @@ label .kopf { display: flex; justify-content: space-between; align-items: baseli
 .notfall { margin-top: 16px; }
 .notfall summary, #faktor-neu-box summary { cursor: pointer; font-weight: 700; }
 @media print { body * { visibility: hidden; } #codes-anzeige, #codes-anzeige * { visibility: visible; } #codes-anzeige { position: absolute; inset: 0; } #codes-anzeige .aktionen { display: none; } }
+.helfer-box summary { cursor: pointer; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; list-style: none; }
+.helfer-box summary::-webkit-details-marker { display: none; }
+.helfer-box summary h3 { margin: 0; }
+.helfer-box summary::after { content: "+"; margin-left: auto; font-size: 22px; font-weight: 700; line-height: 1; }
+.helfer-box[open] summary::after { content: "–"; }
 .pill.gefahr { background: var(--warn); border-color: var(--warn); color: var(--bg); }
 .trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
 td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
@@ -346,7 +351,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       <button type="button" role="tab" data-tab="freigaben" aria-selected="false" class="nur-admin">Freigaben<span class="zahl" id="zahl-offen" hidden></span></button>
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" class="nur-helfer">Meine offenen Räder</button>
-      <button type="button" role="tab" data-tab="helfer" aria-selected="false" class="nur-admin">Helfer</button>
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" class="nur-admin">Übersicht</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" class="nur-admin">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
@@ -530,6 +534,24 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
     <!-- Registrierte Konten (Admin) -->
     <section data-panel="konten" hidden>
       <div class="kacheln" id="kt-kacheln"></div>
+      <details class="t k4 helfer-box" id="helfer-box" style="margin-top:14px">
+        <summary><h3>Katalog-Helfer freischalten</h3><span class="fine" id="helfer-zusammenfassung"></span></summary>
+        <div class="raster" style="margin-top:12px">
+          <form id="f-helfer">
+            <p class="fine">Geht auch für Adressen, die noch kein Konto haben: Die Rolle gilt, sobald sich jemand damit anmeldet. Bei Apple mit verborgener Adresse ist es eine @privaterelay.appleid.com-Adresse (steht in der App unter Einstellungen, „Dein Konto“).</p>
+            <label><span class="pflicht">E-Mail-Adresse</span><input name="email" type="email" required></label>
+            <label><span class="pflicht">Rolle</span>
+              <select name="rolle"><option value="helfer">Helfer: Einträge warten auf Freigabe</option><option value="admin">Admin: sofort live, darf freigeben und Konten verwalten</option></select>
+            </label>
+            <div class="aktionen"><button class="pill" type="submit">Freischalten</button></div>
+            <div class="msg" role="status" id="msg-helfer"></div>
+          </form>
+          <div>
+            <strong>Freigeschaltet, aber noch ohne Konto</strong>
+            <ul class="liste" id="helfer-ohne" style="margin-top:8px"></ul>
+          </div>
+        </div>
+      </details>
       <div class="t" style="margin-top:14px">
         <h3>Registrierte Konten <span class="opt" id="kt-zahl"></span></h3>
         <p class="fine">Was in einer Garage steht, ist hier nicht zu sehen, nur die Anzahl der Räder.</p>
@@ -633,27 +655,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       <div class="karten" id="eigene"></div>
     </section>
 
-    <!-- Helfer verwalten (Admin) -->
-    <section data-panel="helfer" hidden>
-      <div class="raster">
-        <div class="t">
-          <h3>Freigeschaltete Konten</h3>
-          <table><thead><tr><th>E-Mail</th><th>Rolle</th><th>Räder</th><th>Seit</th><th></th></tr></thead><tbody id="helfer-liste"></tbody></table>
-          <div class="msg" role="status" id="msg-helfer" style="margin-top:12px"></div>
-        </div>
-        <div class="t k4">
-          <h3>Konto freischalten</h3>
-          <p class="fine">Die E-Mail-Adresse steht in der App unter Einstellungen, „Dein Konto“. Bei Apple mit verborgener Adresse ist es eine @privaterelay.appleid.com-Adresse.</p>
-          <form id="f-helfer">
-            <label><span class="pflicht">E-Mail-Adresse</span><input name="email" type="email" required></label>
-            <label><span class="pflicht">Rolle</span>
-              <select name="rolle"><option value="helfer">Helfer: Einträge warten auf Freigabe</option><option value="admin">Admin: Einträge sofort live, darf freigeben und Helfer verwalten</option></select>
-            </label>
-            <div class="aktionen"><button class="pill" type="submit">Freischalten</button></div>
-          </form>
-        </div>
-      </div>
-    </section>
   </main>
 </div>
 
@@ -673,6 +674,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-13"></script>
+<script src="werkbank.js?v=2026-10-26-14"></script>
 </body>
 </html>

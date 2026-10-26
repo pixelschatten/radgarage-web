@@ -249,7 +249,6 @@
     for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
     if (name === 'freigaben') ladeOffen();
     if (name === 'eigene') ladeEigene();
-    if (name === 'helfer') ladeHelfer();
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'konten') ladeKonten();
@@ -1478,11 +1477,14 @@
   async function ladeKonten() {
     meldung($('#msg-konten'), '');
     try {
-      konten = (await rpc('konten_liste')) || [];
+      [konten, helfer] = await Promise.all([rpc('konten_liste'), rpc('helfer_liste')]);
+      konten = konten || [];
+      helfer = helfer || [];
     } catch (e) {
       konten = [];
       meldung($('#msg-konten'), fehlerText(e), true);
     }
+    zeichneHelferOhneKonto();
     const woche = Date.now() - 7 * 864e5;
     const zahl = (n) => n.toLocaleString('de-DE');
     const kachel = (farbe, titel, wert, unter) => {
@@ -1502,6 +1504,12 @@
     zeichneKonten();
   }
 
+  function helferText(k) {
+    const h = k.rolle && helfer.find((x) => x.email.toLowerCase() === (k.email || '').toLowerCase());
+    if (!h) return '';
+    return ` · ${h.raeder || 0} im Katalog erfasst` + (h.offen ? `, ${h.offen} offen` : '');
+  }
+
   function zeichneKonten() {
     const such = $('#kt-suche').value.trim().toLowerCase();
     const filter = $('#kt-filter').value;
@@ -1514,7 +1522,7 @@
       const li = document.createElement('li');
       const links = document.createElement('div');
       links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: k.email || `Konto ${String(k.id).slice(0, 8)}` }),
-        Object.assign(document.createElement('div'), { className: 'fine', textContent: `Seit ${datum(k.registriert)} · zuletzt ${datum(k.letzte_anmeldung)} · ${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'}` }));
+        Object.assign(document.createElement('div'), { className: 'fine', textContent: `Seit ${datum(k.registriert)} · zuletzt ${datum(k.letzte_anmeldung)} · ${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'}` + helferText(k) }));
       const chips = document.createElement('div');
       chips.className = 'eans';
       const chip = (text, art) => chips.append(Object.assign(document.createElement('span'), { className: 'chip' + (art ? ' ' + art : ''), textContent: text }));
@@ -1978,44 +1986,29 @@
 
   // ----- Helfer verwalten -----
 
-  async function ladeHelfer() {
-    const tb = $('#helfer-liste');
-    try {
-      const liste = (await rpc('helfer_liste')) || [];
-      tb.replaceChildren(...liste.map((h) => {
-        const tr = document.createElement('tr');
-        const td = (text) => { const c = document.createElement('td'); c.textContent = text; return c; };
-        const seit = h.seit ? new Date(h.seit).toLocaleDateString('de-DE') : '';
-        const knopf = document.createElement('td');
-        knopf.className = 'knopf';
-        if (!h.ich) {
-          const b = document.createElement('button');
-          b.type = 'button';
-          b.className = 'pill ghost klein';
-          b.textContent = 'Entfernen';
-          b.addEventListener('click', async () => {
-            if (!window.confirm(`${h.email} entfernen? Bereits erfasste Räder bleiben im Katalog.`)) return;
-            b.disabled = true;
-            try {
-              await rpc('helfer_setzen', { p_email: h.email, p_rolle: null });
-              meldung($('#msg-helfer'), `${h.email} ist entfernt.`);
-              ladeHelfer();
-            } catch (e) {
-              meldung($('#msg-helfer'), fehlerText(e), true);
-              b.disabled = false;
-            }
-          });
-          knopf.append(b);
-        } else {
-          knopf.textContent = 'Du';
-        }
-        const raeder = `${h.raeder || 0}` + (h.offen ? ` (${h.offen} offen)` : '');
-        tr.append(td(h.email), td(h.rolle === 'admin' ? 'Admin' : 'Helfer'), td(raeder), td(seit), knopf);
-        return tr;
-      }));
-    } catch (e) {
-      meldung($('#msg-helfer'), fehlerText(e), true);
-    }
+  // Helfer-Rollen: Zahlen für die Kontenliste und Einladungen ohne Konto
+  let helfer = [];
+  function zeichneHelferOhneKonto() {
+    const mitKonto = new Set(konten.map((k) => (k.email || '').toLowerCase()));
+    const ohne = helfer.filter((h) => !mitKonto.has(h.email.toLowerCase()));
+    const zahl = helfer.length;
+    $('#helfer-zusammenfassung').textContent = `${zahl} ${zahl === 1 ? 'Rolle' : 'Rollen'} vergeben` + (ohne.length ? `, ${ohne.length} noch ohne Konto` : '');
+    const ul = $('#helfer-ohne');
+    ul.replaceChildren(...ohne.map((h) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: h.email }),
+        Object.assign(document.createElement('div'), { className: 'neben', textContent: `${h.rolle === 'admin' ? 'Admin' : 'Helfer'} seit ${datum(h.seit)}` }));
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Zurückziehen' });
+      b.addEventListener('click', async () => {
+        if (!window.confirm(`Freischaltung für ${h.email} zurückziehen?`)) return;
+        b.disabled = true;
+        try { await rpc('helfer_setzen', { p_email: h.email, p_rolle: null }); ladeKonten(); } catch (e) { meldung($('#msg-helfer'), fehlerText(e), true); b.disabled = false; }
+      });
+      li.append(links, b);
+      return li;
+    }));
+    if (!ohne.length) ul.innerHTML = '<li class="leer">Keine offenen Einladungen.</li>';
   }
 
   $('#f-helfer').addEventListener('submit', (ev) => {
@@ -2028,9 +2021,9 @@
       knopf.disabled = true;
       try {
         await rpc('helfer_setzen', { p_email: mail, p_rolle: r });
-        meldung($('#msg-helfer'), `${mail} ist jetzt ${r === 'admin' ? 'Admin' : 'Helfer'}. Gilt ab dem nächsten App-Start.`);
+        meldung($('#msg-helfer'), `${mail} ist jetzt ${r === 'admin' ? 'Admin' : 'Helfer'}. Gilt ab der nächsten Anmeldung.`);
         f.reset();
-        ladeHelfer();
+        ladeKonten();
       } catch (e) {
         meldung($('#msg-helfer'), fehlerText(e), true);
       } finally {
