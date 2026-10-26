@@ -128,6 +128,23 @@ th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--lin
 th { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
 td.knopf { text-align: right; white-space: nowrap; }
 
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; display: grid; gap: 14px; }
+.ergaenzen-kopf { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; border-radius: 16px; padding: 12px 14px; color: var(--ink); }
+.aehnlich { border-radius: 16px; padding: 12px 14px; color: var(--ink); }
+.aehnlich p { margin: 2px 0 6px; }
+.liste li.weg .name { text-decoration: line-through; opacity: .6; }
+.marke.minus { background: var(--warn-bg); color: var(--warn); }
+.marke.plus { background: var(--k4); }
+label.haken { display: flex; gap: 10px; align-items: center; font-weight: 700; margin: 10px 0 4px; }
+label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
+.eans { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-variant-numeric: tabular-nums; padding: 3px 4px 3px 10px; border-radius: 999px; background: var(--surface); }
+.chip button { border: 0; background: transparent; color: var(--muted); cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 6px; border-radius: 999px; }
+.chip button:hover { color: var(--warn); }
+.eans form { display: flex; gap: 6px; align-items: center; }
+.eans input { padding: 6px 10px; font-size: 14px; border-radius: 10px; width: 170px; }
+.eans .ean-msg { font-size: 13px; color: var(--muted); }
+.eans .ean-msg.fehler { color: var(--warn); }
 [hidden] { display: none !important; }
 
 @media (max-width: 860px) {
@@ -153,12 +170,15 @@ td.knopf { text-align: right; white-space: nowrap; }
   <section class="t eng" id="s-mail" hidden>
     <div class="eyebrow">Anmelden</div>
     <h2>Werkbank für den Katalog</h2>
-    <p class="fine">Nur für freigeschaltete Radgarage-Konten. Du bekommst einen Code per E-Mail, danach fragt die Seite nach deinem zweiten Faktor.</p>
+    <p class="fine">Nur für freigeschaltete Radgarage-Konten. Du bekommst einen Code per E-Mail oder nutzt dein Passwort, danach fragt die Seite nach deinem zweiten Faktor.</p>
     <form id="f-mail">
       <label>E-Mail-Adresse deines Radgarage-Kontos
-        <input type="email" name="email" autocomplete="email" required>
+        <input type="email" name="email" autocomplete="username" required>
       </label>
-      <div class="aktionen"><button class="pill" type="submit">Code schicken</button></div>
+      <label id="pw-feld" hidden>Passwort
+        <input type="password" name="passwort" autocomplete="current-password">
+      </label>
+      <div class="aktionen"><button class="pill" type="submit" id="mail-knopf">Code schicken</button><button class="pill ghost" type="button" id="pw-umschalten">Mit Passwort</button></div>
       <div class="msg" role="status"></div>
     </form>
   </section>
@@ -224,17 +244,24 @@ td.knopf { text-align: right; white-space: nowrap; }
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-tab="erfassen" aria-selected="true">Rad erfassen</button>
       <button type="button" role="tab" data-tab="freigaben" aria-selected="false" class="nur-admin">Freigaben<span class="zahl" id="zahl-offen" hidden></span></button>
+      <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" class="nur-helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="helfer" aria-selected="false" class="nur-admin">Helfer</button>
+      <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
 
     <!-- Rad erfassen -->
     <section data-panel="erfassen">
       <div class="raster">
         <div class="t">
-          <h3>Rad</h3>
+          <h3 id="rad-titel">Rad</h3>
           <p class="fine" id="hinweis-rolle"></p>
           <form id="f-rad" autocomplete="off">
+            <div class="ergaenzen-kopf k3" id="ergaenzen-kopf" hidden>
+              <div><div class="eyebrow">Ergänzung zu</div><strong id="ergaenzen-name"></strong></div>
+              <button class="pill ghost klein" type="button" id="ergaenzen-ende">Doch neues Rad</button>
+            </div>
+            <fieldset id="rad-felder">
             <div class="zeile">
               <label><span class="pflicht">Marke</span>
                 <input name="hersteller" list="marken" required maxlength="40" placeholder="z. B. Canyon">
@@ -263,12 +290,26 @@ td.knopf { text-align: right; white-space: nowrap; }
                 <input name="uvp" type="number" min="0" max="99999" step="0.01" inputmode="decimal">
               </label>
             </div>
+            </fieldset>
+            <div class="aehnlich k3" id="aehnlich" hidden>
+              <strong>Steht dieses Rad schon im Katalog?</strong>
+              <p class="fine">Dann ergänze lieber die fehlenden Teile, statt es doppelt anzulegen.</p>
+              <ul class="treffer" id="aehnlich-liste"></ul>
+            </div>
             <label><span>Quelle <small>empfohlen: Link zur Herstellerseite oder zum Datenblatt</small></span>
               <input name="quelle" type="url" maxlength="300" placeholder="https://">
             </label>
-            <h3 style="margin-top:6px">Teile am Rad <span class="opt" id="teile-zahl"></span></h3>
+            <div id="vorhanden-box" hidden>
+              <h3 style="margin-top:6px">Schon im Katalog <span class="opt" id="vorhanden-zahl"></span></h3>
+              <p class="fine">Falsch zugeordnete Teile kannst du zum Entfernen markieren.</p>
+              <ul class="liste" id="vorhanden"></ul>
+            </div>
+            <h3 style="margin-top:6px"><span id="teile-titel">Teile am Rad</span> <span class="opt" id="teile-zahl"></span></h3>
             <ul class="liste" id="rad-teile"><li class="leer">Noch keine Teile. Unter „Teil hinzufügen“ suchen oder neu anlegen. Barcode ist immer freiwillig.</li></ul>
-            <div class="aktionen"><button class="pill" type="submit">Rad speichern</button><button class="pill ghost" type="button" id="leeren">Leeren</button></div>
+            <label id="notiz-feld" hidden><span>Notiz zur Ergänzung <small>freiwillig</small></span>
+              <input name="notiz" maxlength="300" placeholder="z. B. laut Datenblatt 2025">
+            </label>
+            <div class="aktionen"><button class="pill" type="submit" id="rad-speichern">Rad speichern</button><button class="pill ghost" type="button" id="leeren">Leeren</button></div>
             <div class="msg" role="status"></div>
           </form>
         </div>
@@ -301,6 +342,68 @@ td.knopf { text-align: right; white-space: nowrap; }
       </div>
     </section>
 
+    <!-- Teile und Barcodes -->
+    <section data-panel="teile" hidden>
+      <div class="raster">
+        <div class="t">
+          <h3>Teile im Katalog <span class="opt" id="tl-zahl"></span></h3>
+          <div class="zeile">
+            <label>Suchen<input type="search" id="tl-suche" placeholder="z. B. Shimano Kette" autocomplete="off"></label>
+            <label>Kategorie<select id="tl-kategorie"><option value="">Alle</option></select></label>
+          </div>
+          <label class="haken"><input type="checkbox" id="tl-ohne"> Nur Teile ohne Barcode</label>
+          <p class="fine" id="tl-hinweis"></p>
+          <ul class="liste" id="tl-liste"></ul>
+          <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="tl-mehr" hidden>Weitere laden</button></div>
+        </div>
+        <div class="t k4 nur-admin">
+          <h3>Neues Teil anlegen</h3>
+          <p class="fine">Für Teile, die noch an keinem Rad hängen. Sie sind sofort im Katalog.</p>
+          <form id="f-neues-teil" autocomplete="off">
+            <div class="zeile">
+              <label><span class="pflicht">Marke</span><input name="marke" required maxlength="40" placeholder="z. B. Continental"></label>
+              <label><span class="pflicht">Kategorie</span>
+                <select name="kategorie" required id="nt-kategorie"><option value="">Bitte wählen</option></select>
+              </label>
+            </div>
+            <label><span class="pflicht">Name</span><input name="name" required maxlength="80" placeholder="z. B. Grand Prix 5000 S TR 28-622"></label>
+            <div class="zeile">
+              <label><span>Richtpreis in € <small>freiwillig</small></span><input name="preis" type="number" min="0" max="99999" step="0.01" inputmode="decimal"></label>
+              <label><span>Barcode (EAN) <small>freiwillig</small></span><input name="ean" inputmode="numeric" pattern="[0-9]{8,14}" maxlength="14"></label>
+            </div>
+            <label><span>Quelle <small>freiwillig</small></span><input name="quelle" type="url" maxlength="300" placeholder="https://"></label>
+            <div class="aktionen"><button class="pill" type="submit">Teil anlegen</button></div>
+            <div class="msg" role="status"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Kontosicherheit -->
+    <section data-panel="konto" hidden>
+      <div class="raster">
+        <div class="t">
+          <h3>Passwort</h3>
+          <p class="fine">Mit Passwort meldest du dich ohne Code per E-Mail an. Der zweite Faktor aus der Authenticator-App bleibt trotzdem Pflicht. Hast du das Passwort vergessen, geht die Anmeldung per E-Mail-Code weiterhin, danach setzt du hier ein neues.</p>
+          <form id="f-passwort">
+            <input type="email" name="email" autocomplete="username" hidden>
+            <label><span class="pflicht">Neues Passwort</span><small>mindestens 12 Zeichen</small>
+              <input type="password" name="pw1" autocomplete="new-password" minlength="12" maxlength="72" required>
+            </label>
+            <label><span class="pflicht">Noch einmal</span>
+              <input type="password" name="pw2" autocomplete="new-password" minlength="12" maxlength="72" required>
+            </label>
+            <div class="aktionen"><button class="pill" type="submit">Passwort speichern</button></div>
+            <div class="msg" role="status"></div>
+          </form>
+        </div>
+        <div class="t k2">
+          <h3>Zweiter Faktor</h3>
+          <p class="fine">Eingerichtet mit deiner Authenticator-App. Ohne ihn lässt der Server keine Änderungen am Katalog zu, auch nicht in der App. Neues Handy? Dann setzt ein Admin den zweiten Faktor im Supabase-Dashboard zurück (Authentication, Nutzer, Faktoren) und du richtest ihn hier neu ein.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Freigaben (Admin) -->
     <section data-panel="freigaben" hidden>
       <div class="aktionen" style="margin-bottom:12px"><button class="pill ghost klein" type="button" data-neu-laden>Neu laden</button></div>
@@ -310,7 +413,7 @@ td.knopf { text-align: right; white-space: nowrap; }
 
     <!-- Eigene offene Räder (Helfer) -->
     <section data-panel="eigene" hidden>
-      <p class="fine">Diese Räder warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
+      <p class="fine">Diese Räder und Ergänzungen warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
       <div class="karten" id="eigene"></div>
     </section>
 
