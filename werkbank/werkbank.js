@@ -1475,7 +1475,7 @@
   $('#kt-mehr').addEventListener('click', () => { ktZeige += 50; zeichneKonten(); });
 
   function kontoVerwalten(k) {
-    const ich = !!(email && k.email && k.email.toLowerCase() === email.toLowerCase());
+    const ich = !!k.ich;
     const msg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
     const block = (titel, text, ...inhalt) => {
       const d = document.createElement('div');
@@ -1506,11 +1506,13 @@
     const info = Object.assign(document.createElement('p'), { className: 'fine' });
     info.textContent = `Anmeldung über ${(k.anbieter || []).map((a) => ANBIETER[a] || a).join(', ') || '–'}. Registriert ${datum(k.registriert)}, zuletzt angemeldet ${datum(k.letzte_anmeldung)}. `
       + `${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'} in der Garage.`
-      + (k.familie === 'besitzer' ? ` Hat die Familiengarage „${k.familie_name || ''}“ gegründet.` : k.familie ? ` Mitglied der Familiengarage „${k.familie_name || ''}“.` : '')
+      + (k.familie === 'besitzer' ? ` Hat die Familiengarage „${k.familie_name || ''}“ gegründet${k.familie_mitglieder ? ` (${k.familie_mitglieder} ${k.familie_mitglieder === 1 ? 'Mitglied' : 'Mitglieder'})` : ''}.` : k.familie ? ` Mitglied der Familiengarage „${k.familie_name || ''}“.` : '')
       + ` Kennung ${k.id}.`;
 
-    const premium = block('Premium', k.premium ? `Aktiv (${k.premium === 'geschenk' ? 'geschenkt' : k.premium}).` : 'Nicht aktiv.',
-      k.premium
+    const premium = block('Premium', k.premium ? `Aktiv (${k.premium === 'geschenk' ? 'geschenkt' : k.premium === 'kauf' ? 'gekauft' : k.premium}).` : 'Nicht aktiv.',
+      k.premium === 'kauf'
+        ? Object.assign(document.createElement('span'), { className: 'fine', textContent: 'Gekauftes Premium lässt sich hier nicht zurücknehmen.' })
+        : k.premium
         ? knopf('Premium entziehen', async () => { if (!window.confirm(`Premium für ${k.email} entziehen?`)) return false; await rpc('konto_premium', { p_nutzer: k.id, p_an: false }); })
         : knopf('Premium schenken', () => rpc('konto_premium', { p_nutzer: k.id, p_an: true }), 'pill klein'));
 
@@ -1551,7 +1553,7 @@
       bestaetigen, knopf('Endgültig löschen', async () => {
         const soll = (k.email || 'LÖSCHEN').toLowerCase();
         if (bestaetigen.value.trim().toLowerCase() !== soll) { meldung(msg, 'Die eingetippte Adresse stimmt nicht.', true); return false; }
-        await dokumenteLoeschen(k.id);
+        await dokumenteLoeschen(k);
         await rpc('konto_loeschen_admin', { p_nutzer: k.id });
       }, 'pill gefahr klein'));
 
@@ -1567,10 +1569,14 @@
     dialog(k.email || `Konto ${String(k.id).slice(0, 8)}`, ...teile);
   }
 
-  // Wie die App: Dokumente zuerst, sonst blieben Dateien ohne Konto liegen
-  async function dokumenteLoeschen(id) {
+  // Wie die App: Dokumente zuerst, sonst blieben Dateien ohne Konto liegen.
+  // Der Server gibt den Ordner nur auf Anfrage für 10 Minuten frei. Rad-Dokumente
+  // bleiben, wenn die Familiengarage weitergeerbt wird.
+  async function dokumenteLoeschen(k) {
+    const id = k.id;
+    await rpc('konto_dokumente_freigeben', { p_nutzer: id });
     const pfade = [];
-    for (const ordner of ['rad', 'fitting']) {
+    for (const ordner of k.raeder_dokumente_behalten ? ['fitting'] : ['fitting', 'rad']) {
       let ab = 0;
       for (;;) {
         const { data, error } = await sb.storage.from('dokumente').list(`${id}/${ordner}`, { limit: 100, offset: ab });
