@@ -226,6 +226,7 @@
   }
 
   function zeichneTeile() {
+    pflichtCheck();
     const ul = $('#rad-teile');
     $('#teile-zahl').textContent = radTeile.length ? `(${radTeile.length})` : '';
     if (!radTeile.length) {
@@ -264,6 +265,7 @@
         inp.setAttribute('aria-label', 'Barcode zu ' + t.name);
         inp.addEventListener('input', () => { t.ean = inp.value.replace(/\D/g, ''); });
         ean.append(inp);
+        scanKnopf(ean, inp, (code) => { t.ean = code; });
         li.append(ean);
       }
       return li;
@@ -353,6 +355,9 @@
         if (rolle === 'admin') ladeOffen();
         return;
       }
+      const fehlt = fehlendePflichtteile();
+      if (teile.length < MIN_TEILE) throw new Error(`Bitte mindestens ${MIN_TEILE} Teile eintragen, sonst hilft der Eintrag beim Teilekauf kaum.`);
+      if (fehlt.wichtig.length && !window.confirm(`Es fehlen noch: ${fehlt.wichtig.join(', ')}.\n\nTrotzdem speichern?`)) return;
       let ergebnis;
       try {
         ergebnis = await rpc('katalog_rad_erfassen', {
@@ -382,6 +387,271 @@
       if (rolle === 'admin') ladeOffen();
     });
   });
+
+  // ----- Pflichtteile (wie src/data/helfer.ts in der App) -----
+
+  const PFLICHTTEILE = ['Schaltwerk', 'Umwerfer', 'Schalthebel', 'Kurbel', 'Kassette', 'Kette',
+    'Bremssattel', 'Bremsbelag', 'Bremsscheibe', 'Laufradsatz', 'Reifen', 'Schlauch', 'Innenlager', 'Steckachse'];
+  // Fehlen oft zu Recht: kein Umwerfer bei 1-fach, kein Akku ohne elektrische Schaltung, Schlauch bei Tubeless
+  const OFT_NICHT_VERBAUT = ['Umwerfer', 'Akku', 'Schlauch'];
+  const MIN_TEILE = 3;
+
+  function fehlendePflichtteile() {
+    const eBike = ($('#f-rad').kategorie.value || '').startsWith('E-');
+    const soll = [...PFLICHTTEILE];
+    soll.splice(6, 0, ...(eBike ? ['Motor', 'Akku'] : ['Akku']));
+    const da = new Set([...radTeile.map((t) => t.kategorie), ...(ergaenzen ? ergaenzen.vorhanden.filter((t) => !ergaenzen.weg.has(t.id)).map((t) => t.kategorie) : [])]);
+    // Riemen ersetzt Kette und Kassette
+    if (da.has('Riemen')) { da.add('Kette'); da.add('Kassette'); }
+    const fehlt = soll.filter((k) => !da.has(k));
+    return { wichtig: fehlt.filter((k) => !OFT_NICHT_VERBAUT.includes(k)), vielleicht: fehlt.filter((k) => OFT_NICHT_VERBAUT.includes(k)) };
+  }
+
+  function pflichtCheck() {
+    const box = $('#pflicht-check');
+    if (!radTeile.length && !ergaenzen) { box.hidden = true; return; }
+    const { wichtig, vielleicht } = fehlendePflichtteile();
+    box.hidden = false;
+    box.classList.toggle('ok', !wichtig.length);
+    box.replaceChildren();
+    const kopf = document.createElement('strong');
+    kopf.textContent = wichtig.length ? `Noch offen: ${wichtig.join(', ')}` : 'Alle wichtigen Teile sind drin.';
+    box.append(kopf);
+    if (vielleicht.length) box.append(`Fehlen oft zu Recht: ${vielleicht.join(', ')}`);
+  }
+  $('#f-rad').kategorie.addEventListener('change', pflichtCheck);
+
+  // ----- Rad als Vorlage -----
+
+  let vorlageTimer = null;
+  let vorlageZaehler = 0;
+  $('#vorlage-suche').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') ev.preventDefault(); });
+  $('#vorlage-suche').addEventListener('input', (ev) => {
+    clearTimeout(vorlageTimer);
+    vorlageTimer = setTimeout(() => vorlageSuchen(ev.target.value), 300);
+  });
+
+  async function vorlageSuchen(text) {
+    const nr = ++vorlageZaehler;
+    const woerter = woerterAus(text);
+    const ul = $('#vorlage-liste');
+    if (!woerter.length) { ul.replaceChildren(); return; }
+    let q = sb.from('raeder').select('id, hersteller, modell, reihe, baujahr, kategorie').order('baujahr', { ascending: false }).limit(20);
+    for (const w of woerter) {
+      q = /^(19|20)\d\d$/.test(w) ? q.eq('baujahr', Number(w)) : q.or(`hersteller.ilike.*${w}*,modell.ilike.*${w}*`);
+    }
+    const { data, error } = await q;
+    if (nr !== vorlageZaehler) return;
+    if (error) { ul.textContent = fehlerText(error); return; }
+    if (!data.length) { ul.innerHTML = '<li class="fine">Kein Rad gefunden.</li>'; return; }
+    ul.replaceChildren(...data.map((r) => {
+      const li = document.createElement('li');
+      const b = Object.assign(document.createElement('button'), { type: 'button' });
+      b.append(Object.assign(document.createElement('span'), { textContent: `${r.hersteller} ${r.modell}` }),
+        Object.assign(document.createElement('small'), { textContent: `${r.baujahr} · ${r.kategorie}` }));
+      b.addEventListener('click', () => vorlageNehmen(r));
+      li.append(b);
+      return li;
+    }));
+  }
+
+  async function vorlageNehmen(r) {
+    const f = $('#f-rad');
+    const msg = $('#f-rad .msg');
+    meldung(msg, '');
+    try {
+      const details = (await rpc('rad_details', { ids: [r.id] })) || [];
+      const ids = ((details[0] && details[0].teile) || []).map((t) => t.teil_id);
+      let infos = [];
+      if (ids.length) {
+        const { data, error } = await sb.from('teile').select('id, marke, name, kategorie').in('id', ids);
+        if (error) throw error;
+        infos = data;
+      }
+      const nachId = new Map(infos.map((t) => [t.id, t]));
+      f.hersteller.value = r.hersteller;
+      // Reihe übernehmen, die Ausstattung ändert sich bei der Vorlage meist
+      const reihe = r.reihe && r.modell.startsWith(r.reihe) ? r.reihe : r.modell;
+      f.reihe.value = reihe;
+      f.ausstattung.value = reihe === r.modell ? '' : r.modell.slice(reihe.length).trim();
+      f.kategorie.value = r.kategorie;
+      f.baujahr.value = '';
+      radTeile = ids.filter((id) => nachId.has(id)).map((id) => {
+        const t = nachId.get(id);
+        return { teil_id: id, name: `${t.marke} ${t.name}`, kategorie: t.kategorie, ean: '' };
+      });
+      zeichneTeile();
+      $('#vorlage').open = false;
+      $('#vorlage-suche').value = '';
+      $('#vorlage-liste').replaceChildren();
+      meldung(msg, `Vorlage ${r.hersteller} ${r.modell} (${r.baujahr}) übernommen: ${radTeile.length} Teile. Jetzt Modelljahr eintragen und Unterschiede anpassen.`);
+      f.baujahr.focus();
+    } catch (e) {
+      meldung(msg, fehlerText(e), true);
+    }
+  }
+
+  // ----- Teileliste einfügen -----
+
+  // Überschriften aus Datenblättern, die auf eine Kategorie zeigen
+  const KATEGORIE_WOERTER = [
+    ['schaltwerk', 'Schaltwerk'], ['umwerfer', 'Umwerfer'], ['schalthebel', 'Schalthebel'], ['schalt-/bremshebel', 'Schalthebel'],
+    ['schaltbremshebel', 'Schalthebel'], ['shifter', 'Schalthebel'], ['kurbel', 'Kurbel'], ['kettenblatt', 'Kurbel'], ['crank', 'Kurbel'],
+    ['kassette', 'Kassette'], ['zahnkranz', 'Kassette'], ['cassette', 'Kassette'], ['kette', 'Kette'], ['chain', 'Kette'],
+    ['riemen', 'Riemen'], ['motor', 'Motor'], ['akku', 'Akku'], ['batterie', 'Akku'], ['bremsbel', 'Bremsbelag'],
+    ['bremsscheibe', 'Bremsscheibe'], ['rotor', 'Bremsscheibe'], ['bremse', 'Bremssattel'], ['brake', 'Bremssattel'],
+    ['reifen', 'Reifen'], ['mantel', 'Reifen'], ['tire', 'Reifen'], ['tyre', 'Reifen'], ['schlauch', 'Schlauch'],
+    ['laufr', 'Laufradsatz'], ['wheel', 'Laufradsatz'], ['felge', 'Laufradsatz'], ['innenlager', 'Innenlager'],
+    ['tretlager', 'Innenlager'], ['bottom bracket', 'Innenlager'], ['steckachse', 'Steckachse'], ['achse', 'Steckachse'],
+    ['steuersatz', 'Steuersatz'], ['gabel', 'Gabel'], ['fork', 'Gabel'], ['lenkerband', 'Lenkerband'], ['lenker', 'Lenker'],
+    ['sattelstütze', 'Sattelstütze'], ['sattelstuetze', 'Sattelstütze'], ['seatpost', 'Sattelstütze'], ['sattel', 'Sattel'],
+    ['saddle', 'Sattel'], ['pedal', 'Pedale'],
+  ];
+
+  function woerterAus(text) {
+    return text.toLowerCase().split(/[\s,;()]+/).map((w) => w.replace(/[^\p{L}\p{N}.\-/+]/gu, '')).filter((w) => w.length >= 2);
+  }
+
+  function zeileZerlegen(zeile) {
+    let text = zeile.replace(/\t+/g, ': ').trim();
+    let kategorie = null;
+    const m = text.match(/^([^:]{2,40}):\s*(.+)$/);
+    const kopf = (m ? m[1] : text).toLowerCase();
+    for (const [wort, kat] of KATEGORIE_WOERTER) if (kopf.includes(wort)) { kategorie = kat; break; }
+    if (m) text = m[2];
+    return { text, kategorie };
+  }
+
+  async function zeileZuordnen(zeile) {
+    const { text, kategorie } = zeileZerlegen(zeile);
+    const woerter = woerterAus(text).filter((w) => !/^(mit|und|für|fuer|the|and|x)$/.test(w)).slice(0, 8);
+    if (!woerter.length) return { zeile, text, kategorie, kandidaten: [] };
+    const { data } = await sb.from('teile').select('id, marke, name, kategorie')
+      .or(woerter.map((w) => `name.ilike.*${w}*,marke.ilike.*${w}*`).join(',')).limit(200);
+    const kandidaten = (data || []).map((t) => {
+      const hay = `${t.marke} ${t.name}`.toLowerCase();
+      let punkte = woerter.filter((w) => hay.includes(w)).length;
+      // Modellnummern (mit Ziffern) zählen doppelt
+      punkte += woerter.filter((w) => /\d/.test(w) && w.length >= 3 && hay.includes(w)).length;
+      if (kategorie && t.kategorie === kategorie) punkte += 1.5;
+      return { ...t, punkte };
+    }).sort((a, b) => b.punkte - a.punkte || a.name.length - b.name.length).slice(0, 6);
+    return { zeile, text, kategorie, kandidaten };
+  }
+
+  let einfuegenErgebnis = [];
+  $('#einfuegen-los').addEventListener('click', async () => {
+    const zeilen = $('#einfuegen').value.split(/\n/).map((z) => z.trim()).filter((z) => z.length >= 3).slice(0, 40);
+    const info = $('#einfuegen-info');
+    const knopf = $('#einfuegen-los');
+    if (!zeilen.length) { info.textContent = 'Bitte zuerst die Teileliste einfügen.'; return; }
+    knopf.disabled = true;
+    info.textContent = `Suche ${zeilen.length} Teile …`;
+    try {
+      einfuegenErgebnis = await Promise.all(zeilen.map(zeileZuordnen));
+    } finally {
+      knopf.disabled = false;
+    }
+    const sicher = einfuegenErgebnis.filter((e) => e.kandidaten[0] && e.kandidaten[0].punkte >= 2.5).length;
+    info.textContent = `${sicher} von ${zeilen.length} Zeilen sicher zugeordnet. Bitte kurz prüfen.`;
+    $('#einfuegen-ergebnis').replaceChildren(...einfuegenErgebnis.map((e, i) => {
+      const li = document.createElement('li');
+      li.append(Object.assign(document.createElement('div'), { className: 'zeilentext', textContent: e.zeile }));
+      const sel = document.createElement('select');
+      sel.dataset.i = String(i);
+      sel.setAttribute('aria-label', `Katalogteil für ${e.text}`);
+      sel.append(new Option('Nicht übernehmen', ''));
+      for (const k of e.kandidaten) sel.append(new Option(`${k.marke} ${k.name} · ${k.kategorie}`, k.id));
+      const beste = e.kandidaten[0];
+      sel.value = beste && beste.punkte >= 2.5 ? beste.id : '';
+      li.append(sel);
+      if (!e.kandidaten.length) li.append(Object.assign(document.createElement('div'), { className: 'zeilentext', textContent: 'Nichts gefunden. Unten unter „Neu anlegen“ eintragen.' }));
+      return li;
+    }));
+    $('#einfuegen-fertig').hidden = !einfuegenErgebnis.length;
+  });
+
+  $('#einfuegen-uebernehmen').addEventListener('click', () => {
+    let n = 0;
+    for (const sel of $$('#einfuegen-ergebnis select')) {
+      const e = einfuegenErgebnis[Number(sel.dataset.i)];
+      const t = e && e.kandidaten.find((k) => k.id === sel.value);
+      if (!t || radTeile.some((x) => x.teil_id === t.id)) continue;
+      if (ergaenzen && ergaenzen.vorhanden.some((x) => x.id === t.id)) continue;
+      radTeile.push({ teil_id: t.id, name: `${t.marke} ${t.name}`, kategorie: t.kategorie, ean: '' });
+      n += 1;
+    }
+    zeichneTeile();
+    $('#einfuegen-info').textContent = `${n} Teile übernommen.`;
+    $('#einfuegen-ergebnis').replaceChildren();
+    $('#einfuegen-fertig').hidden = true;
+    $('#einfuegen').value = '';
+  });
+
+  // ----- Barcode mit der Kamera -----
+
+  let scanLeser = null;
+  let scanAbbruch = null;
+
+  function kameraMoeglich() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext);
+  }
+
+  function scanKnopf(wo, inp, danach) {
+    if (!kameraMoeglich()) return;
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein scan-knopf', textContent: 'Scannen' });
+    b.setAttribute('aria-label', 'Barcode mit der Kamera scannen');
+    b.addEventListener('click', async () => {
+      const code = await scannen();
+      if (!code) return;
+      inp.value = code;
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+      if (danach) danach(code);
+    });
+    wo.append(b);
+  }
+
+  function scannen() {
+    return new Promise((fertig) => {
+      if (!window.ZXing) { window.alert('Der Scanner lädt noch, bitte gleich noch einmal.'); fertig(null); return; }
+      const box = $('#scanner');
+      const video = $('#scanner-video');
+      $('#scanner-text').textContent = 'Barcode in den Rahmen halten …';
+      box.hidden = false;
+      const hinweise = new Map([[ZXing.DecodeHintType.POSSIBLE_FORMATS, [ZXing.BarcodeFormat.EAN_13, ZXing.BarcodeFormat.EAN_8,
+        ZXing.BarcodeFormat.UPC_A, ZXing.BarcodeFormat.UPC_E, ZXing.BarcodeFormat.CODE_128]]]);
+      scanLeser = new ZXing.BrowserMultiFormatReader(hinweise);
+      let erledigt = false;
+      const ende = (code) => {
+        if (erledigt) return;
+        erledigt = true;
+        try { scanLeser.reset(); } catch { /* schon gestoppt */ }
+        box.hidden = true;
+        fertig(code);
+      };
+      scanAbbruch = () => ende(null);
+      scanLeser.decodeFromConstraints({ video: { facingMode: 'environment' } }, video, (ergebnis) => {
+        if (!ergebnis) return;
+        const code = String(ergebnis.getText()).replace(/\D/g, '');
+        if (code.length >= 8 && code.length <= 14) ende(code);
+      }).catch(() => {
+        $('#scanner-text').textContent = 'Kamera nicht verfügbar. Bitte den Zugriff erlauben oder den Code abtippen.';
+      });
+    });
+  }
+  $('#scanner-zu').addEventListener('click', () => scanAbbruch && scanAbbruch());
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('#scanner').hidden && scanAbbruch) scanAbbruch(); });
+
+  // Scan-Knöpfe an den festen Barcode-Feldern
+  for (const f of [$('#f-teil'), $('#f-neues-teil')]) {
+    const inp = f.ean;
+    const zeile = document.createElement('div');
+    zeile.style.display = 'flex';
+    zeile.style.gap = '8px';
+    inp.replaceWith(zeile);
+    zeile.append(inp);
+    scanKnopf(zeile, inp);
+  }
 
   // ----- Vorhandenes Rad ergänzen -----
 
@@ -770,6 +1040,7 @@
     inp.setAttribute('aria-label', `Barcode zu ${t.marke} ${t.name}`);
     const b = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill ghost klein', textContent: 'Speichern' });
     f.append(inp, b);
+    scanKnopf(f, inp, () => f.requestSubmit());
     f.addEventListener('submit', async (ev) => {
       ev.preventDefault();
       b.disabled = true;
