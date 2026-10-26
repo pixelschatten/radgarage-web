@@ -207,6 +207,7 @@
     if (name === 'helfer') ladeHelfer();
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
     if (name === 'uebersicht') ladeUebersicht();
+    if (name === 'konten') ladeKonten();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
   for (const b of $$('[data-neu-laden]')) b.addEventListener('click', ladeOffen);
@@ -1290,6 +1291,7 @@
     ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
     teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
     rolle: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
+    konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
   };
   let baustellen = [];
   let bsZeige = 30;
@@ -1401,6 +1403,194 @@
     }
   }
   $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
+
+  // ----- Registrierte Konten -----
+
+  const ANBIETER = { apple: 'Apple', google: 'Google', email: 'E-Mail' };
+  let konten = [];
+  let ktZeige = 50;
+  const datum = (d) => (d ? new Date(d).toLocaleDateString('de-DE') : '–');
+  const gesperrt = (k) => k.gesperrt_bis && new Date(k.gesperrt_bis) > new Date();
+
+  async function ladeKonten() {
+    meldung($('#msg-konten'), '');
+    try {
+      konten = (await rpc('konten_liste')) || [];
+    } catch (e) {
+      konten = [];
+      meldung($('#msg-konten'), fehlerText(e), true);
+    }
+    const woche = Date.now() - 7 * 864e5;
+    const zahl = (n) => n.toLocaleString('de-DE');
+    const kachel = (farbe, titel, wert, unter) => {
+      const d = document.createElement('div');
+      d.className = `kachel ${farbe}`;
+      d.append(Object.assign(document.createElement('div'), { className: 'eyebrow', textContent: titel }),
+        Object.assign(document.createElement('div'), { className: 'zahl-gross', textContent: wert }),
+        Object.assign(document.createElement('p'), { className: 'fine', textContent: unter }));
+      return d;
+    };
+    $('#kt-kacheln').replaceChildren(
+      kachel('k1', 'Konten', zahl(konten.length), `${zahl(konten.filter((k) => k.raeder > 0).length)} mit Rädern`),
+      kachel('k5', 'Aktiv', zahl(konten.filter((k) => k.letzte_anmeldung && new Date(k.letzte_anmeldung) > woche).length), 'in den letzten 7 Tagen'),
+      kachel('k4', 'Premium', zahl(konten.filter((k) => k.premium).length), 'Konten'),
+      kachel('k3', 'Familien', zahl(konten.filter((k) => k.familie === 'besitzer').length), ((n) => `${zahl(n)} ${n === 1 ? 'Mitglied' : 'Mitglieder'}`)(konten.filter((k) => k.familie === 'mitglied').length)));
+    ktZeige = 50;
+    zeichneKonten();
+  }
+
+  function zeichneKonten() {
+    const such = $('#kt-suche').value.trim().toLowerCase();
+    const filter = $('#kt-filter').value;
+    const liste = konten.filter((k) => (!such || (k.email || '').toLowerCase().includes(such) || String(k.id).startsWith(such))
+      && (filter === 'premium' ? k.premium : filter === 'familie' ? k.familie : filter === 'rolle' ? k.rolle
+        : filter === 'gesperrt' ? gesperrt(k) : filter === 'unbestaetigt' ? !k.bestaetigt : true));
+    $('#kt-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
+    const ul = $('#kt-liste');
+    ul.replaceChildren(...liste.slice(0, ktZeige).map((k) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: k.email || `Konto ${String(k.id).slice(0, 8)}` }),
+        Object.assign(document.createElement('div'), { className: 'fine', textContent: `Seit ${datum(k.registriert)} · zuletzt ${datum(k.letzte_anmeldung)} · ${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'}` }));
+      const chips = document.createElement('div');
+      chips.className = 'eans';
+      const chip = (text, art) => chips.append(Object.assign(document.createElement('span'), { className: 'chip' + (art ? ' ' + art : ''), textContent: text }));
+      for (const a of k.anbieter || []) chip(ANBIETER[a] || a);
+      if (k.premium) chip('Premium', 'gut');
+      if (k.familie) chip(k.familie === 'besitzer' ? 'Familie gegründet' : 'In Familie');
+      if (k.rolle) chip(k.rolle === 'admin' ? 'Admin' : 'Helfer');
+      if (!k.bestaetigt) chip('nicht bestätigt', 'warn');
+      if (gesperrt(k)) chip('gesperrt', 'warn');
+      links.append(chips);
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Verwalten' });
+      b.addEventListener('click', () => kontoVerwalten(k));
+      li.append(links, b);
+      return li;
+    }));
+    if (!liste.length) ul.innerHTML = '<li class="leer">Keine Konten gefunden.</li>';
+    $('#kt-mehr').hidden = liste.length <= ktZeige;
+  }
+  $('#kt-suche').addEventListener('input', () => { ktZeige = 50; zeichneKonten(); });
+  $('#kt-filter').addEventListener('change', () => { ktZeige = 50; zeichneKonten(); });
+  $('#kt-mehr').addEventListener('click', () => { ktZeige += 50; zeichneKonten(); });
+
+  function kontoVerwalten(k) {
+    const ich = !!k.ich;
+    const msg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+    const block = (titel, text, ...inhalt) => {
+      const d = document.createElement('div');
+      d.className = 'aktion';
+      d.append(Object.assign(document.createElement('strong'), { textContent: titel }));
+      if (text) d.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: text }));
+      const akt = document.createElement('div');
+      akt.className = 'aktionen';
+      akt.append(...inhalt);
+      d.append(akt);
+      return d;
+    };
+    const knopf = (text, fn, art = 'pill ghost klein') => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: art, textContent: text });
+      b.addEventListener('click', async () => {
+        b.disabled = true;
+        meldung(msg, '');
+        try {
+          if ((await fn()) !== false) { dialogZu(); await ladeKonten(); meldung($('#msg-konten'), `${k.email || 'Konto'}: gespeichert.`); }
+        } catch (e) {
+          meldung(msg, fehlerText(e), true);
+        }
+        b.disabled = false;
+      });
+      return b;
+    };
+
+    const info = Object.assign(document.createElement('p'), { className: 'fine' });
+    info.textContent = `Anmeldung über ${(k.anbieter || []).map((a) => ANBIETER[a] || a).join(', ') || '–'}. Registriert ${datum(k.registriert)}, zuletzt angemeldet ${datum(k.letzte_anmeldung)}. `
+      + `${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'} in der Garage.`
+      + (k.familie === 'besitzer' ? ` Hat die Familiengarage „${k.familie_name || ''}“ gegründet${k.familie_mitglieder ? ` (${k.familie_mitglieder} ${k.familie_mitglieder === 1 ? 'Mitglied' : 'Mitglieder'})` : ''}.` : k.familie ? ` Mitglied der Familiengarage „${k.familie_name || ''}“.` : '')
+      + ` Kennung ${k.id}.`;
+
+    const premium = block('Premium', k.premium ? `Aktiv (${k.premium === 'geschenk' ? 'geschenkt' : k.premium === 'kauf' ? 'gekauft' : k.premium}).` : 'Nicht aktiv.',
+      k.premium === 'kauf'
+        ? Object.assign(document.createElement('span'), { className: 'fine', textContent: 'Gekauftes Premium lässt sich hier nicht zurücknehmen.' })
+        : k.premium
+        ? knopf('Premium entziehen', async () => { if (!window.confirm(`Premium für ${k.email} entziehen?`)) return false; await rpc('konto_premium', { p_nutzer: k.id, p_an: false }); })
+        : knopf('Premium schenken', () => rpc('konto_premium', { p_nutzer: k.id, p_an: true }), 'pill klein'));
+
+    const dauer = document.createElement('select');
+    dauer.setAttribute('aria-label', 'Dauer der Sperre');
+    for (const [w, t] of [['7', '7 Tage'], ['30', '30 Tage'], ['0', 'Bis auf Weiteres']]) dauer.append(new Option(t, w));
+    dauer.style.width = 'auto';
+    const sperre = gesperrt(k)
+      ? block('Sperre', `Gesperrt bis ${new Date(k.gesperrt_bis).getFullYear() > 2100 ? 'auf Weiteres' : datum(k.gesperrt_bis)}.`,
+        knopf('Sperre aufheben', () => rpc('konto_sperren', { p_nutzer: k.id, p_bis: null }), 'pill klein'))
+      : block('Sperren', 'Ein gesperrtes Konto kann sich nicht mehr anmelden, seine Daten bleiben erhalten. Laufende Sitzungen enden spätestens nach einer Stunde.',
+        dauer, knopf('Sperren', async () => {
+          const tage = Number(dauer.value);
+          if (!window.confirm(`${k.email} ${tage ? 'für ' + tage + ' Tage' : 'bis auf Weiteres'} sperren?`)) return false;
+          const bis = tage ? new Date(Date.now() + tage * 864e5) : new Date('2999-12-31T00:00:00Z');
+          await rpc('konto_sperren', { p_nutzer: k.id, p_bis: bis.toISOString() });
+        }));
+
+    const rolleWahl = document.createElement('select');
+    rolleWahl.setAttribute('aria-label', 'Rolle in der Werkbank');
+    rolleWahl.style.width = 'auto';
+    for (const [w, t] of [['', 'Keine'], ['helfer', 'Helfer'], ['admin', 'Admin']]) rolleWahl.append(new Option(t, w));
+    rolleWahl.value = k.rolle || '';
+    const rolleBlock = k.email
+      ? block('Rolle in der Werkbank', 'Admins sehen auch diese Kontenverwaltung.', rolleWahl, knopf('Übernehmen', async () => {
+        const neu = rolleWahl.value || null;
+        if (neu === (k.rolle || null)) return false;
+        if (neu === 'admin' && !window.confirm(`${k.email} zum Admin machen? Admins dürfen auch Konten verwalten und löschen.`)) return false;
+        await rpc('helfer_setzen', { p_email: k.email, p_rolle: neu });
+      }))
+      : null;
+
+    const bestaetigen = Object.assign(document.createElement('input'), { type: 'text', placeholder: k.email || 'LÖSCHEN', autocomplete: 'off' });
+    bestaetigen.setAttribute('aria-label', 'Zur Bestätigung E-Mail-Adresse eintippen');
+    const loeschen = block('Konto löschen', 'Löscht das Konto mit Garage, Einstellungen und hochgeladenen Dokumenten. Das lässt sich nicht rückgängig machen. '
+      + (k.familie === 'besitzer' ? 'Die Familiengarage geht an das am längsten beigetretene Mitglied. ' : '')
+      + 'Zur Bestätigung die E-Mail-Adresse eintippen.',
+      bestaetigen, knopf('Endgültig löschen', async () => {
+        const soll = (k.email || 'LÖSCHEN').toLowerCase();
+        if (bestaetigen.value.trim().toLowerCase() !== soll) { meldung(msg, 'Die eingetippte Adresse stimmt nicht.', true); return false; }
+        await dokumenteLoeschen(k);
+        await rpc('konto_loeschen_admin', { p_nutzer: k.id });
+      }, 'pill gefahr klein'));
+
+    const teile = [info, premium];
+    if (!ich) teile.push(sperre);
+    if (rolleBlock && !ich) teile.push(rolleBlock);
+    if (!ich) teile.push(loeschen);
+    else teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Das ist dein eigenes Konto. Sperren, Rolle und Löschen gehen hier nicht.' }));
+    const zu = document.createElement('div');
+    zu.className = 'aktionen';
+    zu.append(Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Schließen', onclick: dialogZu }));
+    teile.push(msg, zu);
+    dialog(k.email || `Konto ${String(k.id).slice(0, 8)}`, ...teile);
+  }
+
+  // Wie die App: Dokumente zuerst, sonst blieben Dateien ohne Konto liegen.
+  // Der Server gibt den Ordner nur auf Anfrage für 10 Minuten frei. Rad-Dokumente
+  // bleiben, wenn die Familiengarage weitergeerbt wird.
+  async function dokumenteLoeschen(k) {
+    const id = k.id;
+    await rpc('konto_dokumente_freigeben', { p_nutzer: id });
+    const pfade = [];
+    for (const ordner of k.raeder_dokumente_behalten ? ['fitting'] : ['fitting', 'rad']) {
+      let ab = 0;
+      for (;;) {
+        const { data, error } = await sb.storage.from('dokumente').list(`${id}/${ordner}`, { limit: 100, offset: ab });
+        if (error) throw error;
+        pfade.push(...(data || []).filter((f) => f.id).map((f) => `${id}/${ordner}/${f.name}`));
+        if (!data || data.length < 100) break;
+        ab += 100;
+      }
+    }
+    for (let i = 0; i < pfade.length; i += 100) {
+      const { error } = await sb.storage.from('dokumente').remove(pfade.slice(i, i + 100));
+      if (error) throw error;
+    }
+  }
 
   // ----- Konto: Passwort -----
 

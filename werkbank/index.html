@@ -170,6 +170,10 @@ textarea { resize: vertical; font-size: 15px; }
 .dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
 .dlg-box { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); }
 .dlg-box form { margin-top: 10px; }
+.dlg-box .aktion { padding: 12px 0; border-top: 1.5px solid var(--line); }
+.dlg-box .aktion:first-of-type { border-top: 0; }
+.chip.gut { background: var(--k4); }
+.pill.gefahr { background: var(--warn); border-color: var(--warn); color: var(--bg); }
 .trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
 td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 [hidden] { display: none !important; }
@@ -275,6 +279,7 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" class="nur-helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="helfer" aria-selected="false" class="nur-admin">Helfer</button>
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" class="nur-admin">Übersicht</button>
+      <button type="button" role="tab" data-tab="konten" aria-selected="false" class="nur-admin">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
 
@@ -453,6 +458,22 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
       </div>
     </section>
 
+    <!-- Registrierte Konten (Admin) -->
+    <section data-panel="konten" hidden>
+      <div class="kacheln" id="kt-kacheln"></div>
+      <div class="t" style="margin-top:14px">
+        <h3>Registrierte Konten <span class="opt" id="kt-zahl"></span></h3>
+        <p class="fine">Was in einer Garage steht, ist hier nicht zu sehen, nur die Anzahl der Räder.</p>
+        <div class="zeile">
+          <label>Suchen<input type="search" id="kt-suche" placeholder="E-Mail-Adresse"></label>
+          <label>Zeigen<select id="kt-filter"><option value="">Alle</option><option value="premium">Mit Premium</option><option value="familie">In einer Familiengarage</option><option value="rolle">Helfer und Admins</option><option value="gesperrt">Gesperrt</option><option value="unbestaetigt">E-Mail nicht bestätigt</option></select></label>
+        </div>
+        <div class="msg" role="status" id="msg-konten"></div>
+        <ul class="liste" id="kt-liste" style="margin-top:12px"></ul>
+        <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="kt-mehr" hidden>Weitere zeigen</button></div>
+      </div>
+    </section>
+
     <!-- Kontosicherheit -->
     <section data-panel="konto" hidden>
       <div class="raster">
@@ -531,6 +552,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-7"></script>
+<script src="werkbank.js?v=2026-10-26-8"></script>
 </body>
 </html>
