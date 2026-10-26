@@ -254,6 +254,8 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
         <p class="fine">Kein Scan möglich? Schlüssel von Hand eintragen:</p>
         <p><code id="geheim"></code></p>
         <form id="f-einrichten">
+          <label>Welche App nutzt du?<input name="name" list="app-namen" maxlength="40" placeholder="z. B. Google Authenticator" autocomplete="off"></label>
+          <datalist id="app-namen"><option value="Google Authenticator"><option value="Microsoft Authenticator"><option value="Apple Passwörter"><option value="1Password"><option value="Authy"><option value="Bitwarden"></datalist>
           <label>Code aus der Authenticator-App
             <input class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required>
           </label>
@@ -513,7 +515,7 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
           <details id="faktor-neu-box" style="margin-top:12px">
             <summary>Weiteres Gerät hinzufügen</summary>
             <form id="f-faktor-neu" autocomplete="off">
-              <label><span class="pflicht">Name des Geräts</span><input name="name" maxlength="40" placeholder="z. B. iPad oder 1Password" required></label>
+              <label><span class="pflicht">Name des Geräts</span><input name="name" list="app-namen" maxlength="40" placeholder="z. B. iPad oder 1Password" required></label>
               <div class="aktionen"><button class="pill" type="submit">QR-Code anzeigen</button></div>
               <div class="msg" role="status"></div>
             </form>
@@ -630,6 +632,6 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 <datalist id="marken"></datalist>
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
-<script src="werkbank.js?v=2026-10-26-9"></script>
+<script src="werkbank.js?v=2026-10-26-10"></script>
 </body>
 </html>
