@@ -373,6 +373,7 @@
   });
 
   $('#leeren').addEventListener('click', () => {
+    appUebernahme = null;
     $('#f-rad').reset();
     radTeile = [];
     ergaenzenEnde();
@@ -397,6 +398,7 @@
         f.reset();
         radTeile = [];
         ergaenzenEnde();
+        await appUebernahmeFertig();
         meldung(msg, ergebnis && ergebnis.live
           ? `Die Ergänzung zu ${name} ist jetzt im Katalog.`
           : `Die Ergänzung zu ${name} ist gespeichert und wartet auf die Freigabe.`);
@@ -429,6 +431,7 @@
       f.reset();
       radTeile = [];
       zeichneTeile();
+      await appUebernahmeFertig();
       meldung(msg, ergebnis && ergebnis.live
         ? `${name} ist jetzt im Katalog.`
         : `${name} ist gespeichert und wartet auf die Freigabe.`);
@@ -989,19 +992,36 @@
     return { raeder: raeder || [], ergaenzungen: ergaenzungen || [] };
   }
 
+  let helferOffen = 0;
+  function zahlenSetzen() {
+    const app = appGruppen.length;
+    const n = helferOffen + app;
+    const zahl = $('#zahl-offen');
+    zahl.hidden = !n;
+    zahl.textContent = String(n);
+    $('#fg-zahl-helfer').textContent = helferOffen ? `(${helferOffen})` : '';
+    $('#fg-zahl-app').textContent = app ? `(${app})` : '';
+  }
+
   async function ladeOffen() {
+    meldung($('#msg-freigaben'), '');
     try {
       const { raeder, ergaenzungen } = await ladeAlleOffenen();
-      const n = raeder.length + ergaenzungen.length;
-      const zahl = $('#zahl-offen');
-      zahl.hidden = !n;
-      zahl.textContent = String(n);
+      helferOffen = raeder.length + ergaenzungen.length;
       const box = $('#offen');
       box.replaceChildren(...raeder.map((r) => radKarte(r, true)), ...ergaenzungen.map((g) => ergaenzungKarte(g, true)));
-      if (!n) box.innerHTML = '<p class="fine">Nichts offen. Alles freigegeben.</p>';
+      if (!helferOffen) box.innerHTML = '<p class="fine">Nichts offen. Alles freigegeben.</p>';
     } catch (e) {
       meldung($('#msg-freigaben'), fehlerText(e), true);
     }
+    try {
+      await ladeApp();
+      if (fgAnsicht === 'app') zeichneApp();
+    } catch (e) {
+      appGruppen = [];
+      $('#app-liste').replaceChildren(Object.assign(document.createElement('p'), { className: 'msg fehler', textContent: fehlerText(e) }));
+    }
+    zahlenSetzen();
   }
 
   async function ladeEigene() {
@@ -1013,6 +1033,320 @@
     } catch (e) {
       box.textContent = fehlerText(e);
     }
+  }
+
+  // ----- Vorschläge aus der App (Admin) -----
+  // Gleiche Meldungen werden zu einer Karte zusammengefasst, die Zahl der Geräte zeigt, wie oft etwas gemeldet wurde.
+
+  const GRUND_TEXT = { falsch: 'Teil stimmt nicht', fehlt: 'Teil fehlt', zuviel: 'Teil nicht verbaut', rad: 'Name oder Baujahr', sonst: 'Etwas anderes' };
+  const ART_TEXT = { korrektur: 'Korrektur', rad: 'Neues Rad', ean: 'Barcode', teil: 'Neues Teil' };
+  const ART_REIHE = ['korrektur', 'rad', 'ean', 'teil'];
+  let appGruppen = [];
+  let appNamen = new Map();
+  let appFilter = '';
+  let fgAnsicht = 'helfer';
+  let appUebernahme = null; // { ids, titel } solange ein App-Rad im Erfassen-Formular steht
+  const norm = (x) => String(x || '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+  function appSchluessel(v) {
+    const d = v.daten || {};
+    if (v.art === 'rad') return `rad|${norm(d.hersteller)}|${norm(d.modell)}|${d.baujahr || ''}`;
+    if (v.art === 'korrektur') return `korrektur|${d.rad_id || ''}|${d.teil_id || ''}|${d.grund || ''}`;
+    if (v.art === 'ean') return `ean|${v.ean || ''}|${d.teil_id || ''}`;
+    return `teil|${norm(d.name)}|${d.kategorie || ''}`;
+  }
+
+  function appGruppieren(liste) {
+    const map = new Map();
+    for (const v of liste) {
+      const k = appSchluessel(v);
+      let g = map.get(k);
+      if (!g) { g = { art: v.art, schluessel: k, eintraege: [], geraete: new Set() }; map.set(k, g); }
+      g.eintraege.push(v);
+      g.geraete.add(v.geraet || `id${v.id}`);
+    }
+    for (const g of map.values()) {
+      g.eintraege.sort((a, b) => String(b.erstellt).localeCompare(String(a.erstellt)));
+      g.neu = g.eintraege[0];
+      g.ids = g.eintraege.map((v) => v.id);
+    }
+    // Häufig gemeldetes zuerst, dann das Neueste
+    return [...map.values()].sort((a, b) => b.geraete.size - a.geraete.size || String(b.neu.erstellt).localeCompare(String(a.neu.erstellt)));
+  }
+
+  async function appNamenLaden(gruppen) {
+    const ids = new Set();
+    const ref = (x) => { if (x && x.katalog_id) ids.add(x.katalog_id); };
+    for (const g of gruppen) {
+      for (const v of g.eintraege) {
+        const d = v.daten || {};
+        if (d.teil_id) ids.add(d.teil_id);
+        (d.teile || []).forEach(ref);
+        const a = d.aenderungen || {};
+        (a.getauscht || []).forEach((x) => { ids.add(x.alt); ref(x.neu); });
+        (a.entfernt || []).forEach((x) => ids.add(x));
+        (a.ergaenzt || []).forEach(ref);
+      }
+    }
+    const fehlt = [...ids].filter((id) => id && !appNamen.has(id));
+    for (let i = 0; i < fehlt.length; i += 150) {
+      const { data, error } = await sb.from('teile').select('id, marke, name, kategorie').in('id', fehlt.slice(i, i + 150));
+      if (error) throw error;
+      for (const t of data || []) appNamen.set(t.id, t);
+    }
+  }
+  const teilName = (id) => { const t = appNamen.get(id); return t ? `${t.marke} ${t.name}` : `unbekanntes Teil (${id})`; };
+  const refName = (x) => (x && x.katalog_id ? teilName(x.katalog_id) : `${(x && x.name) || '?'} (eigenes Teil)`);
+
+  async function ladeApp() {
+    const liste = (await rpc('app_vorschlaege_offen')) || [];
+    appGruppen = appGruppieren(liste);
+    await appNamenLaden(appGruppen);
+    return appGruppen.length;
+  }
+
+  function zeichneApp() {
+    const box = $('#app-liste');
+    const zeigen = appGruppen.filter((g) => !appFilter || g.art === appFilter);
+    for (const b of $$('#app-filter button')) {
+      const n = appGruppen.filter((g) => !b.dataset.art || g.art === b.dataset.art).length;
+      b.textContent = `${b.textContent.replace(/\s*\(\d+\)$/, '')}${n ? ` (${n})` : ''}`;
+    }
+    zeigen.sort((a, b) => ART_REIHE.indexOf(a.art) - ART_REIHE.indexOf(b.art));
+    box.replaceChildren(...zeigen.map(appKarte));
+    if (!zeigen.length) box.innerHTML = '<p class="fine">Nichts offen aus der App.</p>';
+  }
+
+  async function appErledigen(g, status, karte, text) {
+    const n = await rpc('app_vorschlaege_erledigen', { p_ids: g.ids, p_status: status });
+    appGruppen = appGruppen.filter((x) => x !== g);
+    karte.replaceWith(Object.assign(document.createElement('p'), { className: 'msg', textContent: text || (status === 'abgelehnt' ? `Abgelehnt (${n} Meldungen).` : `Erledigt (${n} Meldungen).`) }));
+    zahlenSetzen();
+  }
+
+  function knopf(text, klasse, fn) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: `pill klein ${klasse || ''}`.trim(), textContent: text });
+    b.addEventListener('click', async () => {
+      const msg = b.closest('.karte').querySelector('.msg');
+      b.disabled = true;
+      meldung(msg, '');
+      try { await fn(b); } catch (e) { meldung(msg, fehlerText(e), true); } finally { b.disabled = false; }
+    });
+    return b;
+  }
+
+  function appKarte(g) {
+    const d = g.neu.daten || {};
+    const div = document.createElement('div');
+    div.className = 't karte';
+    const kopf = document.createElement('div');
+    kopf.className = 'app-kopf';
+    const links = document.createElement('div');
+    links.append(Object.assign(document.createElement('div'), { className: 'app-art', textContent: ART_TEXT[g.art] || g.art }));
+    const h = document.createElement('h3');
+    const rechts = document.createElement('div');
+    rechts.className = 'aktionen';
+    const n = g.geraete.size;
+    rechts.append(Object.assign(document.createElement('span'), { className: `chip${n > 1 ? ' gut' : ''}`, textContent: n === 1 ? '1 Gerät' : `${n} Geräte` }));
+    const von = [...new Set(g.eintraege.map((v) => v.von).filter(Boolean))];
+    if (von.length) rechts.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: `Helfer: ${von.join(', ')}` }));
+    links.append(h);
+    kopf.append(links, rechts);
+    const meta = Object.assign(document.createElement('div'), { className: 'meta' });
+    const erst = g.eintraege[g.eintraege.length - 1].erstellt;
+    const zeit = (x) => new Date(x).toLocaleDateString('de-DE');
+    meta.textContent = g.eintraege.length > 1 ? `${g.eintraege.length} Meldungen, ${zeit(erst)} bis ${zeit(g.neu.erstellt)}` : `Gemeldet am ${zeit(g.neu.erstellt)}`;
+    div.append(kopf, meta);
+    const akt = document.createElement('div');
+    akt.className = 'aktionen';
+    const msg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+
+    if (g.art === 'korrektur') {
+      h.textContent = d.titel || d.rad_id;
+      const grund = Object.assign(document.createElement('p'), { textContent: GRUND_TEXT[d.grund] || d.grund || '' });
+      grund.style.fontWeight = '700';
+      if (d.teil_id) grund.textContent += `: ${appNamen.has(d.teil_id) ? teilName(d.teil_id) : d.teil_name || d.teil_id}`;
+      div.append(grund);
+      for (const t of [...new Set(g.eintraege.map((v) => (v.daten && v.daten.text) || '').filter(Boolean))].slice(0, 5)) {
+        div.append(Object.assign(document.createElement('div'), { className: 'zitat', textContent: t }));
+      }
+      // Die Garage-Änderungen hängen nur an manchen Meldungen, die neueste davon zeigen
+      const a = ((g.eintraege.find((v) => v.daten && v.daten.aenderungen) || {}).daten || {}).aenderungen;
+      if (a) {
+        const ul = document.createElement('ul');
+        ul.className = 'kurz';
+        for (const x of a.getauscht || []) ul.append(Object.assign(document.createElement('li'), { textContent: `getauscht: ${teilName(x.alt)} → ${refName(x.neu)}` }));
+        for (const x of a.entfernt || []) ul.append(Object.assign(document.createElement('li'), { textContent: `entfernt: ${teilName(x)}` }));
+        for (const x of a.ergaenzt || []) ul.append(Object.assign(document.createElement('li'), { textContent: `dazu: ${refName(x)}` }));
+        if (ul.children.length) {
+          div.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'So hat der Nutzer das Rad in seiner Garage geändert:' }), ul);
+        }
+      }
+      if (d.rad_id) {
+        akt.append(knopf('Rad öffnen', '', async () => {
+          const { data } = await sb.from('raeder').select('id, hersteller, modell, baujahr').eq('id', d.rad_id).maybeSingle();
+          if (!data) throw new Error('Dieses Rad gibt es im Katalog nicht mehr.');
+          tab('erfassen');
+          await ergaenzenStart(data);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }));
+        akt.append(knopf('Rad-Daten', 'ghost', () => radBearbeiten(d.rad_id, () => meldung(msg, 'Rad-Daten gespeichert.'))));
+      }
+      akt.append(knopf('Erledigt', 'gruen', () => appErledigen(g, 'uebernommen', div)));
+    }
+
+    if (g.art === 'rad') {
+      h.textContent = `${d.hersteller || ''} ${d.modell || ''}${d.baujahr ? ` (${d.baujahr})` : ''}`.trim();
+      if (d.kategorie) meta.textContent += ` · ${d.kategorie}`;
+      const ol = document.createElement('ol');
+      for (const t of d.teile || []) ol.append(Object.assign(document.createElement('li'), { textContent: `${refName(t)} · ${t.kategorie || '?'}` }));
+      if (!ol.children.length) ol.innerHTML = '<li>Keine Teile</li>';
+      div.append(ol);
+      akt.append(knopf('Übernehmen', 'gruen', () => appRadUebernehmen(g)));
+    }
+
+    if (g.art === 'ean') {
+      h.textContent = g.neu.ean || '';
+      const p = document.createElement('p');
+      if (d.teil_id) {
+        p.textContent = `Gehört laut Nutzer zu ${appNamen.has(d.teil_id) ? teilName(d.teil_id) : d.teil_name || d.teil_id}`;
+        akt.append(knopf('Barcode zuordnen', 'gruen', async () => {
+          await rpc('katalog_teil_ean', { p_teil_id: d.teil_id, p_ean: g.neu.ean });
+          await appErledigen(g, 'uebernommen', div, `Barcode ${g.neu.ean} hängt jetzt an ${teilName(d.teil_id)}.`);
+        }));
+        akt.append(knopf('Anderes Teil', 'ghost', () => appTeilWaehlen(g, div)));
+      } else {
+        p.textContent = `Nutzer nennt: ${d.name || '?'}${d.kategorie ? ` · ${d.kategorie}` : ''}${d.preis != null ? ` · ${euro(d.preis)}` : ''}`;
+        akt.append(knopf('Teil suchen', 'gruen', () => appTeilWaehlen(g, div)));
+        akt.append(knopf('Neu anlegen', 'ghost', () => appTeilAnlegen(g, div)));
+      }
+      const bike = Object.assign(document.createElement('a'), { className: 'knopf-weich', textContent: 'Bei Bike24 suchen', target: '_blank', rel: 'noopener noreferrer',
+        href: `https://www.bike24.de/suche?searchTerm=${encodeURIComponent(g.neu.ean || '')}` });
+      div.append(p);
+      akt.append(bike);
+    }
+
+    if (g.art === 'teil') {
+      h.textContent = d.name || '?';
+      div.append(Object.assign(document.createElement('p'), { textContent: [d.kategorie, d.preis != null ? euro(d.preis) : null, d.rad ? `am ${d.rad}` : null].filter(Boolean).join(' · ') }));
+      akt.append(knopf('Anlegen', 'gruen', () => appTeilAnlegen(g, div)));
+      akt.append(knopf('Gibt es schon', 'ghost', () => appErledigen(g, 'uebernommen', div, 'Als erledigt markiert, das Teil steht schon im Katalog.')));
+    }
+
+    akt.append(knopf('Ablehnen', 'rot', () => appErledigen(g, 'abgelehnt', div)));
+    div.append(akt, msg);
+    return div;
+  }
+
+  // Neues Rad aus der App: Erfassen-Formular ausfüllen, nach dem Speichern die Meldungen als übernommen markieren
+  async function appRadUebernehmen(g) {
+    const d = g.neu.daten || {};
+    tab('erfassen');
+    ergaenzenEnde();
+    const f = $('#f-rad');
+    f.reset();
+    f.hersteller.value = d.hersteller || '';
+    f.reihe.value = d.modell || '';
+    f.ausstattung.value = '';
+    f.baujahr.value = d.baujahr || '';
+    if (d.kategorie && [...f.kategorie.options].some((o) => o.value === d.kategorie)) f.kategorie.value = d.kategorie;
+    radTeile = (d.teile || []).filter((t) => t.katalog_id && appNamen.has(t.katalog_id)).map((t) => {
+      const x = appNamen.get(t.katalog_id);
+      return { teil_id: x.id, name: `${x.marke} ${x.name}`, kategorie: x.kategorie, ean: '' };
+    });
+    const eigene = (d.teile || []).filter((t) => !t.katalog_id && t.name);
+    if (eigene.length) {
+      $('#einfuegen').value = eigene.map((t) => `${t.kategorie ? `${t.kategorie}: ` : ''}${t.name}`).join('\n');
+      $('#einfuegen-box').open = true;
+    }
+    zeichneTeile();
+    appUebernahme = { ids: g.ids, titel: `${d.hersteller} ${d.modell}` };
+    meldung($('#f-rad .msg'), `Aus der App übernommen: ${radTeile.length} Katalogteile${eigene.length ? `, ${eigene.length} eigene Teile stehen unter „Teileliste einfügen“ zum Zuordnen` : ''}. Bitte Reihe und Ausstattung trennen, prüfen und speichern.`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    f.reihe.focus();
+  }
+
+  async function appUebernahmeFertig() {
+    if (!appUebernahme) return;
+    const { ids } = appUebernahme;
+    appUebernahme = null;
+    try { await rpc('app_vorschlaege_erledigen', { p_ids: ids, p_status: 'uebernommen' }); } catch { /* bleibt offen, lässt sich später erledigen */ }
+  }
+
+  // Barcode einem vorhandenen Katalogteil zuordnen
+  function appTeilWaehlen(g, karte) {
+    const d = g.neu.daten || {};
+    const such = Object.assign(document.createElement('input'), { type: 'search', placeholder: 'Marke, Name oder Nummer', value: d.name || '' });
+    const ul = Object.assign(document.createElement('ul'), { className: 'wahl-liste treffer' });
+    const info = Object.assign(document.createElement('p'), { className: 'fine' });
+    let nr = 0;
+    const los = async () => {
+      const mein = ++nr;
+      const woerter = woerterAus(such.value).slice(0, 4);
+      if (!woerter.length) { ul.replaceChildren(); return; }
+      let q = sb.from('teile').select('id, marke, name, kategorie').limit(20);
+      for (const w of woerter) q = q.or(`marke.ilike.*${w}*,name.ilike.*${w}*`);
+      const { data, error } = await q;
+      if (mein !== nr) return;
+      info.textContent = error ? fehlerText(error) : data.length ? '' : 'Nichts gefunden. Weniger Wörter versuchen.';
+      ul.replaceChildren(...(data || []).map((t) => {
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.append(Object.assign(document.createElement('span'), { textContent: `${t.marke} ${t.name}` }), Object.assign(document.createElement('small'), { textContent: t.kategorie }));
+        b.addEventListener('click', async () => {
+          try {
+            await rpc('katalog_teil_ean', { p_teil_id: t.id, p_ean: g.neu.ean });
+            dialogZu();
+            await appErledigen(g, 'uebernommen', karte, `Barcode ${g.neu.ean} hängt jetzt an ${t.marke} ${t.name}.`);
+          } catch (e) { info.textContent = fehlerText(e); }
+        });
+        li.append(b);
+        return li;
+      }));
+    };
+    let timer = null;
+    such.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(los, 250); });
+    dialog(`Barcode ${g.neu.ean} zuordnen`, such, info, ul);
+    los();
+  }
+
+  // Neues Katalogteil aus einer Meldung anlegen, bei Barcode-Meldungen gleich mit Barcode
+  function appTeilAnlegen(g, karte) {
+    const d = g.neu.daten || {};
+    const name = String(d.name || '').trim();
+    const leer = name.indexOf(' ');
+    const werte = { marke: leer > 0 ? name.slice(0, leer) : '', name: leer > 0 ? name.slice(leer + 1) : name, kategorie: TEIL_KATEGORIEN.includes(d.kategorie) ? d.kategorie : 'Sonstiges', preis: d.preis };
+    const felder = [['marke', 'Marke'], ['name', 'Name'], ['kategorie', 'Kategorie', 'select', TEIL_KATEGORIEN], ['preis', 'Richtpreis in €', 'number']];
+    const f = formular(felder, werte, 'Anlegen');
+    f.addEventListener('submit', (ev) => {
+      ev.preventDefault();
+      mitKnopf(f, async () => {
+        const p = { marke: f.marke.value.trim(), name: f.name.value.trim(), kategorie: f.kategorie.value };
+        if (f.preis.value) p.preis = Number(f.preis.value);
+        if (g.art === 'ean' && g.neu.ean) p.ean = g.neu.ean;
+        await rpc('katalog_teil_anlegen', { p });
+        dialogZu();
+        await appErledigen(g, 'uebernommen', karte, `${p.marke} ${p.name} ist jetzt im Katalog${p.ean ? `, mit Barcode ${p.ean}` : ''}.`);
+      });
+    });
+    dialog('Teil anlegen', Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Marke und Name bitte prüfen, die App liefert nur den Text des Nutzers.' }), f);
+  }
+
+  function fgAnsichtSetzen(wahl) {
+    fgAnsicht = wahl;
+    for (const b of $$('#fg-ansicht button')) b.setAttribute('aria-checked', String(b.dataset.ansicht === wahl));
+    $('#offen').hidden = wahl !== 'helfer';
+    $('#app-box').hidden = wahl !== 'app';
+    if (wahl === 'app') zeichneApp();
+  }
+  for (const b of $$('#fg-ansicht button')) b.addEventListener('click', () => fgAnsichtSetzen(b.dataset.ansicht));
+  for (const b of $$('#app-filter button')) {
+    b.addEventListener('click', () => {
+      appFilter = b.dataset.art;
+      for (const x of $$('#app-filter button')) x.setAttribute('aria-checked', String(x === b));
+      zeichneApp();
+    });
   }
 
   // ----- Teile und Barcodes -----
@@ -1348,6 +1682,7 @@
   // ----- Übersicht, Baustellen, Verlauf -----
 
   const VERLAUF_TEXTE = {
+    vorschlag_uebernommen: 'App-Vorschlag übernommen', vorschlag_abgelehnt: 'App-Vorschlag abgelehnt',
     rad_erfasst: 'Rad erfasst', rad_freigegeben: 'Rad freigegeben', rad_abgelehnt: 'Rad abgelehnt', rad_geloescht: 'Rad gelöscht',
     rad_geaendert: 'Rad geändert', ergaenzung_erfasst: 'Ergänzung erfasst', ergaenzung_uebernommen: 'Ergänzung übernommen',
     ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
