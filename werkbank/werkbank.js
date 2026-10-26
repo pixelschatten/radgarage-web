@@ -674,6 +674,7 @@
   }
 
   let einfuegenErgebnis = [];
+  const NEU = '__neu';
   $('#einfuegen-los').addEventListener('click', async () => {
     const zeilen = $('#einfuegen').value.split(/\n/).map((z) => z.trim()).filter((z) => z.length >= 3).slice(0, 40);
     const info = $('#einfuegen-info');
@@ -696,10 +697,27 @@
       sel.setAttribute('aria-label', `Katalogteil für ${e.text}`);
       sel.append(new Option('Nicht übernehmen', ''));
       for (const k of e.kandidaten) sel.append(new Option(`${k.marke} ${k.name} · ${k.kategorie}`, k.id));
+      sel.append(new Option('＋ Neu im Katalog anlegen', NEU));
       const beste = e.kandidaten[0];
-      sel.value = beste && beste.punkte >= 2.5 ? beste.id : '';
-      li.append(sel);
-      if (!e.kandidaten.length) li.append(Object.assign(document.createElement('div'), { className: 'zeilentext', textContent: 'Nichts gefunden. Unten unter „Neu anlegen“ eintragen.' }));
+      sel.value = beste && beste.punkte >= 2.5 ? beste.id : !beste || beste.punkte < 1.5 ? NEU : '';
+      // Felder für ein neues Teil, vorbelegt aus der Zeile (erstes Wort = Marke)
+      const neu = Object.assign(document.createElement('div'), { className: 'neu-zeile' });
+      const leer = e.text.indexOf(' ');
+      const feld = (name, wert, platz) => {
+        const inp = Object.assign(document.createElement('input'), { name, value: wert, placeholder: platz, maxLength: name === 'marke' ? 40 : 80 });
+        inp.setAttribute('aria-label', `${platz} für ${e.text}`);
+        return inp;
+      };
+      const kat = document.createElement('select');
+      kat.name = 'kategorie';
+      kat.setAttribute('aria-label', `Kategorie für ${e.text}`);
+      kat.append(new Option('Kategorie wählen', ''), ...TEIL_KATEGORIEN.map((k) => new Option(k, k)));
+      kat.value = e.kategorie && TEIL_KATEGORIEN.includes(e.kategorie) ? e.kategorie : '';
+      neu.append(feld('marke', leer > 0 ? e.text.slice(0, leer) : '', 'Marke'), feld('name', leer > 0 ? e.text.slice(leer + 1) : e.text, 'Name'), kat);
+      const zeigeNeu = () => { neu.hidden = sel.value !== NEU; };
+      sel.addEventListener('change', zeigeNeu);
+      zeigeNeu();
+      li.append(sel, neu);
       return li;
     }));
     $('#einfuegen-fertig').hidden = !einfuegenErgebnis.length;
@@ -707,8 +725,18 @@
 
   $('#einfuegen-uebernehmen').addEventListener('click', () => {
     let n = 0;
-    for (const sel of $$('#einfuegen-ergebnis select')) {
+    const fehlt = [];
+    for (const sel of $$('#einfuegen-ergebnis select[data-i]')) {
       const e = einfuegenErgebnis[Number(sel.dataset.i)];
+      if (sel.value === NEU) {
+        const z = sel.closest('li');
+        const neu = { marke: $('[name=marke]', z).value.trim(), name: $('[name=name]', z).value.trim(), kategorie: $('[name=kategorie]', z).value };
+        if (!neu.marke || !neu.name || !neu.kategorie) { fehlt.push(e.text); continue; }
+        if (radTeile.some((x) => x.neu && `${x.neu.marke} ${x.neu.name}`.toLowerCase() === `${neu.marke} ${neu.name}`.toLowerCase())) continue;
+        radTeile.push({ neu, name: `${neu.marke} ${neu.name}`, kategorie: neu.kategorie, ean: '' });
+        n += 1;
+        continue;
+      }
       const t = e && e.kandidaten.find((k) => k.id === sel.value);
       if (!t || radTeile.some((x) => x.teil_id === t.id)) continue;
       if (ergaenzen && ergaenzen.vorhanden.some((x) => x.id === t.id)) continue;
@@ -716,6 +744,12 @@
       n += 1;
     }
     zeichneTeile();
+    if (fehlt.length) {
+      $('#einfuegen-info').textContent = `${n} Teile übernommen. Bei ${fehlt.length} neuen Teilen fehlen noch Marke, Name oder Kategorie, sie stehen noch unten.`;
+      // Nur die unvollständigen Zeilen stehen lassen
+      for (const sel of $$('#einfuegen-ergebnis select[data-i]')) if (!(sel.value === NEU && fehlt.includes(einfuegenErgebnis[Number(sel.dataset.i)].text))) sel.closest('li').remove();
+      return;
+    }
     $('#einfuegen-info').textContent = `${n} Teile übernommen.`;
     $('#einfuegen-ergebnis').replaceChildren();
     $('#einfuegen-fertig').hidden = true;
