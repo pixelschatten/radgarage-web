@@ -331,6 +331,7 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
                 </label>
               </div>
               <label><span class="pflicht">Name</span><input name="name" required maxlength="80" placeholder="z. B. CN-M8100 12-fach"></label>
+              <div class="aehnlich k3" data-aehnlich hidden><strong>Schon im Katalog?</strong><p class="fine">Antippen nimmt das vorhandene Teil.</p><ul class="treffer"></ul></div>
               <div class="zeile">
                 <label><span>Richtpreis in € <small>freiwillig</small></span><input name="preis" type="number" min="0" max="99999" step="0.01" inputmode="decimal"></label>
                 <label><span>Barcode (EAN) <small>freiwillig</small></span><input name="ean" inputmode="numeric" pattern="[0-9]{8,14}" maxlength="14"></label>
@@ -367,6 +368,7 @@ label.haken input { width: 20px; height: 20px; accent-color: var(--accent); }
               </label>
             </div>
             <label><span class="pflicht">Name</span><input name="name" required maxlength="80" placeholder="z. B. Grand Prix 5000 S TR 28-622"></label>
+            <div class="aehnlich k3" data-aehnlich hidden><strong>Schon im Katalog?</strong><p class="fine">Dann dort den Barcode ergänzen statt neu anlegen.</p><ul class="treffer"></ul></div>
             <div class="zeile">
               <label><span>Richtpreis in € <small>freiwillig</small></span><input name="preis" type="number" min="0" max="99999" step="0.01" inputmode="decimal"></label>
               <label><span>Barcode (EAN) <small>freiwillig</small></span><input name="ean" inputmode="numeric" pattern="[0-9]{8,14}" maxlength="14"></label>

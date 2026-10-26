@@ -793,6 +793,56 @@
     return li;
   }
 
+  // ----- Doppelte Teile vermeiden: beim Neuanlegen ähnliche Katalogteile zeigen -----
+
+  function aehnlicheTeile(form, beiKlick) {
+    const box = form.querySelector('[data-aehnlich]');
+    let timer = null;
+    let nr = 0;
+    const pruefen = async () => {
+      const mein = ++nr;
+      const woerter = `${form.marke.value} ${form.name.value}`.toLowerCase().split(/\s+/)
+        .map((w) => w.replace(/[^\p{L}\p{N}.\-/+]/gu, '')).filter((w) => w.length >= 2);
+      if (woerter.length < 2 || form.name.value.trim().length < 3) { box.hidden = true; return; }
+      // Marke muss passen, vom Namen reicht ein Wort, damit auch andere Schreibweisen auffallen
+      const [marke, ...rest] = woerter;
+      let q = sb.from('teile').select('id, marke, name, kategorie, ean').ilike('marke', `*${marke}*`).limit(8);
+      q = q.or(rest.map((w) => `name.ilike.*${w}*`).join(','));
+      const { data } = await q;
+      if (mein !== nr) return;
+      box.hidden = !data || !data.length;
+      box.querySelector('ul').replaceChildren(...(data || []).map((t) => {
+        const li = document.createElement('li');
+        const b = Object.assign(document.createElement('button'), { type: 'button' });
+        b.append(Object.assign(document.createElement('span'), { textContent: `${t.marke} ${t.name}` }),
+          Object.assign(document.createElement('small'), { textContent: t.kategorie + ((t.ean || []).length ? ' · mit Barcode' : '') }));
+        b.addEventListener('click', () => beiKlick(t));
+        li.append(b);
+        return li;
+      }));
+    };
+    for (const n of ['marke', 'name']) form[n].addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(pruefen, 350); });
+    form.addEventListener('reset', () => { box.hidden = true; });
+  }
+
+  aehnlicheTeile($('#f-teil'), (t) => {
+    if (ergaenzen && ergaenzen.vorhanden.some((x) => x.id === t.id)) {
+      $('#such-info').textContent = 'Dieses Teil ist schon am Rad.';
+    } else if (!radTeile.some((x) => x.teil_id === t.id)) {
+      radTeile.push({ teil_id: t.id, name: `${t.marke} ${t.name}`, kategorie: t.kategorie, ean: '' });
+      zeichneTeile();
+    }
+    $('#f-teil').reset();
+  });
+
+  aehnlicheTeile($('#f-neues-teil'), (t) => {
+    $('#f-neues-teil').reset();
+    $('#tl-ohne').checked = false;
+    $('#tl-kategorie').value = '';
+    $('#tl-suche').value = `${t.marke} ${t.name}`;
+    ladeTeileliste(true);
+  });
+
   // ----- Konto: Passwort -----
 
   $('#f-passwort').addEventListener('submit', (ev) => {
