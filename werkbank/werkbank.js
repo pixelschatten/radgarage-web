@@ -298,6 +298,7 @@
     ladeMarken();
     if (darf('katalog_pflegen')) ladeOffen();
     if (darf('feedback')) feedbackZahl();
+    if (darf('konten_betreuen')) postfachZahl();
     letzteAktivitaet = Date.now();
     pruefeCodes();
     ladeEigenesBild();
@@ -349,6 +350,7 @@
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'statistik') ladeStatistik();
     if (name === 'feedback') ladeFeedback();
+    if (name === 'postfach') ladePostfach();
     if (name === 'konten') ladeKonten();
     if (name === 'konto') ladeSicherheit();
   }
@@ -1356,6 +1358,164 @@
   for (const b of $$('#fb-filter button')) b.addEventListener('click', () => { fbFilter = b.dataset.kat; zeichneFeedback(); });
   $('#fb-neu-laden').addEventListener('click', ladeFeedback);
 
+  // ----- Postfach: Unterhaltungen mit Nutzern (Recht konten_betreuen, postfach.sql) -----
+
+  let pfStatus = 'offen';
+  let pfListe = [];
+  let pfUngelesen = 0;
+  let pfSucheZeit = null;
+  const zeitDe = (d) => new Date(d).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+
+  function postfachZahlSetzen(n) {
+    pfUngelesen = n;
+    $('#zahl-postfach').hidden = !n;
+    $('#zahl-postfach').textContent = String(n);
+  }
+
+  async function postfachZahl() {
+    try { postfachZahlSetzen((await rpc('postfach_anzahl')) || 0); } catch { /* Zahl ist nur Beiwerk */ }
+  }
+
+  async function ladePostfach() {
+    meldung($('#msg-postfach'), '');
+    for (const b of $$('#pf-status button')) b.setAttribute('aria-checked', String(b.dataset.status === pfStatus));
+    try {
+      pfListe = (await rpc('postfach_liste', { p_status: pfStatus, p_suche: $('#pf-suche').value })) || [];
+      if (pfStatus === 'offen' && !$('#pf-suche').value.trim()) {
+        $('#pf-zahl-offen').textContent = pfListe.length ? `(${pfListe.length})` : '';
+        postfachZahlSetzen(pfListe.filter((u) => u.ungelesen > 0).length);
+      }
+      $('#pf-liste').replaceChildren(...pfListe.map(postfachKarte));
+      if (!pfListe.length) {
+        $('#pf-liste').innerHTML = `<p class="fine">${{ offen: 'Nichts offen.', erledigt: 'Noch nichts erledigt.', spam: 'Kein Spam.' }[pfStatus] || 'Noch keine Unterhaltungen.'}</p>`;
+      }
+    } catch (e) {
+      meldung($('#msg-postfach'), fehlerText(e), true);
+    }
+  }
+
+  function postfachKarte(u) {
+    const div = document.createElement('div');
+    div.className = `t karte s1 pf-karte${u.ungelesen > 0 ? ' ungelesen' : ''}`;
+    div.tabIndex = 0;
+    div.setAttribute('role', 'button');
+    const kopf = document.createElement('div');
+    kopf.className = 'app-kopf';
+    const links = document.createElement('div');
+    links.append(
+      Object.assign(document.createElement('div'), { className: 'app-art', textContent: u.name ? `${u.name} · ${u.email}` : u.email }),
+      Object.assign(document.createElement('h3'), { textContent: u.betreff || '(ohne Betreff)' }),
+    );
+    kopf.append(links, Object.assign(document.createElement('div'), { className: 'meta', textContent: zeitDe(u.letzte) }));
+    div.append(kopf);
+    if (u.zuletzt) {
+      div.append(Object.assign(document.createElement('p'), {
+        className: 'meta', textContent: `${u.zuletzt.richtung === 'aus' ? 'Du: ' : ''}${u.zuletzt.text.replace(/\s+/g, ' ')}`,
+      }));
+    }
+    const infos = [`${u.anzahl} ${u.anzahl === 1 ? 'Nachricht' : 'Nachrichten'}`, u.ungelesen > 0 ? `${u.ungelesen} neu` : null, u.konto ? 'hat ein Konto' : 'ohne Konto'];
+    div.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: infos.filter(Boolean).join(' · ') }));
+    const auf = () => unterhaltung(u.id);
+    div.addEventListener('click', auf);
+    div.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); auf(); } });
+    return div;
+  }
+
+  async function unterhaltung(id) {
+    let u;
+    try { u = await rpc('postfach_unterhaltung', { p_id: id }); } catch (e) { meldung($('#msg-postfach'), fehlerText(e), true); return; }
+    postfachZahl();
+    const verlauf = Object.assign(document.createElement('div'), { className: 'pf-verlauf' });
+    for (const n of u.nachrichten) {
+      const d = Object.assign(document.createElement('div'), { className: `pf-nachricht ${n.richtung}` });
+      const wer = n.richtung === 'aus' ? `${n.team || 'Team'} an ${n.an}` : (n.von_name ? `${n.von_name} <${n.von}>` : n.von);
+      const zusatz = [];
+      if (n.richtung === 'aus' && n.status && n.status >= 300) zusatz.push(`von Brevo abgelehnt (${n.status})`);
+      if (n.richtung === 'ein' && n.spam >= 6) zusatz.push('wahrscheinlich Spam');
+      d.append(Object.assign(document.createElement('div'), { className: 'meta', textContent: `${zeitDe(n.erstellt)} · ${wer}${zusatz.length ? ` · ${zusatz.join(', ')}` : ''}` }));
+      if (n.betreff && n.betreff !== u.betreff) d.append(Object.assign(document.createElement('strong'), { textContent: n.betreff }));
+      d.append(Object.assign(document.createElement('p'), { className: 'fb-text', textContent: n.text || '(kein Text)' }));
+      if (n.anhaenge && n.anhaenge.length) {
+        d.append(Object.assign(document.createElement('p'), {
+          className: 'meta', textContent: `Anhänge (nicht übernommen): ${n.anhaenge.map((a) => a.name).join(', ')}`,
+        }));
+      }
+      verlauf.append(d);
+    }
+
+    const f = document.createElement('form');
+    f.className = 'karte';
+    f.autocomplete = 'off';
+    const text = Object.assign(document.createElement('textarea'), { name: 'text', required: true, rows: 7, maxLength: 10000, placeholder: 'Hallo …\n\nViele Grüße\nMarino von Radgarage' });
+    text.setAttribute('aria-label', 'Antwort');
+    const msg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+    const senden = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill', textContent: 'Antworten' });
+    const vorschau = Object.assign(document.createElement('iframe'), { className: 'mail-vorschau', title: 'Vorschau der Mail', hidden: true });
+    vorschau.setAttribute('sandbox', '');
+    const betreff = /^(re|aw)\s*:/i.test(u.betreff || '') ? u.betreff : `Re: ${u.betreff || 'Deine Nachricht an Radgarage'}`;
+    const vorschauKnopf = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Vorschau' });
+    vorschauKnopf.addEventListener('click', async () => {
+      try {
+        vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff, p_text: text.value });
+        vorschau.hidden = false;
+      } catch (e) { meldung(msg, fehlerText(e), true); }
+    });
+    const statusKnopf = (titel, ziel, art = 'pill ghost') => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: art, textContent: titel });
+      b.addEventListener('click', async () => {
+        if (ziel === 'loeschen') {
+          if (!b.dataset.sicher) { b.dataset.sicher = '1'; b.textContent = 'Wirklich löschen?'; return; }
+          try { await rpc('postfach_loeschen', { p_id: u.id }); } catch (e) { meldung(msg, fehlerText(e), true); return; }
+        } else {
+          try { await rpc('postfach_setzen', { p_id: u.id, p_status: ziel }); } catch (e) { meldung(msg, fehlerText(e), true); return; }
+        }
+        dialogZu();
+        ladePostfach();
+      });
+      return b;
+    };
+    const akt = document.createElement('div');
+    akt.className = 'aktionen';
+    akt.append(senden, vorschauKnopf,
+      u.status === 'offen' ? statusKnopf('Erledigt', 'erledigt') : statusKnopf('Wieder öffnen', 'offen'),
+      u.status === 'spam' ? statusKnopf('Kein Spam', 'offen') : statusKnopf('Spam', 'spam'),
+      statusKnopf('Löschen', 'loeschen'));
+    f.append(text, Object.assign(document.createElement('p'), {
+      className: 'fine', textContent: `Geht an ${u.email} von kontakt@radgarage.app, Betreff „${betreff}“, im Radgarage-Design mit Zitat der letzten Nachricht.`,
+    }), vorschau, akt, msg);
+    f.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      senden.disabled = true;
+      meldung(msg, 'Wird gesendet …');
+      try {
+        const r = await rpc('postfach_antworten', { p_id: u.id, p_text: text.value });
+        let st = null;
+        for (let i = 0; i < 6 && !(st && st.status); i += 1) {
+          await new Promise((ok) => setTimeout(ok, 1000));
+          st = await rpc('postfach_status', { p_nachricht: r.nachricht }).catch(() => null);
+        }
+        if (st && st.status && st.status >= 300) { meldung(msg, `Brevo hat die Mail abgelehnt (${st.status}). ${st.fehler || ''}`, true); senden.disabled = false; return; }
+        dialogZu();
+        meldung($('#msg-postfach'), `Antwort an ${u.email} ist ${st && st.status ? 'raus' : 'unterwegs'}.`);
+        ladePostfach();
+      } catch (e) {
+        meldung(msg, fehlerText(e), true);
+        senden.disabled = false;
+      }
+    });
+    const status = { offen: 'Offen', erledigt: 'Erledigt', spam: 'Spam' }[u.status];
+    dialog(u.betreff || '(ohne Betreff)', Object.assign(document.createElement('p'), {
+      className: 'fine', textContent: `${u.name ? `${u.name} · ` : ''}${u.email} · ${status}${u.konto ? ' · hat ein Konto' : ''}`,
+    }), verlauf, f);
+    $('#dlg .dlg-box').classList.add('breit');
+    verlauf.scrollTop = verlauf.scrollHeight;
+  }
+
+  for (const b of $$('#pf-status button')) b.addEventListener('click', () => { pfStatus = b.dataset.status; ladePostfach(); });
+  $('#pf-neu-laden').addEventListener('click', ladePostfach);
+  $('#pf-schreiben').addEventListener('click', () => mailEditor());
+  $('#pf-suche').addEventListener('input', () => { clearTimeout(pfSucheZeit); pfSucheZeit = setTimeout(ladePostfach, 300); });
+
   // ----- Vorschläge aus der App und von der Website (Admin) -----
   // Gleiche Meldungen werden zu einer Karte zusammengefasst, die Zahl der Geräte zeigt, wie oft etwas gemeldet wurde.
   // Hinweise von den Radseiten auf radgarage.app tragen daten.herkunft = 'website' und stehen im eigenen Reiter.
@@ -2071,7 +2231,7 @@
     ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
     teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
     rolle: 'Rolle gesetzt', rolle_gesetzt: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
-    konto_mail: 'Mail an Konto', konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
+    konto_mail: 'Mail an Konto', postfach_antwort: 'Antwort aus dem Postfach', postfach_geloescht: 'Unterhaltung gelöscht', konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
     wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
   };
   let baustellen = [];
@@ -2147,6 +2307,7 @@
       [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
       [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
       [darf('feedback') && fbNeu, 'Neues Feedback', 'von radgarage.app/feedback', () => tab('feedback')],
+      [darf('konten_betreuen') && pfUngelesen, 'Neue Mails', 'im Postfach', () => tab('postfach')],
     ].filter(([n]) => n);
     for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
     box.replaceChildren(...punkte.map(([n, titel, unter, fn]) => {
@@ -2470,19 +2631,24 @@
     if (rolleBlock && !geschuetzt) teile.push(rolleBlock);
     if (k.email && darf('konten_betreuen')) {
       const verlauf = Object.assign(document.createElement('ul'), { className: 'mail-verlauf' });
-      teile.push(block('E-Mail', 'Persönliche Mail im Radgarage-Design an diese Adresse.', verlauf,
+      teile.push(block('E-Mail', 'Persönliche Mail im Radgarage-Design an diese Adresse. Unterhaltungen im Postfach:', verlauf,
         Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'E-Mail schreiben', onclick: () => mailEditor(k) })));
-      rpc('konto_mails', { p_nutzer: k.id }).then((liste) => {
-        verlauf.replaceChildren(...(liste || []).slice(0, 5).map((m) => Object.assign(document.createElement('li'), {
-          className: 'fine', textContent: `${datum(m.gesendet)}: „${m.betreff}“${m.von ? ` (von ${m.von})` : ''}`,
-        })));
+      rpc('postfach_von_konto', { p_nutzer: k.id }).then((liste) => {
+        verlauf.replaceChildren(...(liste || []).slice(0, 8).map((m) => {
+          const li = document.createElement('li');
+          li.append(Object.assign(document.createElement('a'), {
+            href: '#postfach', className: 'fine', textContent: `${datum(m.letzte)}: „${m.betreff || '(ohne Betreff)'}“${m.ungelesen ? ' · neu' : ''}`,
+            onclick: (ev) => { ev.preventDefault(); dialogZu(); tab('postfach'); unterhaltung(m.id); },
+          }));
+          return li;
+        }));
       }).catch(() => {});
     }
     // Tägliche Erinnerung: Der Super-Admin schaltet sie für Admins an und aus, jeder selbst unter „Konto“
     const hEintrag = helfer.find((x) => x.email.toLowerCase() === (k.email || '').toLowerCase());
-    if (!ich && rolle === 'superadmin' && hEintrag && (RECHTE_JE_ROLLE[hEintrag.rolle] || []).includes('katalog_pflegen')) {
+    if (!ich && rolle === 'superadmin' && hEintrag && (RECHTE_JE_ROLLE[hEintrag.rolle] || []).some((r) => r === 'katalog_pflegen' || r === 'konten_betreuen')) {
       const an = hEintrag.erinnerung !== false;
-      teile.push(block('Tägliche Erinnerung', `Mail an diese Adresse, wenn neue Einträge zur Freigabe warten. Gerade ${an ? 'an' : 'aus'}.`,
+      teile.push(block('Tägliche Erinnerung', `Mail an diese Adresse, wenn Neues in Freigaben, Feedback oder Postfach wartet. Gerade ${an ? 'an' : 'aus'}.`,
         knopf(an ? 'Ausschalten' : 'Einschalten', () => rpc('erinnerung_setzen', { p_email: k.email, p_an: !an }))));
     }
     if (!geschuetzt && darf('konten_verwalten')) teile.push(loeschen);
@@ -2923,7 +3089,7 @@
     akt.className = 'aktionen';
     akt.append(senden, vorschauKnopf, Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
     f.append(liste, feld('An', an), feld('Von', von), feld('Betreff', betreff), feld('Text', text),
-      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Antworten gehen an den Absender. Gespeichert wird nur der Betreff.' }),
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Die Mail und die Antworten darauf stehen im Postfach.' }),
       vorschau, akt, msg);
 
     const konto = () => konten.find((k) => (k.email || '').toLowerCase() === an.value.trim().toLowerCase());
@@ -2951,7 +3117,9 @@
         }
         if (st && st.status && st.status >= 300) { meldung(msg, `Brevo hat die Mail abgelehnt (${st.status}). ${st.fehler || ''}`, true); senden.disabled = false; return; }
         dialogZu();
-        meldung($('#msg-konten'), st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`);
+        const fertig = st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`;
+        meldung($('#msg-konten'), fertig);
+        if (!$('[data-panel="postfach"]').hidden) { meldung($('#msg-postfach'), fertig); ladePostfach(); }
       } catch (e) {
         meldung(msg, fehlerText(e), true);
         senden.disabled = false;

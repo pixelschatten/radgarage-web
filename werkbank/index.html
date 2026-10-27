@@ -309,6 +309,14 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 .segment .opt { color: inherit; opacity: .75; font-weight: 700; }
 .app-kopf { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 .app-kopf h3 { margin: 0; }
+.pf-verlauf { display: grid; gap: 10px; max-height: 52vh; overflow: auto; padding: 2px; margin-bottom: 12px; }
+.pf-nachricht { border-radius: 18px; padding: 12px 14px; background: var(--surface); max-width: 88%; }
+.pf-nachricht.aus { background: var(--k4); color: var(--ink); justify-self: end; }
+.pf-nachricht .meta { font-size: 13px; color: var(--muted); }
+.pf-nachricht.aus .meta { color: var(--ink2); }
+.pf-nachricht .fb-text { margin: 6px 0 0; }
+.pf-karte { cursor: pointer; }
+.pf-karte.ungelesen h3::after { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); margin-left: 8px; vertical-align: middle; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 10px; }
 .fb-notiz { width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--text); resize: vertical; min-height: 44px; margin-bottom: 10px; }
 .app-art { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -461,6 +469,7 @@ table.rechte td.nein { color: var(--muted); }
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
+      <button type="button" role="tab" data-tab="postfach" aria-selected="false" data-recht="konten_betreuen">Postfach<span class="zahl" id="zahl-postfach" hidden></span></button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
@@ -734,9 +743,9 @@ table.rechte td.nein { color: var(--muted); }
           <h3>Sicherheit deines Kontos</h3>
           <ul class="status" id="sicher-status"></ul>
         </div>
-        <div class="t k5" data-recht="katalog_pflegen">
+        <div class="t k5" data-recht="katalog_pflegen konten_betreuen">
           <h3>Tägliche Erinnerung</h3>
-          <p class="fine">Einmal am Morgen eine Mail an deine Konto-Adresse, wenn neue Einträge zur Freigabe warten (Räder und Ergänzungen von Helfern, App-Vorschläge, Hinweise von der Website, neues Feedback). Ohne Neues kommt keine Mail.</p>
+          <p class="fine">Einmal am Morgen eine Mail an deine Konto-Adresse, wenn etwas Neues wartet, das du bearbeiten darfst (Räder und Ergänzungen von Helfern, App-Vorschläge, Hinweise von der Website, neues Feedback, neue Mails im Postfach). Ohne Neues kommt keine Mail.</p>
           <label class="haken"><input type="checkbox" id="erinnerung-an"> Erinnerung per Mail bekommen</label>
           <div class="msg" role="status" id="msg-erinnerung"></div>
         </div>
@@ -863,6 +872,26 @@ table.rechte td.nein { color: var(--muted); }
       <div class="karten" id="fb-liste"></div>
     </section>
 
+    <!-- Postfach: Antworten auf Werkbank-Mails und Mails an kontakt@ (Recht konten_betreuen) -->
+    <section data-panel="postfach" hidden>
+      <div class="st-kopf">
+        <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
+          <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
+          <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
+          <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
+          <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
+        </div>
+        <div class="aktionen" style="margin:0">
+          <button class="pill klein" type="button" id="pf-schreiben">Neue Mail</button>
+          <button class="pill ghost klein" type="button" id="pf-neu-laden">Neu laden</button>
+        </div>
+      </div>
+      <p class="fine">Antworten auf Mails aus der Werkbank und Mails, die an kontakt@radgarage.app weitergeleitet werden, je Person als Unterhaltung. Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
+      <label style="display:block; margin: 4px 0 14px">Suchen<input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off"></label>
+      <div class="msg" role="status" id="msg-postfach"></div>
+      <div class="karten" id="pf-liste"></div>
+    </section>
+
     <!-- Eigene offene Räder (Helfer) -->
     <section data-panel="eigene" hidden>
       <p class="fine">Diese Räder und Ergänzungen warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
@@ -889,6 +918,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-12"></script>
+<script src="werkbank.js?v=2026-10-27-13"></script>
 </body>
 </html>
