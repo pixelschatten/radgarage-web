@@ -550,8 +550,12 @@
         if (t.ean && /^[0-9]{8,14}$/.test(t.ean)) x.ean = t.ean;
         return x;
       });
+      // Doppelter Boden: Einträge mit Recht katalog_pflegen gehen sofort live
+      const neuZahl = radTeile.filter((t) => t.neu).length;
+      const teileText = `${teile.length} ${teile.length === 1 ? 'Teil' : 'Teile'}${neuZahl ? `, davon ${neuZahl} neu im Katalog` : ''}`;
       if (ergaenzen) {
         const name = ergaenzen.rad.name;
+        if (darf('katalog_pflegen') && !window.confirm(`Ergänzung zu ${name} wirklich in die Datenbank übernehmen?\n\n${teileText} dazu${ergaenzen.weg.size ? `, ${ergaenzen.weg.size} entfernt` : ''}. Sie ist sofort in der App sichtbar.`)) return;
         const ergebnis = await rpc('katalog_rad_ergaenzen', {
           p: { rad_id: ergaenzen.rad.id, dazu: teile, weg: [...ergaenzen.weg], notiz: f.notiz.value.trim(), quelle: f.quelle.value.trim() },
         });
@@ -568,6 +572,8 @@
       const fehlt = fehlendePflichtteile();
       if (teile.length < MIN_TEILE) throw new Error(`Bitte mindestens ${MIN_TEILE} Teile eintragen, sonst hilft der Eintrag beim Teilekauf kaum.`);
       if (fehlt.wichtig.length && !window.confirm(`Es fehlen noch: ${fehlt.wichtig.join(', ')}.\n\nTrotzdem speichern?`)) return;
+      const radName = `${f.hersteller.value.trim()} ${f.reihe.value.trim()} ${f.ausstattung.value.trim()}`.trim();
+      if (darf('katalog_pflegen') && !window.confirm(`${radName} (${f.baujahr.value}) wirklich in die Datenbank aufnehmen?\n\n${teileText}. Das Rad ist sofort in der App sichtbar.`)) return;
       let ergebnis;
       try {
         ergebnis = await rpc('katalog_rad_erfassen', {
