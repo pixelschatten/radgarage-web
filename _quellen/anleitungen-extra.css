@@ -1,0 +1,74 @@
+/* Anleitungen: eine Seite pro Wartungsarbeit, Bento wie die Startseite. */
+.krumen { font-size: 14px; color: var(--muted); padding-block: 0 10px; }
+.krumen ol { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.krumen li + li::before { content: "›"; margin-right: 6px; }
+.krumen a { color: var(--muted); font-weight: 600; }
+.krumen [aria-current] { color: var(--text); font-weight: 700; }
+
+.anl { padding-block: 0 14px; }
+.anl .kopf { grid-column: span 8; padding: 34px 34px 30px; }
+.anl .kopf h1 { font-size: clamp(36px, 4.8vw, 58px); margin: 10px 0 14px; }
+.anl .kopf .lead { color: var(--ink2); }
+.anl .daten { grid-column: span 4; display: grid; gap: 14px; }
+.anl .daten .t { padding: 20px 24px; }
+.wert { font-family: var(--display); font-weight: 800; font-size: 28px; line-height: 1.1; margin-top: 2px; }
+
+.anl .wann { grid-column: span 5; }
+.anl .werkzeug { grid-column: span 7; }
+.anl .schritte { grid-column: span 7; grid-row: span 2; padding: 30px 32px; }
+.anl .video { grid-column: span 5; }
+.anl .tipp { grid-column: span 5; }
+.anl .fragen { grid-column: span 12; }
+.anl .app { grid-column: span 12; padding: 36px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: center; }
+.anl .app .actions { justify-content: flex-end; }
+.anl .mehr { grid-column: span 12; padding: 0; background: none; }
+
+.t ul.punkte { margin: 8px 0 0; padding-left: 20px; color: var(--ink2); }
+.t ul.punkte li { margin-bottom: 4px; }
+.liste { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 8px; }
+.liste li { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, .45); color: var(--ink); font-weight: 600; }
+:root[data-theme="dark"] .liste li { background: rgba(255, 255, 255, .06); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .liste li { background: rgba(255, 255, 255, .06); } }
+.liste li span:last-child { white-space: nowrap; font-weight: 800; }
+.schritte .steps { gap: 18px; margin-top: 14px; }
+.schritte .steps h3 { margin: 0 0 4px; font-size: 19px; }
+.schritte .steps p { margin: 0; }
+
+.player { margin-top: 12px; border-radius: 20px; overflow: hidden; aspect-ratio: 16 / 9; background: var(--nav); color: var(--nav-fg); display: grid; place-items: center; text-align: center; position: relative; }
+.player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.player .zustimmen { padding: 18px; display: grid; gap: 10px; justify-items: center; max-width: 30em; }
+.player .zustimmen p { color: var(--nav-fg); font-size: 14px; line-height: 1.45; }
+.player .zustimmen a { color: var(--nav-fg); }
+.play { width: 62px; height: 62px; border-radius: 50%; background: var(--k1); color: #28241E; display: grid; place-items: center; }
+.klein { font-size: 14px; margin-top: 10px !important; }
+
+.fragen details { border-top: 1px solid var(--line); padding: 14px 0; }
+.fragen details:first-of-type { border-top: 0; }
+.fragen summary { font-weight: 800; font-size: 18px; cursor: pointer; color: var(--ink); }
+.fragen details p { margin-top: 8px; }
+
+.karten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.karte { display: flex; flex-direction: column; gap: 6px; text-decoration: none; min-height: 170px; transition: transform .15s ease; }
+.karte:hover { transform: translateY(-3px); }
+.karte h3 { font-size: 23px; margin: 6px 0 0; }
+.karte .meta { margin-top: auto; font-size: 14px; font-weight: 700; color: var(--ink2); }
+.hinweis { font-size: 14px; color: var(--muted); max-width: 52em; margin: 6px 0 30px; }
+
+.uebersicht .kopf { grid-column: span 12; padding: 40px 36px; }
+.uebersicht .kopf h1 { font-size: clamp(40px, 5.6vw, 66px); margin: 10px 0 14px; }
+
+@media (max-width: 900px) {
+  .anl .kopf, .anl .daten, .anl .wann, .anl .werkzeug, .anl .schritte, .anl .video, .anl .tipp { grid-column: span 12; grid-row: auto; }
+  .anl .daten { grid-template-columns: repeat(3, 1fr); }
+  .anl .app { grid-template-columns: 1fr; padding: 28px 24px; }
+  .anl .app .actions { justify-content: flex-start; }
+  .karten { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .anl .kopf { padding: 26px 22px; }
+  .anl .daten { grid-template-columns: 1fr; }
+  .anl .schritte { padding: 24px 20px; }
+  .karten { grid-template-columns: 1fr; }
+  .karte { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .karte { transition: none; } .karte:hover { transform: none; } }

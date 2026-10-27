@@ -336,7 +336,7 @@
   function tabAusAdresse() {
     const [name, unter] = location.hash.slice(1).split('/');
     tab(name || '');
-    if (name === 'freigaben') fgAnsichtSetzen(unter === 'app' ? 'app' : 'helfer');
+    if (name === 'freigaben') fgAnsichtSetzen(['app', 'web'].includes(unter) ? unter : 'helfer');
   }
   window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
   for (const b of $$('[data-neu-laden]')) b.addEventListener('click', ladeOffen);
@@ -1176,13 +1176,15 @@
 
   let helferOffen = 0;
   function zahlenSetzen() {
-    const app = appGruppen.length;
-    const n = helferOffen + app;
+    const web = appGruppen.filter((g) => g.web).length;
+    const app = appGruppen.length - web;
+    const n = helferOffen + app + web;
     const zahl = $('#zahl-offen');
     zahl.hidden = !n;
     zahl.textContent = String(n);
     $('#fg-zahl-helfer').textContent = helferOffen ? `(${helferOffen})` : '';
     $('#fg-zahl-app').textContent = app ? `(${app})` : '';
+    $('#fg-zahl-web').textContent = web ? `(${web})` : '';
   }
 
   async function ladeOffen() {
@@ -1217,8 +1219,9 @@
     }
   }
 
-  // ----- Vorschläge aus der App (Admin) -----
+  // ----- Vorschläge aus der App und von der Website (Admin) -----
   // Gleiche Meldungen werden zu einer Karte zusammengefasst, die Zahl der Geräte zeigt, wie oft etwas gemeldet wurde.
+  // Hinweise von den Radseiten auf radgarage.app tragen daten.herkunft = 'website' und stehen im eigenen Reiter.
 
   const GRUND_TEXT = { falsch: 'Teil stimmt nicht', fehlt: 'Teil fehlt', zuviel: 'Teil nicht verbaut', rad: 'Name oder Baujahr', sonst: 'Etwas anderes' };
   const ART_TEXT = { korrektur: 'Korrektur', rad: 'Neues Rad', ean: 'Barcode', teil: 'Neues Teil' };
@@ -1230,8 +1233,11 @@
   let appUebernahme = null; // { ids, titel } solange ein App-Rad im Erfassen-Formular steht
   const norm = (x) => String(x || '').toLowerCase().replace(/\s+/g, ' ').trim();
 
+  const vonWebsite = (v) => (v.daten || {}).herkunft === 'website';
+
   function appSchluessel(v) {
     const d = v.daten || {};
+    if (vonWebsite(v)) return `web|${d.rad_id || ''}|${d.teil_id || ''}|${d.grund || ''}`;
     if (v.art === 'rad') return `rad|${norm(d.hersteller)}|${norm(d.modell)}|${d.baujahr || ''}`;
     if (v.art === 'korrektur') return `korrektur|${d.rad_id || ''}|${d.teil_id || ''}|${d.grund || ''}`;
     if (v.art === 'ean') return `ean|${v.ean || ''}|${d.teil_id || ''}`;
@@ -1243,7 +1249,7 @@
     for (const v of liste) {
       const k = appSchluessel(v);
       let g = map.get(k);
-      if (!g) { g = { art: v.art, schluessel: k, eintraege: [], geraete: new Set() }; map.set(k, g); }
+      if (!g) { g = { art: v.art, web: vonWebsite(v), schluessel: k, eintraege: [], geraete: new Set() }; map.set(k, g); }
       g.eintraege.push(v);
       g.geraete.add(v.geraet || `id${v.id}`);
     }
@@ -1289,14 +1295,20 @@
 
   function zeichneApp() {
     const box = $('#app-liste');
-    const zeigen = appGruppen.filter((g) => !appFilter || g.art === appFilter);
+    const web = fgAnsicht === 'web';
+    const quelle = appGruppen.filter((g) => g.web === web);
+    const zeigen = quelle.filter((g) => !appFilter || g.art === appFilter);
+    $('#app-filter').hidden = web;
+    $('#app-info').textContent = web
+      ? 'Was Besucher auf den Radseiten von radgarage.app melden, ohne Anmeldung. Gleiche Meldungen (gleiches Rad, Teil und Grund) stehen zusammen.'
+      : 'Was Nutzer in der App melden. Gleiche Meldungen von mehreren Geräten stehen zusammen, die Zahl zeigt, wie viele Geräte es gemeldet haben.';
     for (const b of $$('#app-filter button')) {
-      const n = appGruppen.filter((g) => !b.dataset.art || g.art === b.dataset.art).length;
+      const n = quelle.filter((g) => !b.dataset.art || g.art === b.dataset.art).length;
       b.textContent = `${b.textContent.replace(/\s*\(\d+\)$/, '')}${n ? ` (${n})` : ''}`;
     }
     zeigen.sort((a, b) => ART_REIHE.indexOf(a.art) - ART_REIHE.indexOf(b.art));
     box.replaceChildren(...zeigen.map(appKarte));
-    if (!zeigen.length) box.innerHTML = '<p class="fine">Nichts offen aus der App.</p>';
+    if (!zeigen.length) box.innerHTML = `<p class="fine">Nichts offen ${web ? 'von der Website' : 'aus der App'}.</p>`;
   }
 
   async function appErledigen(g, status, karte, text) {
@@ -1329,7 +1341,8 @@
     const rechts = document.createElement('div');
     rechts.className = 'aktionen';
     const n = g.geraete.size;
-    rechts.append(Object.assign(document.createElement('span'), { className: `chip${n > 1 ? ' gut' : ''}`, textContent: n === 1 ? '1 Gerät' : `${n} Geräte` }));
+    const wer = g.web ? ['Meldung', 'Meldungen'] : ['Gerät', 'Geräte'];
+    rechts.append(Object.assign(document.createElement('span'), { className: `chip${n > 1 ? ' gut' : ''}`, textContent: `${n} ${n === 1 ? wer[0] : wer[1]}` }));
     const von = [...new Set(g.eintraege.map((v) => v.von).filter(Boolean))];
     if (von.length) rechts.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: `Helfer: ${von.join(', ')}` }));
     links.append(h);
@@ -1351,6 +1364,10 @@
       div.append(grund);
       for (const t of [...new Set(g.eintraege.map((v) => (v.daten && v.daten.text) || '').filter(Boolean))].slice(0, 5)) {
         div.append(Object.assign(document.createElement('div'), { className: 'zitat', textContent: t }));
+      }
+      // Belege von der Website nur als Text, nie als klickbarer Link (kommt ungeprüft von Besuchern)
+      for (const q of [...new Set(g.eintraege.map((v) => (v.daten && v.daten.beleg) || '').filter(Boolean))].slice(0, 3)) {
+        div.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: `Beleg: ${q}` }));
       }
       // Die Garage-Änderungen hängen nur an manchen Meldungen, die neueste davon zeigen
       const a = ((g.eintraege.find((v) => v.daten && v.daten.aenderungen) || {}).daten || {}).aenderungen;
@@ -1517,11 +1534,16 @@
 
   function fgAnsichtSetzen(wahl) {
     fgAnsicht = wahl;
-    if (!$('[data-panel="freigaben"]').hidden) history.replaceState(null, '', wahl === 'app' ? '#freigaben/app' : '#freigaben');
+    if (!$('[data-panel="freigaben"]').hidden) history.replaceState(null, '', wahl === 'helfer' ? '#freigaben' : `#freigaben/${wahl}`);
     for (const b of $$('#fg-ansicht button')) b.setAttribute('aria-checked', String(b.dataset.ansicht === wahl));
     $('#offen').hidden = wahl !== 'helfer';
-    $('#app-box').hidden = wahl !== 'app';
-    if (wahl === 'app') zeichneApp();
+    $('#app-box').hidden = wahl === 'helfer';
+    if (wahl !== 'helfer') {
+      // Die Art-Filter gelten nur für die App, die Website meldet nur Korrekturen
+      if (wahl === 'web') appFilter = '';
+      for (const x of $$('#app-filter button')) x.setAttribute('aria-checked', String(x.dataset.art === appFilter));
+      zeichneApp();
+    }
   }
   for (const b of $$('#fg-ansicht button')) b.addEventListener('click', () => fgAnsichtSetzen(b.dataset.ansicht));
   for (const b of $$('#app-filter button')) {
@@ -1978,11 +2000,13 @@
     zahlenSetzen();
     const wenig = baustellen.filter((r) => r.teile < 8).length;
     const k = (stat && stat.konten) || {};
-    const appArten = (art) => appGruppen.filter((g) => g.art === art).length;
+    const appArten = (art) => appGruppen.filter((g) => !g.web && g.art === art).length;
+    const webAnzahl = appGruppen.filter((g) => g.web).length;
     const punkte = [
       [helferOffen, 'Von Helfern freigeben', 'Räder und Ergänzungen', () => { tab('freigaben'); fgAnsichtSetzen('helfer'); }],
       [appArten('korrektur'), 'Korrekturen aus der App', 'Nutzer melden Fehler', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
-      [appGruppen.length - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
+      [webAnzahl, 'Hinweise von der Website', 'Besucher der Radseiten', () => { tab('freigaben'); fgAnsichtSetzen('web'); }],
+      [appGruppen.length - webAnzahl - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
       [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
       [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
     ].filter(([n]) => n);
