@@ -1877,7 +1877,7 @@
     const erstes = $('#dlg-inhalt input, #dlg-inhalt select');
     if (erstes) setTimeout(() => erstes.focus(), 0);
   }
-  function dialogZu() { $('#dlg').hidden = true; $('#dlg-inhalt').replaceChildren(); }
+  function dialogZu() { $('#dlg').hidden = true; $('#dlg-inhalt').replaceChildren(); $('#dlg .dlg-box').classList.remove('breit'); }
   $('#dlg').addEventListener('click', (ev) => { if (ev.target === $('#dlg')) dialogZu(); });
   document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !$('#dlg').hidden) dialogZu(); });
 
@@ -2071,7 +2071,7 @@
     ergaenzung_abgelehnt: 'Ergänzung abgelehnt', teil_angelegt: 'Teil angelegt', teil_geaendert: 'Teil geändert',
     teile_zusammengefuehrt: 'Teile zusammengeführt', ean_dazu: 'Barcode ergänzt', ean_weg: 'Barcode entfernt',
     rolle: 'Rolle gesetzt', rolle_gesetzt: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
-    konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
+    konto_mail: 'Mail an Konto', konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
     wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
   };
   let baustellen = [];
@@ -2468,6 +2468,16 @@
       teile.push(sperre);
     }
     if (rolleBlock && !geschuetzt) teile.push(rolleBlock);
+    if (k.email && darf('konten_betreuen')) {
+      const verlauf = Object.assign(document.createElement('ul'), { className: 'mail-verlauf' });
+      teile.push(block('E-Mail', 'Persönliche Mail im Radgarage-Design an diese Adresse.', verlauf,
+        Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'E-Mail schreiben', onclick: () => mailEditor(k) })));
+      rpc('konto_mails', { p_nutzer: k.id }).then((liste) => {
+        verlauf.replaceChildren(...(liste || []).slice(0, 5).map((m) => Object.assign(document.createElement('li'), {
+          className: 'fine', textContent: `${datum(m.gesendet)}: „${m.betreff}“${m.von ? ` (von ${m.von})` : ''}`,
+        })));
+      }).catch(() => {});
+    }
     // Tägliche Erinnerung: Der Super-Admin schaltet sie für Admins an und aus, jeder selbst unter „Konto“
     const hEintrag = helfer.find((x) => x.email.toLowerCase() === (k.email || '').toLowerCase());
     if (!ich && rolle === 'superadmin' && hEintrag && (RECHTE_JE_ROLLE[hEintrag.rolle] || []).includes('katalog_pflegen')) {
@@ -2885,6 +2895,73 @@
       }
     })();
   });
+
+  // ----- E-Mail an ein Konto (Bento-Vorlage auf dem Server, konto_mail_senden) -----
+
+  async function mailEditor(vorher = null) {
+    if (!konten.length) { try { konten = (await rpc('konten_liste')) || []; } catch { /* ohne Vorschläge weiter */ } }
+    let absender = ['kontakt@radgarage.app'];
+    try { absender = (await rpc('konto_mail_absender')) || absender; } catch { /* Standard */ }
+    const f = document.createElement('form');
+    f.autocomplete = 'off';
+    const liste = Object.assign(document.createElement('datalist'), { id: 'mail-konten' });
+    liste.append(...konten.filter((k) => k.email).map((k) => new Option(k.email)));
+    const feld = (text, el) => { const l = document.createElement('label'); l.append(Object.assign(document.createElement('span'), { className: 'pflicht', textContent: text }), el); return l; };
+    const an = Object.assign(document.createElement('input'), { name: 'an', type: 'email', required: true, value: vorher ? vorher.email : '', placeholder: 'E-Mail-Adresse eines Kontos' });
+    an.setAttribute('list', 'mail-konten');
+    const von = document.createElement('select');
+    von.name = 'von';
+    von.append(...absender.map((a) => new Option(a, a)));
+    const betreff = Object.assign(document.createElement('input'), { name: 'betreff', required: true, minLength: 3, maxLength: 150, placeholder: 'z. B. Deine Frage zur Familiengarage' });
+    const text = Object.assign(document.createElement('textarea'), { name: 'text', required: true, rows: 9, maxLength: 10000, placeholder: 'Hallo …\n\nViele Grüße\nMarino von Radgarage' });
+    const vorschau = Object.assign(document.createElement('iframe'), { className: 'mail-vorschau', title: 'Vorschau der Mail', hidden: true });
+    vorschau.setAttribute('sandbox', '');
+    const msg = Object.assign(document.createElement('div'), { className: 'msg', role: 'status' });
+    const vorschauKnopf = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Vorschau' });
+    const senden = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill', textContent: 'Senden' });
+    const akt = document.createElement('div');
+    akt.className = 'aktionen';
+    akt.append(senden, vorschauKnopf, Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
+    f.append(liste, feld('An', an), feld('Von', von), feld('Betreff', betreff), feld('Text', text),
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Antworten gehen an den Absender. Gespeichert wird nur der Betreff.' }),
+      vorschau, akt, msg);
+
+    const konto = () => konten.find((k) => (k.email || '').toLowerCase() === an.value.trim().toLowerCase());
+    vorschauKnopf.addEventListener('click', async () => {
+      try {
+        vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff.value, p_text: text.value });
+        vorschau.hidden = false;
+        vorschau.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (e) { meldung(msg, fehlerText(e), true); }
+    });
+    f.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const k = konto();
+      if (!k) { meldung(msg, 'Zu dieser Adresse gibt es kein Konto.', true); return; }
+      if (!window.confirm(`Mail „${betreff.value.trim()}“ jetzt an ${k.email} schicken?`)) return;
+      senden.disabled = true;
+      meldung(msg, 'Wird gesendet …');
+      try {
+        const r = await rpc('konto_mail_senden', { p_nutzer: k.id, p_betreff: betreff.value, p_text: text.value, p_absender: von.value });
+        // Brevo antwortet asynchron: kurz nachsehen, ob die Mail angenommen wurde
+        let st = null;
+        for (let i = 0; i < 6 && !(st && st.status); i += 1) {
+          await new Promise((ok) => setTimeout(ok, 1000));
+          st = await rpc('konto_mail_status', { p_id: r.id }).catch(() => null);
+        }
+        if (st && st.status && st.status >= 300) { meldung(msg, `Brevo hat die Mail abgelehnt (${st.status}). ${st.fehler || ''}`, true); senden.disabled = false; return; }
+        dialogZu();
+        meldung($('#msg-konten'), st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`);
+      } catch (e) {
+        meldung(msg, fehlerText(e), true);
+        senden.disabled = false;
+      }
+    });
+    dialog(vorher ? `E-Mail an ${vorher.email}` : 'E-Mail schreiben', f);
+    $('#dlg .dlg-box').classList.add('breit');
+    (vorher ? betreff : an).focus();
+  }
+  $('#mail-neu').addEventListener('click', () => mailEditor());
 
   // ----- Rollen und Rechte -----
 
