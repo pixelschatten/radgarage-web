@@ -207,6 +207,44 @@ textarea { resize: vertical; font-size: 15px; }
 .dlg-box { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); }
 .dlg-box form { margin-top: 10px; }
 .dlg-box.breit { width: min(640px, 100%); }
+.kat-leiste { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 12px; }
+.kat-leiste input[type=search] { flex: 1 1 280px; }
+.kat-filter { display: flex; gap: 10px; flex-wrap: wrap; }
+.kat-filter select { width: auto; }
+.kat-pfad { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; font-size: 15px; }
+.kat-pfad .pfad-link { border: 0; background: transparent; color: var(--muted); font: 700 15px var(--font); cursor: pointer; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
+.kat-pfad .pfad-link:hover { color: var(--ink); }
+.kat-pfad .pfad-hier { font-weight: 800; color: var(--ink); }
+.kat-pfad .pfad-trenner { color: var(--muted); }
+.kat-gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.kat-gitter.klein { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
+.kat-kachel { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; border: 0; border-radius: 22px; padding: 18px 18px 16px; min-height: 132px; color: var(--ink); font-family: var(--font); cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.kat-kachel:hover, .kat-kachel:focus-visible { transform: translateY(-2px); box-shadow: 0 10px 24px var(--shadow); }
+.kat-titel { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; overflow-wrap: anywhere; }
+.kat-zahl { font-size: 15px; font-weight: 700; }
+.kat-unter { font-size: 13px; color: var(--ink2); }
+.kat-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: auto; padding-top: 6px; }
+.kat-chip { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--surface); color: var(--ink); }
+.kat-kachel .kat-chip { background: color-mix(in srgb, var(--surface) 65%, transparent); }
+.kat-chip.warn { background: var(--k1); }
+.kat-rad { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; text-align: left; border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; background: var(--surface2); color: var(--ink); font-family: var(--font); cursor: pointer; }
+.kat-rad:hover, .kat-rad:focus-visible { border-color: var(--accent); }
+.kat-rad .kat-chips { margin-top: 2px; padding-top: 0; }
+.kat-rad-name { font-weight: 800; font-size: 15px; overflow-wrap: anywhere; }
+.kat-marke { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.kat-rad-teile { font-size: 13px; color: var(--muted); min-height: 1em; }
+.kat-rad-teile.wenig { color: var(--warn); }
+.kat-marken { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.kat-filterchip { border: 1px solid var(--line); background: var(--surface2); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: 700 13px var(--font); cursor: pointer; }
+.kat-filterchip[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.kat-detail .kat-chips { margin: 0 0 12px; padding: 0; }
+.kat-teilgruppen { display: grid; gap: 8px; margin-bottom: 14px; }
+.kat-teilgruppe { display: grid; grid-template-columns: 130px 1fr; gap: 10px; align-items: start; padding: 8px 0; border-top: 1px solid var(--line); }
+.kat-teilkat { font-size: 13px; font-weight: 700; color: var(--muted); padding-top: 5px; }
+.kat-teilnamen { display: flex; flex-wrap: wrap; gap: 6px; }
+.kat-teilname { border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 12px; padding: 5px 10px; font: 600 14px var(--font); cursor: pointer; text-align: left; }
+.kat-teilname:hover { border-color: var(--accent); }
+@media (max-width: 560px) { .kat-teilgruppe { grid-template-columns: 1fr; gap: 4px; } .kat-gitter { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; } .kat-kachel { min-height: 112px; padding: 14px; } .kat-titel { font-size: 16px; } }
 .mail-kachel { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .mail-kachel h3 { margin-bottom: 2px; }
 .mail-vorschau { width: 100%; height: 460px; border: 1.5px solid var(--line); border-radius: 16px; background: #F2EDE2; margin-top: 10px; }
@@ -468,6 +506,7 @@ table.rechte td.nein { color: var(--muted); }
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" data-recht="katalog_pflegen">Übersicht</button>
       <button type="button" role="tab" data-tab="erfassen" aria-selected="false" data-recht="katalog_erfassen">Rad erfassen</button>
       <button type="button" role="tab" data-tab="freigaben" aria-selected="false" data-recht="katalog_pflegen">Freigaben<span class="zahl" id="zahl-offen" hidden></span></button>
+      <button type="button" role="tab" data-tab="katalog" aria-selected="false">Katalog</button>
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
@@ -586,6 +625,28 @@ table.rechte td.nein { color: var(--muted); }
     </section>
 
     <!-- Teile und Barcodes -->
+    <section data-panel="katalog" hidden>
+      <div class="st-kopf">
+        <div><h2>Katalog</h2><p class="fine" id="kat-stand"></p></div>
+        <div class="st-kopf-rechts">
+          <div class="segment" role="radiogroup" aria-label="Katalog" id="kat-ansicht">
+            <button type="button" role="radio" data-ansicht="raeder" aria-checked="true">Räder</button>
+            <button type="button" role="radio" data-ansicht="teile" aria-checked="false">Teile</button>
+          </div>
+          <button class="knopf-weich" type="button" id="kat-neu" title="Katalog neu laden">Neu laden</button>
+        </div>
+      </div>
+      <div class="kat-leiste">
+        <input type="search" id="kat-suche" autocomplete="off" aria-label="Im Katalog suchen">
+        <div class="kat-filter" id="kat-filter-raeder">
+          <select id="kat-art" aria-label="Radart"><option value="">Alle Radarten</option></select>
+          <select id="kat-jahr" aria-label="Modelljahr"><option value="">Alle Jahre</option></select>
+        </div>
+      </div>
+      <nav class="kat-pfad" id="kat-pfad" aria-label="Wo du bist"></nav>
+      <div id="kat-inhalt"></div>
+    </section>
+
     <section data-panel="teile" hidden>
       <div class="raster">
         <div class="t">
@@ -918,6 +979,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-14"></script>
+<script src="werkbank.js?v=2026-10-27-15"></script>
 </body>
 </html>
