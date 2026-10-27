@@ -410,8 +410,10 @@
     suchTimer = setTimeout(() => suche(ev.target.value), 250);
   });
 
-  async function suche(text) {
+  // Eingefügte Zeilen wie „Kette: Shimano CN-M8100“ funktionieren auch: gesucht wird nach dem Teil hinter dem Doppelpunkt
+  async function suche(roh) {
     const nr = ++suchZaehler;
+    const { text, kategorie } = zeileZerlegen(roh);
     const woerter = text.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}.\-/+]/gu, '')).filter((w) => w.length >= 2);
     const ul = $('#treffer');
     if (!woerter.length) { ul.replaceChildren(); $('#such-info').textContent = ''; return; }
@@ -420,7 +422,15 @@
     const { data, error } = await q;
     if (nr !== suchZaehler) return;
     if (error) { $('#such-info').textContent = fehlerText(error); return; }
-    $('#such-info').textContent = data.length ? (data.length === 30 ? 'Mehr als 30 Treffer, genauer suchen.' : '') : 'Nichts gefunden. Unten neu anlegen.';
+    $('#such-info').textContent = data.length ? (data.length === 30 ? 'Mehr als 30 Treffer, genauer suchen.' : '') : 'Nichts im Katalog. Enter legt es neu an.';
+    // Passende Kategorie nach oben
+    if (kategorie) data.sort((a, b) => (b.kategorie === kategorie) - (a.kategorie === kategorie));
+    suchStand = { text, kategorie, data };
+    const neuKnopf = document.createElement('li');
+    const nb = Object.assign(document.createElement('button'), { type: 'button', className: 'neu-anlegen' });
+    nb.append(Object.assign(document.createElement('span'), { textContent: `＋ Neu anlegen: „${text.trim()}“` }), Object.assign(document.createElement('small'), { textContent: 'nicht im Katalog' }));
+    nb.addEventListener('click', () => neuAusSuche());
+    neuKnopf.append(nb);
     ul.replaceChildren(...data.map((t) => {
       const li = document.createElement('li');
       const b = document.createElement('button');
@@ -438,11 +448,56 @@
         }
         radTeile.push({ teil_id: t.id, name: `${t.marke} ${t.name}`, kategorie: t.kategorie, ean: '' });
         zeichneTeile();
+        sucheLeeren(`${t.marke} ${t.name} ist am Rad.`);
       });
       li.append(b);
       return li;
-    }));
+    }), neuKnopf);
   }
+
+  let suchStand = null;
+  function sucheLeeren(info) {
+    suchZaehler += 1;
+    $('#suche').value = '';
+    $('#treffer').replaceChildren();
+    $('#such-info').textContent = info || '';
+    $('#suche').focus();
+  }
+
+  // Maske „Neu anlegen“ mit dem Suchtext vorbelegen: erstes Wort = Marke (Schreibweise aus dem Katalog, wenn bekannt)
+  function neuAusSuche() {
+    const { text, kategorie, data } = suchStand || { text: $('#suche').value, kategorie: null, data: [] };
+    const t = text.trim();
+    if (!t) return;
+    const f = $('#f-teil');
+    f.reset();
+    const klein = t.toLowerCase();
+    const bekannt = [...new Set(data.map((x) => x.marke))].sort((a, b) => b.length - a.length).find((m) => klein.startsWith(`${m.toLowerCase()} `));
+    const leer = t.indexOf(' ');
+    f.marke.value = bekannt || (leer > 0 ? t.slice(0, leer) : '');
+    f.name.value = bekannt ? t.slice(bekannt.length + 1).trim() : leer > 0 ? t.slice(leer + 1) : t;
+    let kat = kategorie;
+    if (!kat) for (const [wort, k] of KATEGORIE_WOERTER) if (klein.includes(wort)) { kat = k; break; }
+    if (kat && TEIL_KATEGORIEN.includes(kat)) f.kategorie.value = kat;
+    $('#neu-teil').open = true;
+    $('#treffer').replaceChildren();
+    $('#such-info').textContent = 'Bitte prüfen und „Zum Rad hinzufügen“.';
+    f.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const leerFeld = [f.marke, f.name, f.kategorie].find((x) => !x.value);
+    (leerFeld || f.name).focus();
+    f.marke.dispatchEvent(new Event('input'));
+  }
+
+  // Enter: genau ein Treffer → nehmen, kein Treffer → neu anlegen
+  $('#suche').addEventListener('keydown', async (ev) => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    clearTimeout(suchTimer);
+    await suche(ev.target.value);
+    const knoepfe = $$('#treffer button');
+    if (knoepfe.length === 2) knoepfe[0].click();
+    else if (knoepfe.length === 1) neuAusSuche();
+  });
 
   $('#f-teil').addEventListener('submit', (ev) => {
     ev.preventDefault();
@@ -453,6 +508,8 @@
     radTeile.push({ neu, name: `${neu.marke} ${neu.name}`, kategorie: neu.kategorie, ean });
     zeichneTeile();
     f.reset();
+    $('#neu-teil').open = false;
+    sucheLeeren(`${neu.marke} ${neu.name} kommt neu in den Katalog.`);
   });
 
   $('#leeren').addEventListener('click', () => {
