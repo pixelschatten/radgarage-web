@@ -262,7 +262,24 @@
     }
     rolle = info && RECHTE_JE_ROLLE[info.rolle] ? info.rolle : null;
     rechte = new Set(rolle ? info.rechte || RECHTE_JE_ROLLE[rolle] : []);
+    $('#erinnerung-an').checked = info?.erinnerung !== false;
   }
+
+  // Tägliche Mail „neu zur Freigabe“ für sich selbst an- und ausschalten
+  $('#erinnerung-an').addEventListener('change', async (ev) => {
+    const an = ev.target.checked;
+    ev.target.disabled = true;
+    meldung($('#msg-erinnerung'), '');
+    try {
+      await rpc('erinnerung_setzen', { p_email: null, p_an: an });
+      meldung($('#msg-erinnerung'), an ? 'Erinnerung ist an.' : 'Erinnerung ist aus.');
+    } catch (e) {
+      ev.target.checked = !an;
+      meldung($('#msg-erinnerung'), fehlerText(e), true);
+    } finally {
+      ev.target.disabled = false;
+    }
+  });
 
   async function werkbank() {
     // Nach dem zweiten Faktor neu fragen, erst dann gelten Konten-Rechte
@@ -2445,6 +2462,13 @@
       teile.push(sperre);
     }
     if (rolleBlock && !geschuetzt) teile.push(rolleBlock);
+    // Tägliche Erinnerung: Der Super-Admin schaltet sie für Admins an und aus, jeder selbst unter „Konto“
+    const hEintrag = helfer.find((x) => x.email.toLowerCase() === (k.email || '').toLowerCase());
+    if (!ich && rolle === 'superadmin' && hEintrag && (RECHTE_JE_ROLLE[hEintrag.rolle] || []).includes('katalog_pflegen')) {
+      const an = hEintrag.erinnerung !== false;
+      teile.push(block('Tägliche Erinnerung', `Mail an diese Adresse, wenn neue Einträge zur Freigabe warten. Gerade ${an ? 'an' : 'aus'}.`,
+        knopf(an ? 'Ausschalten' : 'Einschalten', () => rpc('erinnerung_setzen', { p_email: k.email, p_an: !an }))));
+    }
     if (!geschuetzt && darf('konten_verwalten')) teile.push(loeschen);
     if (geschuetzt) teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: ich ? 'Das ist dein eigenes Konto. Sperren, Rolle und Löschen gehen hier nicht.' : 'Das ist das Konto des Super-Admins. Sperren, Rolle und Löschen gehen hier nicht.' }));
     const zu = document.createElement('div');
