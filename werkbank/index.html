@@ -315,7 +315,10 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 .pf-nachricht .meta { font-size: 13px; color: var(--muted); }
 .pf-nachricht.aus .meta { color: var(--ink2); }
 .pf-nachricht .fb-text { margin: 6px 0 0; }
-.pf-karte { cursor: pointer; }
+.pf-karte { cursor: pointer; background: var(--surface2); }
+.crm-kachel #pf-liste { max-height: 560px; overflow: auto; margin-top: 4px; }
+.crm-kachel #pf-suche { flex: 1 1 200px; min-width: 0; }
+.zahl-klein { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--k1); color: var(--ink); font-size: 13px; vertical-align: middle; }
 .pf-karte.ungelesen h3::after { content: ""; display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--warn); margin-left: 8px; vertical-align: middle; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 10px; }
 .fb-notiz { width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--text); resize: vertical; min-height: 44px; margin-bottom: 10px; }
@@ -469,8 +472,7 @@ table.rechte td.nein { color: var(--muted); }
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
-      <button type="button" role="tab" data-tab="postfach" aria-selected="false" data-recht="konten_betreuen">Postfach<span class="zahl" id="zahl-postfach" hidden></span></button>
-      <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
+      <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten<span class="zahl" id="zahl-postfach" hidden></span></button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
 
@@ -696,9 +698,27 @@ table.rechte td.nein { color: var(--muted); }
     <!-- Registrierte Konten (Admin) -->
     <section data-panel="konten" hidden>
       <div class="kacheln" id="kt-kacheln" data-recht="konten_sehen"></div>
-      <div class="t k5 mail-kachel" data-recht="konten_betreuen" style="margin-top:14px">
-        <div><h3>E-Mail an ein Konto</h3><p class="fine">Persönliche Mail im Radgarage-Design, zum Beispiel als Antwort auf eine Frage.</p></div>
-        <button class="pill" type="button" id="mail-neu">E-Mail schreiben</button>
+      <!-- E-Mail-CRM: Mails an Konten, Antworten darauf und Mails an kontakt@ (postfach.sql) -->
+      <div class="t k5 crm-kachel" id="postfach" data-recht="konten_betreuen" style="margin-top:14px">
+        <div class="mail-kachel">
+          <div><h3>E-Mail-CRM <span class="zahl-klein" id="pf-zahl-neu" hidden></span></h3><p class="fine">Persönliche Mails im Radgarage-Design und die Antworten darauf, je Person als Unterhaltung.</p></div>
+          <div class="aktionen" style="margin:0">
+            <button class="pill" type="button" id="mail-neu">E-Mail schreiben</button>
+            <button class="pill ghost klein" type="button" id="pf-neu-laden">Neu laden</button>
+          </div>
+        </div>
+        <div class="st-kopf" style="margin-top:12px">
+          <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
+            <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
+            <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
+            <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
+            <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
+          </div>
+          <input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off" aria-label="Unterhaltungen suchen">
+        </div>
+        <div class="msg" role="status" id="msg-postfach"></div>
+        <div class="karten" id="pf-liste"></div>
+        <p class="fine" style="margin-top:10px">Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
       </div>
       <details class="t k4 helfer-box" id="helfer-box" style="margin-top:14px" data-recht="rollen">
         <summary><h3 id="helfer-titel">Katalog-Helfer freischalten</h3><span class="fine" id="helfer-zusammenfassung"></span></summary>
@@ -872,26 +892,6 @@ table.rechte td.nein { color: var(--muted); }
       <div class="karten" id="fb-liste"></div>
     </section>
 
-    <!-- Postfach: Antworten auf Werkbank-Mails und Mails an kontakt@ (Recht konten_betreuen) -->
-    <section data-panel="postfach" hidden>
-      <div class="st-kopf">
-        <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
-          <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
-          <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
-          <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
-          <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
-        </div>
-        <div class="aktionen" style="margin:0">
-          <button class="pill klein" type="button" id="pf-schreiben">Neue Mail</button>
-          <button class="pill ghost klein" type="button" id="pf-neu-laden">Neu laden</button>
-        </div>
-      </div>
-      <p class="fine">Antworten auf Mails aus der Werkbank und Mails, die an kontakt@radgarage.app weitergeleitet werden, je Person als Unterhaltung. Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
-      <label style="display:block; margin: 4px 0 14px">Suchen<input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off"></label>
-      <div class="msg" role="status" id="msg-postfach"></div>
-      <div class="karten" id="pf-liste"></div>
-    </section>
-
     <!-- Eigene offene Räder (Helfer) -->
     <section data-panel="eigene" hidden>
       <p class="fine">Diese Räder und Ergänzungen warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
@@ -918,6 +918,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-13"></script>
+<script src="werkbank.js?v=2026-10-27-14"></script>
 </body>
 </html>

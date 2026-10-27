@@ -350,13 +350,13 @@
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'statistik') ladeStatistik();
     if (name === 'feedback') ladeFeedback();
-    if (name === 'postfach') ladePostfach();
-    if (name === 'konten') ladeKonten();
+    if (name === 'konten') { ladeKonten(); if (darf('konten_betreuen')) ladePostfach(); }
     if (name === 'konto') ladeSicherheit();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
   function tabAusAdresse() {
     const [name, unter] = location.hash.slice(1).split('/');
+    if (name === 'postfach') { zumPostfach(); return; }
     tab(name || '');
     if (name === 'freigaben') fgAnsichtSetzen(['app', 'web'].includes(unter) ? unter : 'helfer');
   }
@@ -1368,8 +1368,10 @@
 
   function postfachZahlSetzen(n) {
     pfUngelesen = n;
-    $('#zahl-postfach').hidden = !n;
-    $('#zahl-postfach').textContent = String(n);
+    for (const el of [$('#zahl-postfach'), $('#pf-zahl-neu')]) {
+      el.hidden = !n;
+      el.textContent = String(n);
+    }
   }
 
   async function postfachZahl() {
@@ -1512,8 +1514,12 @@
   }
 
   for (const b of $$('#pf-status button')) b.addEventListener('click', () => { pfStatus = b.dataset.status; ladePostfach(); });
+  // Links aus der Morgenmail (#postfach) führen in den Reiter Konten zur Kachel
+  function zumPostfach() {
+    tab('konten');
+    $('#postfach').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
   $('#pf-neu-laden').addEventListener('click', ladePostfach);
-  $('#pf-schreiben').addEventListener('click', () => mailEditor());
   $('#pf-suche').addEventListener('input', () => { clearTimeout(pfSucheZeit); pfSucheZeit = setTimeout(ladePostfach, 300); });
 
   // ----- Vorschläge aus der App und von der Website (Admin) -----
@@ -2307,7 +2313,7 @@
       [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
       [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
       [darf('feedback') && fbNeu, 'Neues Feedback', 'von radgarage.app/feedback', () => tab('feedback')],
-      [darf('konten_betreuen') && pfUngelesen, 'Neue Mails', 'im Postfach', () => tab('postfach')],
+      [darf('konten_betreuen') && pfUngelesen, 'Neue Mails', 'im E-Mail-CRM', () => zumPostfach()],
     ].filter(([n]) => n);
     for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
     box.replaceChildren(...punkte.map(([n, titel, unter, fn]) => {
@@ -2631,14 +2637,14 @@
     if (rolleBlock && !geschuetzt) teile.push(rolleBlock);
     if (k.email && darf('konten_betreuen')) {
       const verlauf = Object.assign(document.createElement('ul'), { className: 'mail-verlauf' });
-      teile.push(block('E-Mail', 'Persönliche Mail im Radgarage-Design an diese Adresse. Unterhaltungen im Postfach:', verlauf,
+      teile.push(block('E-Mail', 'Persönliche Mail im Radgarage-Design an diese Adresse. Unterhaltungen im E-Mail-CRM:', verlauf,
         Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'E-Mail schreiben', onclick: () => mailEditor(k) })));
       rpc('postfach_von_konto', { p_nutzer: k.id }).then((liste) => {
         verlauf.replaceChildren(...(liste || []).slice(0, 8).map((m) => {
           const li = document.createElement('li');
           li.append(Object.assign(document.createElement('a'), {
             href: '#postfach', className: 'fine', textContent: `${datum(m.letzte)}: „${m.betreff || '(ohne Betreff)'}“${m.ungelesen ? ' · neu' : ''}`,
-            onclick: (ev) => { ev.preventDefault(); dialogZu(); tab('postfach'); unterhaltung(m.id); },
+            onclick: (ev) => { ev.preventDefault(); dialogZu(); unterhaltung(m.id); },
           }));
           return li;
         }));
@@ -3089,7 +3095,7 @@
     akt.className = 'aktionen';
     akt.append(senden, vorschauKnopf, Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
     f.append(liste, feld('An', an), feld('Von', von), feld('Betreff', betreff), feld('Text', text),
-      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Die Mail und die Antworten darauf stehen im Postfach.' }),
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Die Mail und die Antworten darauf stehen im E-Mail-CRM.' }),
       vorschau, akt, msg);
 
     const konto = () => konten.find((k) => (k.email || '').toLowerCase() === an.value.trim().toLowerCase());
@@ -3119,7 +3125,7 @@
         dialogZu();
         const fertig = st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`;
         meldung($('#msg-konten'), fertig);
-        if (!$('[data-panel="postfach"]').hidden) { meldung($('#msg-postfach'), fertig); ladePostfach(); }
+        if (darf('konten_betreuen')) ladePostfach();
       } catch (e) {
         meldung(msg, fehlerText(e), true);
         senden.disabled = false;
