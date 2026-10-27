@@ -41,15 +41,16 @@
   const ROLLEN = { superadmin: 'Super-Admin', admin: 'Admin', support: 'Support', helfer: 'Helfer' };
   // Spiegel der Rechte-Matrix auf dem Server (meine_rolle liefert sie mit, das hier ist nur der Rückfall)
   const RECHTE_JE_ROLLE = {
-    superadmin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'konten_sehen', 'konten_betreuen', 'konten_verwalten', 'rollen', 'system'],
-    admin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'rollen'],
-    support: ['statistik', 'konten_sehen', 'konten_betreuen'],
+    superadmin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'konten_sehen', 'konten_betreuen', 'konten_verwalten', 'rollen', 'system', 'feedback'],
+    admin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'rollen', 'feedback'],
+    support: ['statistik', 'konten_sehen', 'konten_betreuen', 'feedback'],
     helfer: ['katalog_erfassen'],
   };
   const RECHTE_TEXT = [
     ['katalog_erfassen', 'Räder und Teile erfassen', 'Bei Helfern wartet alles auf Freigabe.'],
     ['katalog_pflegen', 'Katalog pflegen', 'Sofort live, Freigaben, App-Vorschläge, Bearbeiten und Löschen, Shops, Übersicht.'],
     ['statistik', 'Statistik', 'Zusammengefasste Zahlen, keine einzelnen Personen.'],
+    ['feedback', 'Feedback', 'Nachrichten von radgarage.app/feedback lesen, abhaken, beantworten.'],
     ['konten_sehen', 'Konten sehen', 'Liste der Konten mit Profilbild. Nur mit zweitem Faktor.'],
     ['konten_betreuen', 'Konten betreuen', 'Sperren, zweiten Faktor zurücksetzen.'],
     ['konten_verwalten', 'Konten verwalten', 'Konten löschen, Premium schenken.'],
@@ -279,6 +280,7 @@
     tabAusAdresse();
     ladeMarken();
     if (darf('katalog_pflegen')) ladeOffen();
+    if (darf('feedback')) feedbackZahl();
     letzteAktivitaet = Date.now();
     pruefeCodes();
     ladeEigenesBild();
@@ -319,7 +321,7 @@
 
   function tab(name) {
     const knopf = $(`nav.tabs button[data-tab="${name}"]`);
-    if (!knopf || knopf.hidden) name = ['erfassen', 'uebersicht', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || 'konto';
+    if (!knopf || knopf.hidden) name = ['erfassen', 'uebersicht', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || (darf('feedback') ? 'feedback' : 'konto');
     // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
     if (location.hash.slice(1).split('/')[0] !== name) history.pushState(null, '', `#${name}`);
     for (const b of $$('nav.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
@@ -329,6 +331,7 @@
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'statistik') ladeStatistik();
+    if (name === 'feedback') ladeFeedback();
     if (name === 'konten') ladeKonten();
     if (name === 'konto') ladeSicherheit();
   }
@@ -1219,6 +1222,117 @@
     }
   }
 
+  // ----- Feedback von radgarage.app/feedback (Recht „feedback“) -----
+
+  const FB_KATEGORIE = { verbesserung: 'Verbesserung', funktion: 'Fehlende Funktion', katalog: 'Katalog-Lücke', sonstiges: 'Sonstiges' };
+  const FB_WER = { interessent: 'Interessiert sich', nutzer: 'Nutzt die App', tester: 'Testet die App', sonstige: 'Sonstige' };
+  let fbStatus = 'neu';
+  let fbFilter = '';
+  let fbListe = [];
+  let fbNeu = 0;
+
+  function feedbackZahlSetzen(n) {
+    fbNeu = n;
+    $('#zahl-feedback').hidden = !n;
+    $('#zahl-feedback').textContent = String(n);
+    $('#fb-zahl-neu').textContent = n ? `(${n})` : '';
+  }
+
+  async function feedbackZahl() {
+    try { feedbackZahlSetzen((await rpc('feedback_anzahl')) || 0); } catch { /* Zahl ist nur Beiwerk */ }
+  }
+
+  async function ladeFeedback() {
+    meldung($('#msg-feedback'), '');
+    try {
+      fbListe = (await rpc('feedback_liste', { p_status: fbStatus })) || [];
+      if (fbStatus === 'neu') feedbackZahlSetzen(fbListe.length);
+      zeichneFeedback();
+    } catch (e) {
+      meldung($('#msg-feedback'), fehlerText(e), true);
+    }
+  }
+
+  function zeichneFeedback() {
+    for (const b of $$('#fb-status button')) b.setAttribute('aria-checked', String(b.dataset.status === fbStatus));
+    for (const b of $$('#fb-filter button')) {
+      const n = fbListe.filter((f) => !b.dataset.kat || f.kategorie === b.dataset.kat).length;
+      b.textContent = `${b.textContent.replace(/\s*\(\d+\)$/, '')}${n ? ` (${n})` : ''}`;
+      b.setAttribute('aria-checked', String(b.dataset.kat === fbFilter));
+    }
+    const zeigen = fbListe.filter((f) => !fbFilter || f.kategorie === fbFilter);
+    $('#fb-liste').replaceChildren(...zeigen.map(feedbackKarte));
+    if (!zeigen.length) $('#fb-liste').innerHTML = `<p class="fine">${fbStatus === 'neu' ? 'Kein neues Feedback.' : 'Noch nichts erledigt.'}</p>`;
+  }
+
+  function feedbackKarte(f) {
+    const div = document.createElement('div');
+    div.className = 't karte s1';
+    const kopf = document.createElement('div');
+    kopf.className = 'app-kopf';
+    const links = document.createElement('div');
+    links.append(Object.assign(document.createElement('div'), { className: 'app-art', textContent: FB_KATEGORIE[f.kategorie] || f.kategorie }));
+    const zeit = new Date(f.erstellt).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
+    const meta = [zeit, FB_WER[f.wer], f.herkunft === 'app' ? 'aus der App' : null].filter(Boolean).join(' · ');
+    links.append(Object.assign(document.createElement('div'), { className: 'meta', textContent: meta }));
+    kopf.append(links);
+    div.append(kopf, Object.assign(document.createElement('p'), { className: 'fb-text', textContent: f.text }));
+    if (f.email) {
+      const p = document.createElement('p');
+      p.className = 'meta';
+      const a = Object.assign(document.createElement('a'), {
+        href: `mailto:${f.email}?subject=${encodeURIComponent('Dein Feedback zur Radgarage')}`, textContent: f.email,
+      });
+      p.append('Antwort an ', a);
+      div.append(p);
+    } else {
+      div.append(Object.assign(document.createElement('p'), { className: 'meta', textContent: 'Ohne E-Mail-Adresse' }));
+    }
+    if (f.status === 'erledigt') {
+      div.append(Object.assign(document.createElement('p'), {
+        className: 'meta',
+        textContent: `Erledigt ${datum(f.erledigt_am)}${f.erledigt_von ? ` von ${f.erledigt_von}` : ''}`,
+      }));
+    }
+    const notiz = Object.assign(document.createElement('textarea'), {
+      className: 'fb-notiz', rows: 1, maxLength: 2000, placeholder: 'Notiz (nur intern), z. B. „kommt mit Version 1.2“', value: f.notiz || '',
+    });
+    notiz.setAttribute('aria-label', 'Interne Notiz');
+    const aktionen = document.createElement('div');
+    aktionen.className = 'aktionen';
+    const ziel = f.status === 'neu' ? 'erledigt' : 'neu';
+    aktionen.append(
+      knopf(f.status === 'neu' ? 'Erledigt' : 'Wieder öffnen', '', async () => {
+        await rpc('feedback_setzen', { p_id: f.id, p_status: ziel, p_notiz: notiz.value });
+        fbListe = fbListe.filter((x) => x !== f);
+        feedbackZahlSetzen(Math.max(0, fbNeu + (ziel === 'erledigt' ? -1 : 1)));
+        zeichneFeedback();
+      }),
+      knopf('Notiz speichern', 'ghost', async (b) => {
+        await rpc('feedback_setzen', { p_id: f.id, p_status: f.status, p_notiz: notiz.value });
+        f.notiz = notiz.value.trim();
+        meldung(b.closest('.karte').querySelector('.msg'), 'Notiz gespeichert.');
+      }),
+      knopf('Löschen', 'ghost', async (b) => {
+        if (!b.dataset.sicher) {
+          b.dataset.sicher = '1';
+          b.textContent = 'Wirklich löschen?';
+          return;
+        }
+        await rpc('feedback_loeschen', { p_id: f.id });
+        fbListe = fbListe.filter((x) => x !== f);
+        if (f.status === 'neu') feedbackZahlSetzen(Math.max(0, fbNeu - 1));
+        zeichneFeedback();
+      }),
+    );
+    div.append(notiz, aktionen, Object.assign(document.createElement('div'), { className: 'msg', role: 'status' }));
+    return div;
+  }
+
+  for (const b of $$('#fb-status button')) b.addEventListener('click', () => { fbStatus = b.dataset.status; ladeFeedback(); });
+  for (const b of $$('#fb-filter button')) b.addEventListener('click', () => { fbFilter = b.dataset.kat; zeichneFeedback(); });
+  $('#fb-neu-laden').addEventListener('click', ladeFeedback);
+
   // ----- Vorschläge aus der App und von der Website (Admin) -----
   // Gleiche Meldungen werden zu einer Karte zusammengefasst, die Zahl der Geräte zeigt, wie oft etwas gemeldet wurde.
   // Hinweise von den Radseiten auf radgarage.app tragen daten.herkunft = 'website' und stehen im eigenen Reiter.
@@ -2009,6 +2123,7 @@
       [appGruppen.length - webAnzahl - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
       [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
       [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
+      [darf('feedback') && fbNeu, 'Neues Feedback', 'von radgarage.app/feedback', () => tab('feedback')],
     ].filter(([n]) => n);
     for (const b of $$('#app-filter button')) b.setAttribute('aria-checked', String(b.dataset.art === appFilter));
     box.replaceChildren(...punkte.map(([n, titel, unter, fn]) => {
