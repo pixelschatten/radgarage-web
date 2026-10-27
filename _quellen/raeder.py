@@ -153,6 +153,7 @@ def rad_seite(r, alle):
       <p class="klein">* Aus den übrigen Teilen erschlossen, bitte am Rad prüfen. Preise sind Richtpreise ohne Gewähr.</p>
     </section>
 ''')
+    out.append(vorschlag_form(r, titel_name))
     out.append(f'''    <aside class="t k4 app">
       <div>
         <span class="eyebrow">Die App zum Rad</span>
@@ -162,12 +163,15 @@ def rad_seite(r, alle):
       <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
     </aside>
 ''')
-    andere = [x for x in alle if x['marke_slug'] == r['marke_slug'] and x['id'] != r['id']][:3]
+    # Erst andere Ausstattungen derselben Reihe (gleiches Jahr zuerst), dann die Marke, dann gleiche Radart.
+    marke = [x for x in alle if x['marke_slug'] == r['marke_slug'] and x['id'] != r['id']]
+    marke.sort(key=lambda x: (x['reihe'] != r['reihe'], abs(x['baujahr'] - r['baujahr']), x['kategorie'] != r['kategorie']))
+    andere = marke[:6]
     if len(andere) < 3:
         andere += [x for x in alle if x['marke_slug'] != r['marke_slug'] and x['kategorie'] == r['kategorie']][:3 - len(andere)]
     if andere:
         out.append(f'''    <section class="t mehr" aria-labelledby="mehr-titel">
-      <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Räder</h2>
+      <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Räder von {e(r["hersteller"])}</h2>
       <div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(andere))}</div>
     </section>
 ''')
@@ -175,8 +179,42 @@ def rad_seite(r, alle):
   <p class="hinweis">Angaben nach Herstellerdaten und Testberichten, Stand {e(r["geaendert"][:7].replace("-", "/"))}. Hersteller ändern die Ausstattung manchmal während des Modelljahrs, prüf vor dem Kauf die Teile an deinem Rad. Fehler entdeckt? Schreib uns an <a href="mailto:kontakt@radgarage.app">kontakt@radgarage.app</a> oder nutze in der App „Verbesserung vorschlagen“. Shop-Links sind Suchlinks, keine Partnerlinks.</p>
   </main>
 ''')
+    out.append('<script src="/raeder/vorschlag.js?v=1" defer></script>\n')
     out.append(FUSS)
     return ''.join(out)
+
+
+GRUENDE = [
+    ('falsch', 'Teil stimmt nicht'), ('fehlt', 'Teil fehlt'), ('zuviel', 'Teil nicht verbaut'),
+    ('rad', 'Name oder Baujahr'), ('sonst', 'Etwas anderes'),
+]
+
+
+def vorschlag_form(r, titel_name):
+    """Hinweis ohne Anmeldung, landet wie die Korrekturen aus der App in vorschlaege (daten.herkunft = 'website')."""
+    gruende = ''.join(
+        f'<label><input type="radio" name="grund" value="{g}" required> {e(t)}</label>' for g, t in GRUENDE)
+    teile = ''.join(
+        f'<option value="{e(t["id"])}">{e(NAMEN.get(t["kategorie"], t["kategorie"]))}: {e(teilname(t))}</option>' for t in r['teile'])
+    return f'''    <section class="t s2 voll vorschlag" id="verbessern" aria-labelledby="vs-titel">
+      <span class="eyebrow">Mitmachen</span>
+      <h2 id="vs-titel" style="font-size:30px;margin:6px 0 6px">Stimmt etwas nicht?</h2>
+      <p>Du kennst das {e(r["modell"])} besser? Sag uns, was falsch ist oder fehlt. Ganz ohne Anmeldung. Wir prüfen jeden Hinweis und verbessern den Katalog für alle.</p>
+      <form class="vs-form" data-rad="{e(r["id"])}" data-titel="{e(titel_name)}" novalidate>
+        <fieldset><legend>Was ist los?</legend><div class="wahl">{gruende}</div></fieldset>
+        <label class="feld vs-teil" hidden>Welches Teil?
+          <select name="teil"><option value="">Bitte wählen</option>{teile}</select></label>
+        <label class="feld">Was ist richtig? <span class="vs-frei" hidden>(freiwillig)</span>
+          <textarea name="text" rows="3" maxlength="1000" placeholder="z. B. Verbaut ist eine Shimano CN-M8100, nicht CN-M7100"></textarea></label>
+        <label class="feld">Woher weißt du das? <span>(freiwillig, z. B. Link zur Herstellerseite)</span>
+          <input type="text" name="beleg" maxlength="300" autocomplete="off"></label>
+        <label class="falle" aria-hidden="true">Bitte leer lassen <input type="text" name="webseite" tabindex="-1" autocomplete="off"></label>
+        <div class="actions"><button class="pill" type="submit">Hinweis senden</button></div>
+        <p class="msg" role="status" hidden></p>
+        <p class="klein">Wir speichern nur deinen Hinweis, keinen Namen und keine E-Mail-Adresse. Mehr in der <a href="/datenschutz.html#hinweise">Datenschutzerklärung</a>.</p>
+      </form>
+    </section>
+'''
 
 
 def radkarte(r, i=0, ebene='h3'):
@@ -192,6 +230,16 @@ def marken(alle):
     return m
 
 
+def reihen_abschnitte(raeder):
+    reihen = OrderedDict()
+    for r in sorted(raeder, key=lambda x: (x['reihe'].lower(), -x['baujahr'], x['modell'])):
+        reihen.setdefault(r['reihe'], []).append(r)
+    return '\n'.join(
+        f'  <section class="reihe-abschnitt" aria-label="{e(name)}"><h2 class="zwischen">{e(name)}</h2>'
+        f'<div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(rs))}</div></section>'
+        for name, rs in reihen.items())
+
+
 def marken_seite(slug, raeder):
     name = raeder[0]['hersteller']
     pfad = f'/raeder/{slug}/'
@@ -203,12 +251,10 @@ def marken_seite(slug, raeder):
     <div class="t k1 kopf">
       <span class="eyebrow">Marke</span>
       <h1>{e(name)}: Teile und Ersatzteile</h1>
-      <p class="lead">Wähle dein Modell und sieh, welche Kette, Bremsbeläge, Reifen und anderen Teile verbaut sind.</p>
+      <p class="lead">{len(raeder)} Modelle im Katalog. Wähle dein Rad und sieh, welche Kette, Bremsbeläge, Reifen und anderen Teile verbaut sind.</p>
     </div>
   </div>
-  <section aria-label="Modelle" style="margin-top:14px">
-    <div class="karten">{"".join(radkarte(r, i, 'h2') for i, r in enumerate(raeder))}</div>
-  </section>
+{reihen_abschnitte(raeder)}
   </main>
 ''', FUSS]
     return ''.join(out)

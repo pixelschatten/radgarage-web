@@ -19,3 +19,19 @@
   .teiltabelle td:first-of-type { width: calc(100% - 80px); }
   .teiltabelle .preis { width: 76px; }
 }
+.reihe-abschnitt { margin-top: 10px; }
+
+/* Hinweis-Formular auf den Radseiten */
+.vorschlag > p { color: var(--ink2); max-width: 46em; }
+.vs-form { margin-top: 16px; max-width: 760px; }
+.vs-form .wahl { grid-template-columns: repeat(3, 1fr); }
+.vs-form .feld { display: grid; gap: 6px; font-weight: 800; font-size: 15px; color: var(--ink); }
+.vs-form .feld span { font-weight: 500; color: var(--muted); }
+.vs-form textarea, .vs-form select, .vs-form input[type=text] { width: 100%; font: inherit; font-size: 17px; font-weight: 500; padding: 13px 16px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+.vs-form textarea { resize: vertical; min-height: 96px; }
+.vs-form textarea:focus-visible, .vs-form select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.vs-form .msg.fehler { background: var(--warn-bg); color: var(--warn); }
+.vs-form .klein { margin: 0 !important; }
+.falle { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+@media (max-width: 900px) { .vs-form .wahl { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .vs-form .wahl { grid-template-columns: 1fr; } }

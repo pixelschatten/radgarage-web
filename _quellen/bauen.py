@@ -31,6 +31,7 @@ if __name__ == '__main__':
         an.schreiben(f'anleitungen/{a["slug"]}/index.html', an.anleitung_seite(a, an.ANLEITUNGEN))
         seiten.append(f'/anleitungen/{a["slug"]}/')
     alle = ra.laden()
+    an.schreiben('raeder/vorschlag.js', lesen('_quellen/vorschlag.js'))
     an.schreiben('raeder/index.html', ra.uebersicht_seite(alle, GESAMT_RAEDER))
     for slug, rs in ra.marken(alle).items():
         an.schreiben(f'raeder/{slug}/index.html', ra.marken_seite(slug, rs))

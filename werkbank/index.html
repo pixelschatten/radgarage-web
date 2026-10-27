@@ -804,13 +804,14 @@ table.rechte td.nein { color: var(--muted); }
         <div class="segment" role="radiogroup" aria-label="Herkunft" id="fg-ansicht">
           <button type="button" role="radio" data-ansicht="helfer" aria-checked="true">Von Helfern <span class="opt" id="fg-zahl-helfer"></span></button>
           <button type="button" role="radio" data-ansicht="app" aria-checked="false">Aus der App <span class="opt" id="fg-zahl-app"></span></button>
+          <button type="button" role="radio" data-ansicht="web" aria-checked="false">Von der Website <span class="opt" id="fg-zahl-web"></span></button>
         </div>
         <button class="pill ghost klein" type="button" data-neu-laden>Neu laden</button>
       </div>
       <div class="msg" role="status" id="msg-freigaben"></div>
       <div class="karten" id="offen"></div>
       <div id="app-box" hidden>
-        <p class="fine">Was Nutzer in der App melden. Gleiche Meldungen von mehreren Geräten stehen zusammen, die Zahl zeigt, wie viele Geräte es gemeldet haben.</p>
+        <p class="fine" id="app-info">Was Nutzer in der App melden. Gleiche Meldungen von mehreren Geräten stehen zusammen, die Zahl zeigt, wie viele Geräte es gemeldet haben.</p>
         <div class="segment" role="radiogroup" aria-label="Art" id="app-filter" style="margin:4px 0 14px; flex-wrap: wrap">
           <button type="button" role="radio" data-art="" aria-checked="true">Alle</button>
           <button type="button" role="radio" data-art="korrektur" aria-checked="false">Korrekturen</button>
@@ -848,6 +849,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-6"></script>
+<script src="werkbank.js?v=2026-10-27-7"></script>
 </body>
 </html>
