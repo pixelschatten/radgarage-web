@@ -338,7 +338,7 @@
 
   function tab(name) {
     const knopf = $(`nav.tabs button[data-tab="${name}"]`);
-    if (!knopf || knopf.hidden) name = ['erfassen', 'uebersicht', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || (darf('feedback') ? 'feedback' : 'konto');
+    if (!knopf || knopf.hidden) name = ['uebersicht', 'erfassen', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || (darf('feedback') ? 'feedback' : 'konto');
     // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
     if (location.hash.slice(1).split('/')[0] !== name) history.pushState(null, '', `#${name}`);
     for (const b of $$('nav.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));

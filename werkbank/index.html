@@ -448,11 +448,11 @@ table.rechte td.nein { color: var(--muted); }
   <!-- Werkbank -->
   <main id="s-werkbank" hidden>
     <nav class="tabs" role="tablist">
-      <button type="button" role="tab" data-tab="erfassen" aria-selected="true" data-recht="katalog_erfassen">Rad erfassen</button>
+      <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" data-recht="katalog_pflegen">Übersicht</button>
+      <button type="button" role="tab" data-tab="erfassen" aria-selected="false" data-recht="katalog_erfassen">Rad erfassen</button>
       <button type="button" role="tab" data-tab="freigaben" aria-selected="false" data-recht="katalog_pflegen">Freigaben<span class="zahl" id="zahl-offen" hidden></span></button>
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
-      <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" data-recht="katalog_pflegen">Übersicht</button>
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
@@ -879,6 +879,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-9"></script>
+<script src="werkbank.js?v=2026-10-27-10"></script>
 </body>
 </html>
