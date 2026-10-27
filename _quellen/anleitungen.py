@@ -260,6 +260,19 @@ def euro(n):
     return f'ca. {n} €'
 
 
+HAUPTMENUE = [('/anleitungen/', 'Anleitungen'), ('/raeder/', 'Räder'), ('/teile/', 'Ersatzteile')]
+
+
+def kopfnav(pfad):
+    """Hauptmenü im Kopf. Der Bereich, in dem die Seite liegt, ist markiert."""
+    def aktiv(h):
+        if not pfad.startswith(h):
+            return ''
+        return ' aria-current="page"' if pfad == h else ' aria-current="true"'
+    links = ''.join(f'<a href="{h}"{aktiv(h)}>{e(t)}</a>' for h, t in HAUPTMENUE)
+    return f'<nav class="kopfnav" aria-label="Hauptmenü">{links}</nav>'
+
+
 def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werkstatt.jpg'):
     url = SEITE + pfad
     daten = '\n'.join(
@@ -290,6 +303,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
+    {kopfnav(pfad)}
     <a class="pill" href="/#anmelden">Testzugang sichern</a>
   </header>
 '''

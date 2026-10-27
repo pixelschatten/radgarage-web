@@ -207,12 +207,23 @@ body { padding-top: env(safe-area-inset-top, 0px); }
 .legal-page li { margin-bottom: 4px; }
 .back { font-weight: 700; }
 footer { padding-bottom: 40px; }
+/* Hauptmenü im Kopf, auf dem Handy als eigene Zeile unter Logo und Knopf */
+.kopfnav { display: flex; gap: 4px; margin: 0 auto 0 20px; }
+.kopfnav a { text-decoration: none; font-weight: 700; font-size: 16px; padding: 10px 14px; border-radius: 999px; color: var(--text); white-space: nowrap; }
+.kopfnav a:hover, .kopfnav a[aria-current] { background: var(--surface); }
+@media (max-width: 760px) {
+  header { flex-wrap: wrap; }
+  .kopfnav { order: 3; width: 100%; margin: 0; background: var(--surface); border-radius: 999px; padding: 4px; gap: 2px; }
+  .kopfnav a { flex: 1; text-align: center; padding: 9px 4px; font-size: 15px; }
+  .kopfnav a:hover, .kopfnav a[aria-current] { background: var(--bg); }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <a href="./" class="logo">Radgarage</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
     <a class="pill" href="./#anmelden">Testzugang sichern</a>
   </header>
   <main>
