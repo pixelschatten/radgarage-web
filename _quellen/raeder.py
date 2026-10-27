@@ -34,6 +34,32 @@ SHOPS = [
     ('ROSE Bikes', 'https://www.rosebikes.de/search?q={q}'),
 ]
 FARBEN = ['k1', 'k2', 'k3', 'k4', 'k5']
+JAHRES_KM = 3000  # Beispiel-Fahrleistung für die Wartungskosten pro Jahr
+
+
+def _teile_laden():
+    # Alle geprüften Teile mit passt_key, erzeugt mit _quellen/teile-auszug.sql
+    with open(os.path.join(WURZEL, '_quellen/teile-auszug.json'), encoding='utf-8') as f:
+        return {t['id']: t for t in json.load(f)}
+
+
+TEILE = _teile_laden()
+
+
+def alternativen(teil_id):
+    """Teile mit gleichem passt_key, günstigste zuerst."""
+    t = TEILE.get(teil_id)
+    if not t or not t['passt_key']:
+        return []
+    alt = [a for a in TEILE.values() if a['passt_key'] == t['passt_key'] and a['id'] != teil_id]
+    return sorted(alt, key=lambda a: (a['preis'] is None, a['preis'] or 0, a['marke'], a['name']))
+
+
+def slug(s):
+    s = s.lower().replace('+', ' plus')
+    for a, b in [('ä', 'ae'), ('ö', 'oe'), ('ü', 'ue'), ('ß', 'ss'), ('é', 'e'), ('è', 'e')]:
+        s = s.replace(a, b)
+    return re.sub(r'[^a-z0-9]+', '-', s).strip('-')
 
 
 def laden():
@@ -45,6 +71,16 @@ def laden():
         r['pfad'] = f'/raeder/{r["marke_slug"]}/{r["slug"]}/'
         r['name'] = f'{r["hersteller"]} {r["modell"]}'
         r['teile'] = r['teile'] or []
+    # Reihenseite nur, wenn die Reihe mindestens zwei Räder hat. Der Slug darf nicht mit einer Ziffer
+    # beginnen, sonst könnte er mit den Radpfaden /raeder/<marke>/<jahr>-<modell>/ kollidieren.
+    zahl = {}
+    for r in raeder:
+        zahl[(r['marke_slug'], r['reihe'])] = zahl.get((r['marke_slug'], r['reihe']), 0) + 1
+    for r in raeder:
+        s = slug(r['reihe'])
+        if s[:1].isdigit():
+            s = f'{r["marke_slug"]}-{s}'
+        r['reihe_pfad'] = f'/raeder/{r["marke_slug"]}/{s}/' if zahl[(r['marke_slug'], r['reihe'])] > 1 else None
     return raeder
 
 
@@ -54,6 +90,74 @@ def preis(p):
 
 def teilname(t):
     return t['name'] if t['name'].lower().startswith(t['marke'].lower()) or t['marke'] == 'Universal' else f'{t["marke"]} {t["name"]}'
+
+
+def teil_link(t):
+    return f'<a href="/teile/{e(t["id"])}/">{e(teilname(t))}</a>' if t['id'] in TEILE else e(teilname(t))
+
+
+def wartungskosten(teile):
+    """Teilekosten der Verschleißteile pro 1.000 km nach den Richtwerten der App.
+
+    Ein Bremsbelag- oder Reifeneintrag gilt für beide Räder, zwei Einträge stehen für vorne und hinten.
+    Gibt None zurück, wenn zu wenig Preise bekannt sind.
+    """
+    posten, fehlt = [], []
+    for kat in ['Kette', 'Kassette', 'Bremsbelag', 'Reifen']:
+        ts = [t for t in teile if t['kategorie'] == kat]
+        anzahl = 2 if kat in ('Bremsbelag', 'Reifen') and len(ts) == 1 else 1
+        for t in ts[:2]:
+            if not t['preis']:
+                fehlt.append(t)
+                continue
+            je_1000 = float(t['preis']) * anzahl * 1000 / RICHTWERT_KM[kat]
+            posten.append({'teil': t, 'anzahl': anzahl, 'km': RICHTWERT_KM[kat], 'je_1000': je_1000})
+    # Nur zeigen, wenn Beläge, Reifen und Kette oder Kassette mit Preis drin sind, sonst wirkt der Wert zu niedrig.
+    kats = {p['teil']['kategorie'] for p in posten}
+    if not ({'Bremsbelag', 'Reifen'} <= kats and kats & {'Kette', 'Kassette'}):
+        return None
+    return {'posten': posten, 'fehlt': fehlt, 'summe': sum(p['je_1000'] for p in posten),
+            'riemen': any(t['kategorie'] == 'Riemen' for t in teile)}
+
+
+def euro_genau(x):
+    return f'{x:.2f} €'.replace('.', ',')
+
+
+def tsd(n):
+    return f'{n:,}'.replace(',', '.')
+
+
+def liste(w):
+    namen = []
+    for p in w['posten']:
+        n = {'Bremsbelag': 'Bremsbeläge', 'Kette': 'Kette', 'Kassette': 'Kassette', 'Reifen': 'Reifen'}[p['teil']['kategorie']]
+        if n not in namen:
+            namen.append(n)
+    return ', '.join(namen[:-1]) + ' und ' + namen[-1]
+
+
+def wartung_kasten(r, w):
+    zeilen = ''.join(
+        f'<tr><th scope="row">{e(NAMEN.get(p["teil"]["kategorie"], p["teil"]["kategorie"]))}</th>'
+        f'<td>{teil_link(p["teil"])}<span>{"2 × " if p["anzahl"] == 2 else ""}{preis(p["teil"]["preis"])}, '
+        f'Wechsel etwa alle {tsd(p["km"])} km</span></td>'
+        f'<td class="preis">{euro_genau(p["je_1000"])}</td></tr>'
+        for p in w['posten'])
+    zusatz = []
+    if w['fehlt']:
+        zusatz.append('Ohne Preis und deshalb nicht eingerechnet: ' + ', '.join(e(teilname(t)) for t in w['fehlt']) + '.')
+    if w['riemen']:
+        zusatz.append('Der Riemen hält meist deutlich länger als eine Kette und ist nicht eingerechnet.')
+    jahr = round(w['summe'] * JAHRES_KM / 1000)
+    return f'''    <section class="t k2 voll wartung" aria-labelledby="wk-titel">
+      <span class="eyebrow">Unterhalt</span>
+      <h2 id="wk-titel" style="font-size:30px;margin:6px 0 4px">Was kostet das {e(r["modell"])} im Unterhalt?</h2>
+      <p>Rund <b>{euro_genau(w["summe"])} pro 1.000 km</b> für {liste(w)}. Bei {tsd(JAHRES_KM)} km im Jahr sind das etwa <b>{jahr} € Teilekosten</b>.</p>
+      <table class="teiltabelle"><tbody>{zeilen}</tbody></table>
+      <p class="klein">Nur Teile, ohne Werkstatt. Gerechnet mit Richtpreisen und typischen Wechselabständen, die je nach Fahrweise, Wetter und Pflege stark schwanken. {" ".join(zusatz)} In der App rechnet die Radgarage mit deinen eigenen Kilometern.</p>
+    </section>
+'''
 
 
 def hinweis(t):
@@ -69,7 +173,7 @@ def shoplinks(t):
 def verschleiss_kachel(t, farbe):
     kat = t['kategorie']
     zeilen = [f'<span class="eyebrow">{e(NAMEN.get(kat, kat))}</span>',
-              f'<h3>{e(teilname(t))}</h3>']
+              f'<h3>{teil_link(t)}</h3>']
     info = ', '.join(x for x in [t['merkmale'], hinweis(t)] if x)
     if info:
         zeilen.append(f'<p>{e(info)}</p>')
@@ -82,9 +186,9 @@ def verschleiss_kachel(t, farbe):
         zeilen.append(f'<p class="fakten">{"".join(fakten)}</p>')
     if t['abgeleitet']:
         zeilen.append('<p class="pruefen">Aus den übrigen Teilen erschlossen, bitte am Rad prüfen.</p>')
-    alt = [a for a in (t.get('alternativen') or []) if a['marke'] != 'Universal']
+    alt = [a for a in alternativen(t['id']) if a['marke'] != 'Universal'][:3]
     if alt:
-        namen = ', '.join(e(teilname(a)) for a in alt)
+        namen = ', '.join(teil_link(a) for a in alt)
         zeilen.append(f'<p class="klein"><b>Passt auch:</b> {namen}</p>')
     zeilen.append(f'<p class="klein">Suchen bei {shoplinks(t)}</p>')
     if kat in ANLEITUNG:
@@ -94,8 +198,9 @@ def verschleiss_kachel(t, farbe):
 
 
 def rad_seite(r, alle):
-    nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r['hersteller'], f'/raeder/{r["marke_slug"]}/'),
-                        (f'{r["modell"]} ({r["baujahr"]})', r['pfad'])])
+    reihe = [(r['reihe'], r['reihe_pfad'])] if r['reihe_pfad'] else []
+    nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r['hersteller'], f'/raeder/{r["marke_slug"]}/')]
+                       + reihe + [(f'{r["modell"]} ({r["baujahr"]})', r['pfad'])])
     teile = r['teile']
     vers = [t for t in teile if t['kategorie'] in VERSCHLEISS]
     vers.sort(key=lambda t: VERSCHLEISS.index(t['kategorie']))
@@ -133,6 +238,9 @@ def rad_seite(r, alle):
       <div class="karten">{karten}</div>
     </section>
 ''')
+    w = wartungskosten(teile)
+    if w:
+        out.append(wartung_kasten(r, w))
     gruppen = []
     for name, kats in GRUPPEN:
         g = [t for t in teile if t['kategorie'] in kats]
@@ -141,7 +249,7 @@ def rad_seite(r, alle):
         g.sort(key=lambda t: kats.index(t['kategorie']))
         zeilen = ''.join(
             f'<tr><th scope="row">{e(NAMEN.get(t["kategorie"], t["kategorie"]))}</th>'
-            f'<td><b>{e(teilname(t))}</b>{"<sup>*</sup>" if t["abgeleitet"] else ""}'
+            f'<td><b>{teil_link(t)}</b>{"<sup>*</sup>" if t["abgeleitet"] else ""}'
             f'{"<span>" + e(", ".join(x for x in [t["merkmale"], hinweis(t)] if x)) + "</span>" if (t["merkmale"] or hinweis(t)) else ""}</td>'
             f'<td class="preis">{preis(t["preis"])}</td></tr>'
             for t in g)
@@ -230,12 +338,18 @@ def marken(alle):
     return m
 
 
+def reihe_titel(name, rs):
+    p = rs[0]['reihe_pfad']
+    return f'<a href="{p}">{e(name)}</a>' if p else e(name)
+
+
 def reihen_abschnitte(raeder):
     reihen = OrderedDict()
     for r in sorted(raeder, key=lambda x: (x['reihe'].lower(), -x['baujahr'], x['modell'])):
         reihen.setdefault(r['reihe'], []).append(r)
     return '\n'.join(
-        f'  <section class="reihe-abschnitt" aria-label="{e(name)}"><h2 class="zwischen">{e(name)}</h2>'
+        f'  <section class="reihe-abschnitt" aria-label="{e(name)}"><h2 class="zwischen">'
+        f'{reihe_titel(name, rs)}</h2>'
         f'<div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(rs))}</div></section>'
         for name, rs in reihen.items())
 
@@ -282,3 +396,76 @@ def uebersicht_seite(alle, gesamt):
   </section>
   </main>
 ''', FUSS])
+
+
+def reihen(alle):
+    """Räder je Reihenseite, nur Reihen mit mindestens zwei Rädern."""
+    m = OrderedDict()
+    for r in sorted(alle, key=lambda x: (x['hersteller'].lower(), x['reihe'].lower(), -x['baujahr'], x['modell'])):
+        if r['reihe_pfad']:
+            m.setdefault(r['reihe_pfad'], []).append(r)
+    return m
+
+
+def _erstes(r, *kats):
+    for k in kats:
+        t = next((t for t in r['teile'] if t['kategorie'] == k), None)
+        if t:
+            return teil_link(t)
+    return '–'
+
+
+def reihe_seite(pfad, rs):
+    r0 = rs[0]
+    name = f'{r0["hersteller"]} {r0["reihe"]}'
+    jahre = sorted({r['baujahr'] for r in rs})
+    spanne = f'{jahre[0]}' if len(jahre) == 1 else f'{jahre[0]} bis {jahre[-1]}'
+    nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r0['hersteller'], f'/raeder/{r0["marke_slug"]}/'),
+                        (r0['reihe'], pfad)])
+    titel = f'{name}: alle Ausstattungen und Teile im Vergleich'
+    if len(titel) < 50:
+        titel += ' | Radgarage'
+    beschr = (f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
+              f'UVP und was jede Version im Unterhalt kostet.')
+    liste = {'@context': 'https://schema.org', '@type': 'ItemList', 'name': name,
+             'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + r['pfad'],
+                                  'name': f'{r["name"]} ({r["baujahr"]})'} for i, r in enumerate(rs)]}
+    zeilen = []
+    guenstig = None
+    for r in rs:
+        w = wartungskosten(r['teile'])
+        if w and (guenstig is None or w['summe'] < guenstig[1]):
+            guenstig = (r, w['summe'])
+        uvp = f'{tsd(round(r["uvp_eur"]))} €' if r['uvp_eur'] else '–'
+        zeilen.append(
+            f'<tr><th scope="row"><a href="{r["pfad"]}">{e(r["modell"])}</a></th><td>{r["baujahr"]}</td>'
+            f'<td class="zahl">{uvp}</td><td>{_erstes(r, "Schaltwerk", "Motor")}</td>'
+            f'<td>{_erstes(r, "Bremssattel", "Bremsbelag")}</td><td>{_erstes(r, "Reifen")}</td>'
+            f'<td class="zahl">{euro_genau(w["summe"]) if w else "–"}</td></tr>')
+    satz = ''
+    if guenstig and len(rs) > 2:
+        satz = (f' Am günstigsten im Unterhalt ist das {e(guenstig[0]["modell"])} ({guenstig[0]["baujahr"]}) '
+                f'mit rund {euro_genau(guenstig[1])} pro 1.000 km.')
+    out = [kopf(titel, beschr, pfad, [liste, brot]), nav, f'''  <main>
+  <div class="bento uebersicht">
+    <div class="t k3 kopf">
+      <span class="eyebrow">{e(r0["kategorie"])} · {e(r0["hersteller"])}</span>
+      <h1>{e(name)}: Ausstattungen im Vergleich</h1>
+      <p class="lead">{len(rs)} Versionen aus den Modelljahren {spanne}. Hier siehst du auf einen Blick, womit sie sich unterscheiden.{satz}</p>
+    </div>
+    <section class="t s1 voll vergleich" aria-labelledby="vg-titel">
+      <h2 id="vg-titel" style="font-size:30px;margin:0 0 10px">Ausstattung und Unterhalt</h2>
+      <div class="tabelle-rahmen"><table class="vergleichstabelle">
+        <thead><tr><th scope="col">Ausstattung</th><th scope="col">Jahr</th><th scope="col" class="zahl">UVP</th><th scope="col">Schaltung</th><th scope="col">Bremse</th><th scope="col">Reifen</th><th scope="col" class="zahl">Unterhalt je 1.000 km</th></tr></thead>
+        <tbody>{"".join(zeilen)}</tbody>
+      </table></div>
+      <p class="klein">Unterhalt = Teilekosten für Kette, Kassette, Bremsbeläge und Reifen (soweit Preise bekannt) nach Richtpreisen und typischen Wechselabständen, ohne Werkstatt. Angaben ohne Gewähr.</p>
+    </section>
+  </div>
+  <section aria-label="Alle Versionen" style="margin-top:14px">
+    <h2 class="zwischen">Alle Versionen</h2>
+    <div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(rs))}</div>
+  </section>
+  </main>
+''', FUSS]
+    return ''.join(out)

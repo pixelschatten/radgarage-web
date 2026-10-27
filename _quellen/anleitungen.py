@@ -299,7 +299,8 @@ FUSS = '''  <footer>
     <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
     <nav>
       <a href="/anleitungen/">Anleitungen</a>
-      <a href="/raeder/">Räder und Teile</a>
+      <a href="/raeder/">Räder</a>
+      <a href="/teile/">Ersatzteile</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="/impressum.html">Impressum</a>
       <a href="/datenschutz.html">Datenschutz</a>
