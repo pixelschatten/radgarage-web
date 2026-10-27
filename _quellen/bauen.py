@@ -1,4 +1,4 @@
-"""Baut alle generierten Seiten: Anleitungen, Modellseiten, Reihen- und Teileseiten, gemeinsames CSS und sitemap.xml.
+"""Baut alle generierten Seiten: Anleitungen, Modellseiten, Reihen- und Teileseiten, Feedback, gemeinsames CSS und sitemap.xml.
 
 Aufruf im Repo-Wurzelordner: python3 _quellen/bauen.py
 """
@@ -8,6 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import anleitungen as an
+import feedback as fb
 import raeder as ra
 import teile as te
 
@@ -44,6 +45,9 @@ if __name__ == '__main__':
         an.schreiben(pfad.strip('/') + '/index.html', ra.reihe_seite(pfad, rs))
         seiten.append(pfad)
     seiten += te.bauen(alle, an.schreiben)
+    an.schreiben('feedback/index.html', fb.seite())
+    an.schreiben('feedback/feedback.js', lesen('_quellen/feedback.js'))
+    seiten.append('/feedback/')
     seiten += ['/datenschutz.html', '/impressum.html', '/konto-loeschen.html']
     an.schreiben('sitemap.xml', sitemap(seiten))
     print(f'{len(an.ANLEITUNGEN)} Anleitungen, {len(alle)} Räder, {len(seiten)} Seiten in der Sitemap.')

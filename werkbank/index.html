@@ -303,6 +303,8 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 .segment .opt { color: inherit; opacity: .75; font-weight: 700; }
 .app-kopf { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 .app-kopf h3 { margin: 0; }
+.fb-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 10px; }
+.fb-notiz { width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border-radius: 14px; border: 2px solid var(--line); background: var(--bg); color: var(--text); resize: vertical; min-height: 44px; margin-bottom: 10px; }
 .app-art { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 .karte .zitat { margin: 8px 0; padding: 8px 12px; border-left: 3px solid var(--line); color: var(--text); font-size: 15px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .karte ul.kurz { margin: 6px 0 10px; padding-left: 20px; font-size: 15px; }
@@ -451,6 +453,7 @@ table.rechte td.nein { color: var(--muted); }
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" data-recht="katalog_pflegen">Übersicht</button>
+      <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
@@ -823,6 +826,27 @@ table.rechte td.nein { color: var(--muted); }
       </div>
     </section>
 
+    <!-- Feedback von radgarage.app/feedback -->
+    <section data-panel="feedback" hidden>
+      <div class="st-kopf">
+        <div class="segment" role="radiogroup" aria-label="Status" id="fb-status">
+          <button type="button" role="radio" data-status="neu" aria-checked="true">Neu <span class="opt" id="fb-zahl-neu"></span></button>
+          <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
+        </div>
+        <button class="pill ghost klein" type="button" id="fb-neu-laden">Neu laden</button>
+      </div>
+      <p class="fine">Was Besucher und Nutzer über radgarage.app/feedback schicken. Neue Einträge kommen zusätzlich per Mail an feedback@radgarage.app. Erledigtes wird ein Jahr nach dem Abhaken automatisch gelöscht.</p>
+      <div class="segment" role="radiogroup" aria-label="Kategorie" id="fb-filter" style="margin:4px 0 14px; flex-wrap: wrap">
+        <button type="button" role="radio" data-kat="" aria-checked="true">Alle</button>
+        <button type="button" role="radio" data-kat="verbesserung" aria-checked="false">Verbesserung</button>
+        <button type="button" role="radio" data-kat="funktion" aria-checked="false">Fehlende Funktion</button>
+        <button type="button" role="radio" data-kat="katalog" aria-checked="false">Katalog-Lücke</button>
+        <button type="button" role="radio" data-kat="sonstiges" aria-checked="false">Sonstiges</button>
+      </div>
+      <div class="msg" role="status" id="msg-feedback"></div>
+      <div class="karten" id="fb-liste"></div>
+    </section>
+
     <!-- Eigene offene Räder (Helfer) -->
     <section data-panel="eigene" hidden>
       <p class="fine">Diese Räder und Ergänzungen warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
@@ -849,6 +873,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-7"></script>
+<script src="werkbank.js?v=2026-10-27-8"></script>
 </body>
 </html>
