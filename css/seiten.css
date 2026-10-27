@@ -307,3 +307,19 @@ footer { padding-bottom: 40px; }
 .falle { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 @media (max-width: 900px) { .vs-form .wahl { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 600px) { .vs-form .wahl { grid-template-columns: 1fr; } }
+
+/* Wartungskosten auf der Radseite, Vergleich auf der Reihenseite */
+.wartung > p { max-width: 46em; }
+.wartung .teiltabelle { margin-top: 12px; }
+.tabelle-rahmen { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; }
+.vergleichstabelle { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 15px; }
+.vergleichstabelle th, .vergleichstabelle td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-top: 1px solid var(--line); }
+.vergleichstabelle thead th { border-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.vergleichstabelle .zahl { text-align: right; white-space: nowrap; }
+.vergleichstabelle tbody th a { font-weight: 800; }
+
+/* Teileseiten */
+.radliste { columns: 3 240px; column-gap: 28px; margin: 6px 0 0; padding: 0; list-style: none; }
+.radliste li { break-inside: avoid; padding: 5px 0; border-top: 1px solid var(--line); font-size: 15px; }
+.radliste .marke { font-weight: 800; color: var(--muted); border-top: 0; padding-top: 14px; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+.teil-kauf .actions { margin-top: 12px; }

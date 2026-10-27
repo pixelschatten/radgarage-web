@@ -1,4 +1,4 @@
-"""Baut alle generierten Seiten: Anleitungen, Modellseiten, gemeinsames CSS und sitemap.xml.
+"""Baut alle generierten Seiten: Anleitungen, Modellseiten, Reihen- und Teileseiten, gemeinsames CSS und sitemap.xml.
 
 Aufruf im Repo-Wurzelordner: python3 _quellen/bauen.py
 """
@@ -9,6 +9,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import anleitungen as an
 import raeder as ra
+import teile as te
 
 GESAMT_RAEDER = 800  # für den Text der Übersicht („über 800 Fahrräder“), beim Katalogausbau anpassen
 
@@ -39,6 +40,10 @@ if __name__ == '__main__':
     for r in alle:
         an.schreiben(r['pfad'].strip('/') + '/index.html', ra.rad_seite(r, alle))
         seiten.append(r['pfad'])
+    for pfad, rs in ra.reihen(alle).items():
+        an.schreiben(pfad.strip('/') + '/index.html', ra.reihe_seite(pfad, rs))
+        seiten.append(pfad)
+    seiten += te.bauen(alle, an.schreiben)
     seiten += ['/datenschutz.html', '/impressum.html', '/konto-loeschen.html']
     an.schreiben('sitemap.xml', sitemap(seiten))
     print(f'{len(an.ANLEITUNGEN)} Anleitungen, {len(alle)} Räder, {len(seiten)} Seiten in der Sitemap.')
