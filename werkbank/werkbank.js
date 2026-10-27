@@ -1435,7 +1435,7 @@
       const wer = n.richtung === 'aus' ? `${n.team || 'Team'} an ${n.an}` : (n.von_name ? `${n.von_name} <${n.von}>` : n.von);
       const zusatz = [];
       if (n.richtung === 'aus' && n.status && n.status >= 300) zusatz.push(`von Brevo abgelehnt (${n.status})`);
-      if (n.richtung === 'ein' && n.spam >= 6) zusatz.push('wahrscheinlich Spam');
+      if (n.richtung === 'ein' && n.spam >= 15) zusatz.push('wahrscheinlich Spam');
       d.append(Object.assign(document.createElement('div'), { className: 'meta', textContent: `${zeitDe(n.erstellt)} · ${wer}${zusatz.length ? ` · ${zusatz.join(', ')}` : ''}` }));
       if (n.betreff && n.betreff !== u.betreff) d.append(Object.assign(document.createElement('strong'), { textContent: n.betreff }));
       d.append(Object.assign(document.createElement('p'), { className: 'fb-text', textContent: n.text || '(kein Text)' }));
