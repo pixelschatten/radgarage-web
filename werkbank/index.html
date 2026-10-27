@@ -127,6 +127,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 .treffer button { width: 100%; text-align: left; font: inherit; font-size: 15px; padding: 9px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--bg); color: var(--text); cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
 .treffer button:hover { border-color: var(--accent); }
 .treffer small { color: var(--muted); white-space: nowrap; }
+.treffer button.neu-anlegen { border-style: dashed; font-weight: 700; }
 
 details.neu-teil { margin-top: 14px; border-top: 2px solid var(--line); padding-top: 12px; }
 details.neu-teil summary { font-weight: 800; cursor: pointer; }
@@ -529,7 +530,7 @@ table.rechte td.nein { color: var(--muted); }
         <div class="t k5">
           <h3>Teil hinzufügen</h3>
           <label>Im Katalog suchen
-            <input type="search" id="suche" placeholder="z. B. Shimano 105 Kette" autocomplete="off">
+            <input type="search" id="suche" placeholder="Teil eintippen oder einfügen, z. B. Shimano CN-M8100" autocomplete="off">
           </label>
           <ul class="treffer" id="treffer"></ul>
           <p class="fine" id="such-info"></p>
@@ -847,6 +848,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-5"></script>
+<script src="werkbank.js?v=2026-10-27-6"></script>
 </body>
 </html>
