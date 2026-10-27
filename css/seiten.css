@@ -269,3 +269,25 @@ footer { padding-bottom: 40px; }
   .karte { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .karte { transition: none; } .karte:hover { transform: none; } }
+
+/* Modellseiten: Verschleißteile als Kacheln, alle Teile als Tabelle nach Gruppen. */
+.voll { grid-column: span 12; }
+.zwischen { font-size: 30px; margin: 14px 0 12px; }
+.teilkarte { display: flex; flex-direction: column; gap: 8px; }
+.teilkarte h3 { margin: 2px 0 0; font-size: 22px; }
+.teilkarte .fakten { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 15px; }
+.teilkarte .pruefen { font-size: 14px; font-weight: 700; }
+.teilkarte .klein { margin-top: 0 !important; }
+.teilkarte .klein-pill { align-self: flex-start; margin-top: auto; font-size: 14px; padding: 9px 16px; white-space: normal; text-align: left; }
+.alle h3 { font-size: 19px; margin: 20px 0 6px; }
+.teiltabelle { width: 100%; border-collapse: collapse; font-size: 16px; }
+.teiltabelle th, .teiltabelle td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-top: 1px solid var(--line); }
+.teiltabelle th { width: 26%; font-weight: 700; color: var(--muted); }
+.teiltabelle td span { display: block; font-size: 14px; color: var(--muted); }
+.teiltabelle .preis { text-align: right; white-space: nowrap; font-weight: 700; padding-right: 0; width: 1%; }
+@media (max-width: 600px) {
+  .teiltabelle th { width: auto; display: block; padding-bottom: 0; }
+  .teiltabelle td { display: inline-block; border-top: 0; padding-top: 2px; }
+  .teiltabelle td:first-of-type { width: calc(100% - 80px); }
+  .teiltabelle .preis { width: 76px; }
+}

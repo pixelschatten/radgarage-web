@@ -1,0 +1,2385 @@
+[
+ {
+  "id": "canyon-2024-grizl-7",
+  "hersteller": "Canyon",
+  "modell": "Grizl 7",
+  "reihe": "Grizl",
+  "baujahr": 2024,
+  "kategorie": "Gravel",
+  "uvp_eur": 1899,
+  "zweitnamen": [],
+  "geaendert": "2026-10-25",
+  "teile": [
+   {
+    "id": "shimano-cn-m6100",
+    "marke": "Shimano",
+    "name": "Deore CN-M6100",
+    "kategorie": "Kette",
+    "merkmale": "12-fach",
+    "preis": 28,
+    "abgeleitet": true,
+    "hinweis": "laut 99spokes (Modelljahr 2025, gleiche Ausstattung)",
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "SX Eagle Kette",
+      "preis": 20
+     },
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Kette",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "SLX CN-M7100",
+      "preis": 30
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-hg710-11-36",
+    "marke": "Shimano",
+    "name": "105 CS-HG710 11-36",
+    "kategorie": "Kassette",
+    "merkmale": "12-fach, 11-36",
+    "preis": 60,
+    "abgeleitet": true,
+    "hinweis": "laut 99spokes (Modelljahr 2025, gleiche Ausstattung)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7101 11-34",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7100 11-34",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7100 11-36",
+      "preis": 70
+     }
+    ]
+   },
+   {
+    "id": "shimano-l05a",
+    "marke": "Shimano",
+    "name": "L05A Resin",
+    "kategorie": "Bremsbelag",
+    "merkmale": "Flat Mount Road/Gravel, organisch",
+    "preis": 16,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Shimano GRX BR-RX400 (Flat Mount)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "L03A Resin",
+      "preis": 14
+     },
+     {
+      "marke": "Shimano",
+      "name": "L05A-RF Resin mit Kühlrippen",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "shimano-sm-rt70-160",
+    "marke": "Shimano",
+    "name": "SM-RT70 160 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "160 mm, Center Lock",
+    "preis": 30,
+    "abgeleitet": false,
+    "hinweis": "RT70 160 mm laut Quelle, vorn und hinten",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "SM-RT10 160 mm",
+      "preis": 12
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-RT30 160 mm",
+      "preis": 20
+     },
+     {
+      "marke": "Universal",
+      "name": "Bremsscheibe 160 mm Center Lock",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schwalbe-g-one-bite-45",
+    "marke": "Schwalbe",
+    "name": "G-One Bite 45",
+    "kategorie": "Reifen",
+    "merkmale": "700 x 45",
+    "preis": 45,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "G-One Comp 40-622",
+      "preis": 25
+     },
+     {
+      "marke": "Mitas",
+      "name": "X-Road 42-622",
+      "preis": 25
+     },
+     {
+      "marke": "Rubena",
+      "name": "X Road 700 x 40C",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schlauch-700-28-45",
+    "marke": "Universal",
+    "name": "Schlauch 700 × 28–45C",
+    "kategorie": "Schlauch",
+    "merkmale": "28–47-622; Ventilart und -länge am Rad prüfen",
+    "preis": 7,
+    "abgeleitet": true,
+    "hinweis": "Reifen tubeless-fähig; Größe aus dem Reifen abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-rx820",
+    "marke": "Shimano",
+    "name": "GRX RD-RX820",
+    "kategorie": "Schaltwerk",
+    "merkmale": "12-fach",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "GRX RD-RX822-GS",
+      "preis": 110
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX RD-RX822-SGS",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fd-rx820",
+    "marke": "Shimano",
+    "name": "GRX FD-RX820",
+    "kategorie": "Umwerfer",
+    "merkmale": "2-fach, 12-fach",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "shimano-bl-rx610",
+    "marke": "Shimano",
+    "name": "GRX ST-RX610 / BL-RX610",
+    "kategorie": "Schalthebel",
+    "merkmale": "12-fach, hydraulisch",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "105 ST-R7120",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX ST-RX820",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fc-rx610-46-30",
+    "marke": "Shimano",
+    "name": "GRX FC-RX610 46/30",
+    "kategorie": "Kurbel",
+    "merkmale": "2-fach, 12-fach, Hollowtech II",
+    "preis": null,
+    "abgeleitet": true,
+    "hinweis": "Kettenblätter in der Quelle nicht genannt, 46/30 abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 50/34, 170 mm",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 52/36",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 50/34",
+      "preis": 300
+     }
+    ]
+   },
+   {
+    "id": "shimano-br-rx400",
+    "marke": "Shimano",
+    "name": "GRX BR-RX400",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, Flat Mount, je Stück",
+    "preis": null,
+    "abgeleitet": true,
+    "hinweis": "Quelle nennt Hebel GRX RX610; Sattel abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra BR-R8170",
+      "preis": 110
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace BR-R9270",
+      "preis": 200
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 BR-R7170",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "dt-swiss-gravel-ln-lrs",
+    "marke": "DT Swiss",
+    "name": "Gravel LN Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "24 mm innen, 12 × 100 / 12 × 142 mm, Center Lock",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "token-ninja-lite-bb4124",
+    "marke": "Token",
+    "name": "Ninja Lite BB4124",
+    "kategorie": "Innenlager",
+    "merkmale": "Pressfit PF86,5, 24-mm-Achse",
+    "preis": 45,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "BB-RS500-PB",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-BB71-41B",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra SM-BB72-41B",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "canyon-grizl-steckachsen",
+    "marke": "Canyon",
+    "name": "Thru Axle 12 × 100 / 12 × 142 mm (Grizl)",
+    "kategorie": "Steckachse",
+    "merkmale": "Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "conway-2022-grv-8-0",
+  "hersteller": "Conway",
+  "modell": "GRV 8.0",
+  "reihe": "GRV",
+  "baujahr": 2022,
+  "kategorie": "Gravel",
+  "uvp_eur": null,
+  "zweitnamen": [],
+  "geaendert": "2026-10-25",
+  "teile": [
+   {
+    "id": "shimano-cn-hg601",
+    "marke": "Shimano",
+    "name": "CN-HG601",
+    "kategorie": "Kette",
+    "merkmale": "11-fach",
+    "preis": 28,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "PC-1110 (NX 11-fach)",
+      "preis": 20
+     },
+     {
+      "marke": "KMC",
+      "name": "X11",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra CN-HG701-11",
+      "preis": 28
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-hg700-11-34",
+    "marke": "Shimano",
+    "name": "CS-HG700 11-34",
+    "kategorie": "Kassette",
+    "merkmale": "11-fach, 11-34",
+    "preis": 45,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "microSHIFT",
+      "name": "11-fach Kassette 11-32",
+      "preis": 35
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7000 11-32",
+      "preis": 40
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7000 11-30",
+      "preis": 40
+     }
+    ]
+   },
+   {
+    "id": "shimano-l05a",
+    "marke": "Shimano",
+    "name": "L05A Resin",
+    "kategorie": "Bremsbelag",
+    "merkmale": "Flat Mount Road/Gravel, organisch",
+    "preis": 16,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Shimano GRX BR-RX400 (Flat Mount)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "L03A Resin",
+      "preis": 14
+     },
+     {
+      "marke": "Shimano",
+      "name": "L05A-RF Resin mit Kühlrippen",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "shimano-sm-rt54-160",
+    "marke": "Shimano",
+    "name": "SM-RT54 160 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "160 mm, Center Lock",
+    "preis": 28,
+    "abgeleitet": false,
+    "hinweis": "160 mm vorn und hinten",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "SM-RT10 160 mm",
+      "preis": 12
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-RT30 160 mm",
+      "preis": 20
+     },
+     {
+      "marke": "Universal",
+      "name": "Bremsscheibe 160 mm Center Lock",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "conti-terra-trail-40-622",
+    "marke": "Continental",
+    "name": "Terra Trail 40-622",
+    "kategorie": "Reifen",
+    "merkmale": "700 x 40C",
+    "preis": 45,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "G-One Comp 40-622",
+      "preis": 25
+     },
+     {
+      "marke": "Mitas",
+      "name": "X-Road 42-622",
+      "preis": 25
+     },
+     {
+      "marke": "Rubena",
+      "name": "X Road 700 x 40C",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schlauch-700-28-45",
+    "marke": "Universal",
+    "name": "Schlauch 700 × 28–45C",
+    "kategorie": "Schlauch",
+    "merkmale": "28–47-622; Ventilart und -länge am Rad prüfen",
+    "preis": 7,
+    "abgeleitet": true,
+    "hinweis": "Größe aus dem Reifen abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-rx810-gs",
+    "marke": "Shimano",
+    "name": "GRX RD-RX810 GS",
+    "kategorie": "Schaltwerk",
+    "merkmale": "11-fach, für 2-fach-Antrieb",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Quelle: GRX RD-RX810, 11-fach",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "GRX RD-RX812",
+      "preis": 80
+     }
+    ]
+   },
+   {
+    "id": "shimano-fd-rx810",
+    "marke": "Shimano",
+    "name": "GRX FD-RX810",
+    "kategorie": "Umwerfer",
+    "merkmale": "2 × 11-fach, Anlötsockel",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "shimano-st-rx600-11",
+    "marke": "Shimano",
+    "name": "GRX ST-RX600",
+    "kategorie": "Schalthebel",
+    "merkmale": "Schalt-/Bremshebel, 2 × 11-fach, hydraulisch, Paar",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "105 ST-R7020",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra ST-R8020",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fc-rx600-46-30",
+    "marke": "Shimano",
+    "name": "GRX FC-RX600 46/30",
+    "kategorie": "Kurbel",
+    "merkmale": "2-fach, 10/11-fach, 24-mm-Achse",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "165 mm",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CUES FC-U6010 46/32",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "CUES FC-U8000-2 46/32",
+      "preis": 90
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX FC-RX600-10 46/30",
+      "preis": 90
+     }
+    ]
+   },
+   {
+    "id": "shimano-br-rx400",
+    "marke": "Shimano",
+    "name": "GRX BR-RX400",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, Flat Mount, je Stück",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra BR-R8170",
+      "preis": 110
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace BR-R9270",
+      "preis": 200
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 BR-R7170",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "mach1-gravel19-rs470-lrs",
+    "marke": "Mach1",
+    "name": "Gravel 19 / Shimano RS470 Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "622, 12 × 100 / 12 × 142 mm, Center Lock",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Naben vorn HB-RS470, hinten FH-RS470",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-bb-rs500",
+    "marke": "Shimano",
+    "name": "BB-RS500",
+    "kategorie": "Innenlager",
+    "merkmale": "BSA 68 mm, 24-mm-Achse",
+    "preis": 20,
+    "abgeleitet": true,
+    "hinweis": "Quelle: Shimano BSA; Typ abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "BB-MT500",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-BB52 Innenlager",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "BB-MT501",
+      "preis": 20
+     }
+    ]
+   },
+   {
+    "id": "conway-grv-steckachsen",
+    "marke": "Conway",
+    "name": "Steckachsen 12 × 100 / 12 × 142 mm (GRV)",
+    "kategorie": "Steckachse",
+    "merkmale": "Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Maße laut Naben 12 × 100 / 12 × 142 mm",
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "cube-2025-kathmandu-hybrid-pro-800",
+  "hersteller": "Cube",
+  "modell": "Kathmandu Hybrid Pro 800",
+  "reihe": "Kathmandu Hybrid",
+  "baujahr": 2025,
+  "kategorie": "E-Trekking",
+  "uvp_eur": 3599,
+  "zweitnamen": [
+   "Kathmandu Hybrid Pro 800 Easy Entry",
+   "Kathmandu Hybrid Pro 800 Trapez"
+  ],
+  "geaendert": "2026-10-25",
+  "teile": [
+   {
+    "id": "kmc-eglide-11",
+    "marke": "KMC",
+    "name": "eGlide 11-fach (E-Bike)",
+    "kategorie": "Kette",
+    "merkmale": "LinkGlide-kompatibel, E-Bike",
+    "preis": 35,
+    "abgeleitet": false,
+    "hinweis": "Quelle: KMC eGlide",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CUES CN-LG500",
+      "preis": 25
+     },
+     {
+      "marke": "KMC",
+      "name": "xGlide 10-fach",
+      "preis": 25
+     },
+     {
+      "marke": "KMC",
+      "name": "xGlide 11-fach",
+      "preis": 30
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-lg400-11-11-50",
+    "marke": "Shimano",
+    "name": "CUES CS-LG400-11 11-50",
+    "kategorie": "Kassette",
+    "merkmale": "11-fach, 11-50, LinkGlide",
+    "preis": 60,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CUES CS-LG700 11-45",
+      "preis": 60
+     },
+     {
+      "marke": "Shimano",
+      "name": "CUES CS-LG700 11-50",
+      "preis": 60
+     },
+     {
+      "marke": "Shimano",
+      "name": "XT CS-LG600-11 11-50",
+      "preis": 90
+     }
+    ]
+   },
+   {
+    "id": "shimano-d03s",
+    "marke": "Shimano",
+    "name": "D03S Resin",
+    "kategorie": "Bremsbelag",
+    "merkmale": "4-Kolben MTB, organisch",
+    "preis": 18,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Shimano BR-MT420 (4 Kolben)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "N03A Resin mit Kühlrippen",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "scheibe-180-cl",
+    "marke": "Universal",
+    "name": "Bremsscheibe 180 mm Center Lock",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "180 mm, Center Lock",
+    "preis": 30,
+    "abgeleitet": false,
+    "hinweis": "180 mm vorn und hinten laut Quelle; Center Lock laut Naben",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "SM-RT10 180 mm",
+      "preis": 15
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-RT30 180 mm",
+      "preis": 15
+     },
+     {
+      "marke": "Shimano",
+      "name": "RT-EM300 180 mm",
+      "preis": 20
+     }
+    ]
+   },
+   {
+    "id": "schwalbe-big-apple-55-622",
+    "marke": "Schwalbe",
+    "name": "Big Apple Active 55-622",
+    "kategorie": "Reifen",
+    "merkmale": "28 x 2.15",
+    "preis": 25,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "Land Cruiser Plus 55-622",
+      "preis": 25
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Big Ben Performance 55-622",
+      "preis": 30
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Marathon Green Addix Eco 55-622",
+      "preis": 35
+     }
+    ]
+   },
+   {
+    "id": "schlauch-622-54-62",
+    "marke": "Universal",
+    "name": "Schlauch 29 × 2,1–2,4",
+    "kategorie": "Schlauch",
+    "merkmale": "54–62-622, passt auch für 28 Zoll × 2,0–2,4; Ventilart und -länge am Rad prüfen",
+    "preis": 8,
+    "abgeleitet": true,
+    "hinweis": "Größe aus dem Reifen abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-u6000-11",
+    "marke": "Shimano",
+    "name": "CUES RD-U6000-11-GS",
+    "kategorie": "Schaltwerk",
+    "merkmale": "11-fach, LinkGlide",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CUES RD-U8020-SGS",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "CUES RD-U8000 GS",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "CUES RD-U6020-11-SGS",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-sl-u6000-11",
+    "marke": "Shimano",
+    "name": "CUES SL-U6000 11-fach",
+    "kategorie": "Schalthebel",
+    "merkmale": "Rapidfire Plus, 2x11",
+    "preis": 35,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CUES SL-U8000-11IR",
+      "preis": 40
+     }
+    ]
+   },
+   {
+    "id": "acid-mtb-hybrid-pro",
+    "marke": "ACID",
+    "name": "MTB Hybrid Pro Kurbel",
+    "kategorie": "Kurbel",
+    "merkmale": "für Bosch-Mittelmotor; Kettenblatt je Modell (z. B. 38 Z Reaction Hybrid, 34/36 Z Stereo Hybrid)",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "ACID",
+      "name": "ExCrank 165 mm",
+      "preis": null
+     },
+     {
+      "marke": "Miranda",
+      "name": "Crius ISIS 160 mm",
+      "preis": null
+     },
+     {
+      "marke": "ACID",
+      "name": "E-Crank 40 Z, 175 mm",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "bosch-performance-cx-gen5",
+    "marke": "Bosch",
+    "name": "Performance Line CX (Gen 5, BDU38)",
+    "kategorie": "Motor",
+    "merkmale": "85 Nm, per App bis 100 Nm, Smart System",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Bosch",
+      "name": "Performance Line CX-R (BDU38)",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "bosch-powertube-800",
+    "marke": "Bosch",
+    "name": "PowerTube 800 (Smart System)",
+    "kategorie": "Akku",
+    "merkmale": "800 Wh, Smart System",
+    "preis": 1100,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "shimano-br-mt420",
+    "marke": "Shimano",
+    "name": "Deore BR-MT420",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, 4 Kolben",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "cube-ex25-newmen",
+    "marke": "CUBE",
+    "name": "EX25 / Newmen Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Felgen CUBE EX25, 32 Loch, tubeless-ready; Naben CUBE by Newmen, 15 / 12 mm Boost, Center Lock",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "cube-kathmandu-hybrid-steckachse",
+    "marke": "CUBE",
+    "name": "Steckachse hinten 12 mm (Kathmandu Hybrid)",
+    "kategorie": "Steckachse",
+    "merkmale": "vorn Schnellspanner; Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "vorn 15-mm-Steckachse der Gabel (15 × 110 mm), hinten 12 mm Boost laut Quelle",
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "cube-2024-stereo-hybrid-140-hpc-pro-750",
+  "hersteller": "Cube",
+  "modell": "Stereo Hybrid 140 HPC Pro 750",
+  "reihe": "Stereo Hybrid 140 HPC",
+  "baujahr": 2024,
+  "kategorie": "E-MTB",
+  "uvp_eur": 4499,
+  "zweitnamen": [],
+  "geaendert": "2026-10-24",
+  "teile": [
+   {
+    "id": "kmc-x11",
+    "marke": "KMC",
+    "name": "X11",
+    "kategorie": "Kette",
+    "merkmale": "11-fach",
+    "preis": 25,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "PC-1110 (NX 11-fach)",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "CN-HG601",
+      "preis": 28
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra CN-HG701-11",
+      "preis": 28
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-m5100-11-51",
+    "marke": "Shimano",
+    "name": "Deore CS-M5100 11-51",
+    "kategorie": "Kassette",
+    "merkmale": "11-fach, 11-51",
+    "preis": 50,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "microSHIFT",
+      "name": "11-fach Kassette 11-32",
+      "preis": 35
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7000 11-32",
+      "preis": 40
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7000 11-30",
+      "preis": 40
+     }
+    ]
+   },
+   {
+    "id": "magura-9c",
+    "marke": "Magura",
+    "name": "9.C Comfort",
+    "kategorie": "Bremsbelag",
+    "merkmale": "4-Kolben Magura (MT5/MT7)",
+    "preis": 20,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Magura MT Thirty (4 Kolben), prüfen",
+    "alternativen": [
+     {
+      "marke": "Magura",
+      "name": "9.P Performance",
+      "preis": 22
+     }
+    ]
+   },
+   {
+    "id": "scheibe-203-cl",
+    "marke": "Universal",
+    "name": "Bremsscheibe 203 mm Center Lock",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "203 mm, Center Lock",
+    "preis": 35,
+    "abgeleitet": false,
+    "hinweis": "203 mm laut Beschreibung; Center Lock aus den MT400-Naben abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "SM-RT30 203 mm",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "RT-EM300 203 mm",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-RT64 203 mm",
+      "preis": 35
+     }
+    ]
+   },
+   {
+    "id": "schwalbe-nobby-nic-2-6",
+    "marke": "Schwalbe",
+    "name": "Nobby Nic Performance 2.6",
+    "kategorie": "Reifen",
+    "merkmale": "27.5/29 x 2.6",
+    "preis": 40,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "Smart Sam 2.6",
+      "preis": 30
+     },
+     {
+      "marke": "Kenda",
+      "name": "Booster 29 x 2.6",
+      "preis": 35
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Hans Dampf Super Trail 29 x 2.6",
+      "preis": 55
+     }
+    ]
+   },
+   {
+    "id": "schlauch-622-60-70",
+    "marke": "Universal",
+    "name": "Schlauch 29 × 2,35–2,8",
+    "kategorie": "Schlauch",
+    "merkmale": "60–70-622; Ventilart und -länge am Rad prüfen",
+    "preis": 9,
+    "abgeleitet": true,
+    "hinweis": "Größe aus dem Reifen abgeleitet; bei 27,5-Zoll-Laufrädern (kleine Rahmen) den 27,5-Zoll-Schlauch nehmen",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-m5100-sgs",
+    "marke": "Shimano",
+    "name": "Deore RD-M5100-SGS",
+    "kategorie": "Schaltwerk",
+    "merkmale": "11-fach, langer Käfig",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "shimano-sl-m5100",
+    "marke": "Shimano",
+    "name": "Deore SL-M5100",
+    "kategorie": "Schalthebel",
+    "merkmale": "11-fach",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "acid-excrank-165",
+    "marke": "ACID",
+    "name": "ExCrank 165 mm",
+    "kategorie": "Kurbel",
+    "merkmale": "36 Z (27,5 Zoll) oder 34 Z (29 Zoll), für Bosch-Mittelmotor",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Miranda",
+      "name": "Crius ISIS 160 mm",
+      "preis": null
+     },
+     {
+      "marke": "Miranda",
+      "name": "Virage 38 Z",
+      "preis": null
+     },
+     {
+      "marke": "ACID",
+      "name": "E-Crank 40 Z, 175 mm",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "bosch-performance-cx-gen4",
+    "marke": "Bosch",
+    "name": "Performance Line CX (Gen 4)",
+    "kategorie": "Motor",
+    "merkmale": "85 Nm, Smart System",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "bosch-powertube-750",
+    "marke": "Bosch",
+    "name": "PowerTube 750",
+    "kategorie": "Akku",
+    "merkmale": "750 Wh, System (Classic+ / Smart) prüfen",
+    "preis": 1000,
+    "abgeleitet": false,
+    "hinweis": "Smart System",
+    "alternativen": null
+   },
+   {
+    "id": "magura-mt-thirty",
+    "marke": "Magura",
+    "name": "MT Thirty",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, 4 Kolben",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "rodi-tryp-30-shimano-mt400",
+    "marke": "Rodi",
+    "name": "Tryp 30 / Shimano MT400 Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Felgen Rodi Tryp 30 32 Loch tubeless-ready, Naben HB-MT400-B / FH-MT400-B, Boost, Center Lock",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "cube-stereo-hybrid-140-steckachsen",
+    "marke": "CUBE",
+    "name": "Steckachsen 15 × 110 / 12 × 148 mm (Stereo Hybrid 140)",
+    "kategorie": "Steckachse",
+    "merkmale": "Boost; Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "giant-2024-talon-e-plus-2",
+  "hersteller": "Giant",
+  "modell": "Talon E+ 2",
+  "reihe": "Talon E+",
+  "baujahr": 2024,
+  "kategorie": "E-MTB",
+  "uvp_eur": 2399,
+  "zweitnamen": [
+   "Talon E+ 2 29"
+  ],
+  "geaendert": "2026-10-25",
+  "teile": [
+   {
+    "id": "kmc-e9-sport",
+    "marke": "KMC",
+    "name": "e9 Sport (E-Bike)",
+    "kategorie": "Kette",
+    "merkmale": "9-fach, E-Bike-optimiert",
+    "preis": 25,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "KMC",
+      "name": "Z9 Wide",
+      "preis": 12
+     },
+     {
+      "marke": "KMC",
+      "name": "X9",
+      "preis": 18
+     },
+     {
+      "marke": "Shimano",
+      "name": "CN-HG53 9-fach",
+      "preis": 18
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-hg200-9-11-36",
+    "marke": "Shimano",
+    "name": "CS-HG200-9 11-36",
+    "kategorie": "Kassette",
+    "merkmale": "9-fach, 11-36",
+    "preis": 20,
+    "abgeleitet": false,
+    "hinweis": "Quelle: Altus CS-HG200 11-36",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "CS-HG201 11-36",
+      "preis": 20
+     },
+     {
+      "marke": "microSHIFT",
+      "name": "H092 11-36",
+      "preis": 20
+     },
+     {
+      "marke": "SunRace",
+      "name": "9-fach Kassette 11-36",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "tektro-e10-11",
+    "marke": "Tektro",
+    "name": "E10.11",
+    "kategorie": "Bremsbelag",
+    "merkmale": "2-Kolben Tektro MTB, gleiche Form wie Shimano B01S/B05S",
+    "preis": 10,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Tektro HD-M280 (2 Kolben)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "B05S Resin",
+      "preis": 12
+     },
+     {
+      "marke": "Shimano",
+      "name": "B03S Resin",
+      "preis": 12
+     }
+    ]
+   },
+   {
+    "id": "scheibe-180",
+    "marke": "Universal",
+    "name": "Bremsscheibe 180 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "180 mm, Aufnahme (Center Lock oder 6-Loch) am Rad prüfen",
+    "preis": 30,
+    "abgeleitet": false,
+    "hinweis": "vorn 180 mm laut Quelle; Aufnahme am Rad prüfen",
+    "alternativen": null
+   },
+   {
+    "id": "scheibe-160",
+    "marke": "Universal",
+    "name": "Bremsscheibe 160 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "160 mm, Aufnahme (Center Lock oder 6-Loch) am Rad prüfen",
+    "preis": 25,
+    "abgeleitet": false,
+    "hinweis": "hinten 160 mm laut Quelle; Aufnahme am Rad prüfen",
+    "alternativen": null
+   },
+   {
+    "id": "maxxis-rekon-2-4",
+    "marke": "Maxxis",
+    "name": "Rekon 29x2.4",
+    "kategorie": "Reifen",
+    "merkmale": "29 x 2.4",
+    "preis": 45,
+    "abgeleitet": true,
+    "hinweis": "vorn und hinten; Quelle nennt nur Maxxis Rekon 29\", Breite vom Modell 2025 abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "Tough Tom 2.25",
+      "preis": 20
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Rapid Rob 2.25",
+      "preis": 20
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Smart Sam 2.25",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schlauch-622-54-62",
+    "marke": "Universal",
+    "name": "Schlauch 29 × 2,1–2,4",
+    "kategorie": "Schlauch",
+    "merkmale": "54–62-622, passt auch für 28 Zoll × 2,0–2,4; Ventilart und -länge am Rad prüfen",
+    "preis": 8,
+    "abgeleitet": true,
+    "hinweis": "ab Werk mit Schlauch; Größe aus dem Reifen abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-m3100-sgs",
+    "marke": "Shimano",
+    "name": "Alivio RD-M3100-SGS",
+    "kategorie": "Schaltwerk",
+    "merkmale": "9-fach, langer Käfig",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Quelle: Alivio M3100 9-fach; Käfiglänge am Rad prüfen",
+    "alternativen": [
+     {
+      "marke": "microSHIFT",
+      "name": "RD-M46L",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Altus RD-M2000",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "Deore RD-M592 Shadow",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-sl-m2010-9",
+    "marke": "Shimano",
+    "name": "SL-M2010-9R Rapidfire Plus",
+    "kategorie": "Schalthebel",
+    "merkmale": "9-fach",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "microSHIFT",
+      "name": "Schalthebel 2 × 9-fach (MTB)",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Altus Rapidfire Plus 9-fach",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "Alivio SL-M3100-R",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "fsa-comet-megatooth-36",
+    "marke": "FSA",
+    "name": "Comet Kurbel mit MegaTooth-Kettenblatt 36 Z",
+    "kategorie": "Kurbel",
+    "merkmale": "für Giant-SyncDrive-Motor",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Haibike",
+      "name": "Stahlkurbel 38 Z",
+      "preis": null
+     },
+     {
+      "marke": "Miranda",
+      "name": "Kies ISIS 170 mm",
+      "preis": null
+     },
+     {
+      "marke": "Praxis",
+      "name": "e-Cadet+ mit Wave-Kettenblatt 36 Z",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "giant-syncdrive-core",
+    "marke": "Giant",
+    "name": "SyncDrive Core",
+    "kategorie": "Motor",
+    "merkmale": "50 Nm, von Yamaha",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "giant-energypak-siderelease-500",
+    "marke": "Giant",
+    "name": "EnergyPak Side-Release 500",
+    "kategorie": "Akku",
+    "merkmale": "500 Wh, seitlich entnehmbar",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "tektro-hd-m280",
+    "marke": "Tektro",
+    "name": "HD-M280",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, 2 Kolben",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "giant-gx03v-etracker-sport",
+    "marke": "Giant",
+    "name": "GX03V / eTracker Sport Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Felgen Giant GX03V, 21 mm innen; Naben Giant eTracker Sport, Schnellspanner",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "rose-2024-reveal-six-ultegra-di2",
+  "hersteller": "Rose",
+  "modell": "Reveal Six Disc Ultegra Di2",
+  "reihe": "Reveal Six Disc",
+  "baujahr": 2024,
+  "kategorie": "Rennrad",
+  "uvp_eur": null,
+  "zweitnamen": [
+   "Reveal 06 Ultegra Di2",
+   "Reveal Six"
+  ],
+  "geaendert": "2026-10-24",
+  "teile": [
+   {
+    "id": "shimano-cn-m8100",
+    "marke": "Shimano",
+    "name": "XT CN-M8100",
+    "kategorie": "Kette",
+    "merkmale": "12-fach",
+    "preis": 45,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "SX Eagle Kette",
+      "preis": 20
+     },
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Kette",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Deore CN-M6100",
+      "preis": 28
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-r8100-11-34",
+    "marke": "Shimano",
+    "name": "Ultegra CS-R8100 11-34",
+    "kategorie": "Kassette",
+    "merkmale": "12-fach, 11-34",
+    "preis": 110,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "105 CS-HG710 11-36",
+      "preis": 60
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7100 11-34",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7101 11-34",
+      "preis": 70
+     }
+    ]
+   },
+   {
+    "id": "shimano-l05a-rf",
+    "marke": "Shimano",
+    "name": "L05A-RF Resin mit Kühlrippen",
+    "kategorie": "Bremsbelag",
+    "merkmale": "Flat Mount Road/Gravel, organisch",
+    "preis": 25,
+    "abgeleitet": false,
+    "hinweis": "abgeleitet von Shimano BR-R8170, am Rad bestätigt",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "L03A Resin",
+      "preis": 14
+     },
+     {
+      "marke": "Shimano",
+      "name": "L05A Resin",
+      "preis": 16
+     }
+    ]
+   },
+   {
+    "id": "shimano-rt-mt800-s-160",
+    "marke": "Shimano",
+    "name": "RT-MT800-S 160 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "160 mm, Center Lock, Ice Technologies Freeza",
+    "preis": 50,
+    "abgeleitet": false,
+    "hinweis": "160 mm vorn und hinten, am Rad bestätigt",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "SM-RT10 160 mm",
+      "preis": 12
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-RT30 160 mm",
+      "preis": 20
+     },
+     {
+      "marke": "Universal",
+      "name": "Bremsscheibe 160 mm Center Lock",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schwalbe-pro-one-evo-super-race-30",
+    "marke": "Schwalbe",
+    "name": "Pro One Evo Super Race 700x30C",
+    "kategorie": "Reifen",
+    "merkmale": "700 x 30, tubeless-fähig",
+    "preis": 70,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Vittoria",
+      "name": "Zaffiro 700 x 28C",
+      "preis": 20
+     },
+     {
+      "marke": "Triban",
+      "name": "Resist+ 700 x 28C",
+      "preis": 20
+     },
+     {
+      "marke": "Continental",
+      "name": "Ultra Sport III 32-622",
+      "preis": 20
+     }
+    ]
+   },
+   {
+    "id": "schlauch-road-28-32-sv60",
+    "marke": "Universal",
+    "name": "Rennradschlauch 700 × 28–32C, 60 mm Ventil",
+    "kategorie": "Schlauch",
+    "merkmale": "Presta-Ventil; für 47-mm-Felgen mindestens 60 mm Ventillänge",
+    "preis": 8,
+    "abgeleitet": false,
+    "hinweis": "Schlauch statt Tubeless am Rad bestätigt; Ventillänge aus Felgenhöhe abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-r8150",
+    "marke": "Shimano",
+    "name": "Ultegra Di2 RD-R8150",
+    "kategorie": "Schaltwerk",
+    "merkmale": "12-fach, elektronisch",
+    "preis": 300,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 RD-R9250",
+      "preis": 700
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 Di2 RD-R7150",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fd-r8150",
+    "marke": "Shimano",
+    "name": "Ultegra Di2 FD-R8150",
+    "kategorie": "Umwerfer",
+    "merkmale": "2-fach, elektronisch",
+    "preis": 200,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 FD-R9250",
+      "preis": 450
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 Di2 FD-R7150",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-st-r8170",
+    "marke": "Shimano",
+    "name": "Ultegra Di2 ST-R8170",
+    "kategorie": "Schalthebel",
+    "merkmale": "Schalt-/Bremshebel, Paar, hydraulisch",
+    "preis": 480,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 ST-R9270",
+      "preis": 900
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 Di2 ST-R7170",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX Di2 ST-RX825",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fc-r8100-50-34-170",
+    "marke": "Shimano",
+    "name": "Ultegra FC-R8100 50/34, 170 mm",
+    "kategorie": "Kurbel",
+    "merkmale": "12-fach, 50/34 Zähne, 170 mm",
+    "preis": 300,
+    "abgeleitet": false,
+    "hinweis": "Kurbellänge laut Quelle bei Rahmengröße 50",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 52/36",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 50/34",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace FC-R9200 52/36",
+      "preis": 600
+     }
+    ]
+   },
+   {
+    "id": "shimano-bt-dn300",
+    "marke": "Shimano",
+    "name": "Di2 Akku BT-DN300",
+    "kategorie": "Akku",
+    "merkmale": "Im Rahmen, für Di2 12-fach",
+    "preis": 150,
+    "abgeleitet": false,
+    "hinweis": "abgeleitet aus Ultegra Di2, am Rad bestätigt",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-br-r8170",
+    "marke": "Shimano",
+    "name": "Ultegra BR-R8170",
+    "kategorie": "Bremssattel",
+    "merkmale": "Hydraulisch, Flat Mount, je Stück",
+    "preis": 110,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace BR-R9270",
+      "preis": 200
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 BR-R7170",
+      "preis": null
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX BR-RX400",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "rose-rc-fifty-disc",
+    "marke": "ROSE",
+    "name": "RC Fifty Disc Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Carbon, 47 mm Felge, 24 Loch, 12-mm-Steckachse",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "pressfit-bb86-24mm",
+    "marke": "Pressfit",
+    "name": "BB86 Innenlager für 24-mm-Achse",
+    "kategorie": "Innenlager",
+    "merkmale": "86,5 × 41 mm, für Shimano-Kurbeln mit 24-mm-Achse",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Lagermodell am Rad prüfen",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "BB-RS500-PB",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-BB71-41B",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra SM-BB72-41B",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "rose-reveal-steckachsen-12mm",
+    "marke": "ROSE",
+    "name": "Steckachsen 12 mm (Reveal)",
+    "kategorie": "Steckachse",
+    "merkmale": "12 mm vorn und hinten, Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "rose-endurance-one-piece-cockpit",
+    "marke": "ROSE",
+    "name": "Endurance One-Piece Carbon-Cockpit",
+    "kategorie": "Lenker",
+    "merkmale": "Lenker und Vorbau einteilig, Größe je Rahmen (bei 50: 90 mm, 40 cm)",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Maße laut Quelle bei Rahmengröße 50",
+    "alternativen": null
+   },
+   {
+    "id": "rose-gel-comfort-lenkerband",
+    "marke": "ROSE",
+    "name": "Gel-Comfort Lenkerband",
+    "kategorie": "Lenkerband",
+    "merkmale": "schwarz",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "rose-d-shape-sattelstuetze",
+    "marke": "ROSE",
+    "name": "D-Shape Sattelstütze",
+    "kategorie": "Sattelstütze",
+    "merkmale": "Carbon, D-Form, 8 mm Versatz, 400 mm",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "flite-flow-manganese",
+    "marke": "Selle Italia",
+    "name": "Flite Flow Manganese",
+    "kategorie": "Sattel",
+    "merkmale": "schwarz",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "specialized-2025-tarmac-sl8-comp-105-di2",
+  "hersteller": "Specialized",
+  "modell": "Tarmac SL8 Comp 105 Di2",
+  "reihe": "Tarmac SL8",
+  "baujahr": 2025,
+  "kategorie": "Rennrad",
+  "uvp_eur": 4199,
+  "zweitnamen": [
+   "Tarmac SL8 Comp"
+  ],
+  "geaendert": "2026-10-24",
+  "teile": [
+   {
+    "id": "shimano-cn-m7100",
+    "marke": "Shimano",
+    "name": "SLX CN-M7100",
+    "kategorie": "Kette",
+    "merkmale": "12-fach",
+    "preis": 30,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "SX Eagle Kette",
+      "preis": 20
+     },
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Kette",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Deore CN-M6100",
+      "preis": 28
+     }
+    ]
+   },
+   {
+    "id": "shimano-cs-r7100-11-34",
+    "marke": "Shimano",
+    "name": "105 CS-R7100 11-34",
+    "kategorie": "Kassette",
+    "merkmale": "12-fach, 11-34, Road-12-fach-Freilauf",
+    "preis": 70,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "105 CS-HG710 11-36",
+      "preis": 60
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7101 11-34",
+      "preis": 70
+     },
+     {
+      "marke": "Shimano",
+      "name": "105 CS-R7100 11-36",
+      "preis": 70
+     }
+    ]
+   },
+   {
+    "id": "shimano-l05a",
+    "marke": "Shimano",
+    "name": "L05A Resin",
+    "kategorie": "Bremsbelag",
+    "merkmale": "Flat Mount Road/Gravel, organisch",
+    "preis": 16,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Shimano 105 hydraulisch (Flat Mount)",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "L03A Resin",
+      "preis": 14
+     },
+     {
+      "marke": "Shimano",
+      "name": "L05A-RF Resin mit Kühlrippen",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "scheibe-160",
+    "marke": "Universal",
+    "name": "Bremsscheibe 160 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "160 mm, Aufnahme (Center Lock oder 6-Loch) am Rad prüfen",
+    "preis": 25,
+    "abgeleitet": true,
+    "hinweis": "vorn und hinten; Größe und Aufnahme in der Quelle nicht genannt, 160 mm abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "specialized-s-works-turbo-26",
+    "marke": "Specialized",
+    "name": "S-Works Turbo 700 x 26",
+    "kategorie": "Reifen",
+    "merkmale": "700 x 26",
+    "preis": 60,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Vittoria",
+      "name": "Zaffiro 700 x 25C",
+      "preis": 20
+     },
+     {
+      "marke": "Vittoria",
+      "name": "Zaffiro Pro Slick 700 x 25C",
+      "preis": 25
+     },
+     {
+      "marke": "Hutchinson",
+      "name": "Challenger 700 x 25C (Tube Type)",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schlauch-road-20-28-sv60",
+    "marke": "Universal",
+    "name": "Rennradschlauch 700 × 20–28C, 60 mm Ventil",
+    "kategorie": "Schlauch",
+    "merkmale": "Presta-Ventil 60 mm",
+    "preis": 8,
+    "abgeleitet": true,
+    "hinweis": "Größe aus dem Reifen abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-rd-r7150",
+    "marke": "Shimano",
+    "name": "105 Di2 RD-R7150",
+    "kategorie": "Schaltwerk",
+    "merkmale": "12-fach, Di2",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra Di2 RD-R8150",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 RD-R9250",
+      "preis": 700
+     }
+    ]
+   },
+   {
+    "id": "shimano-fd-r7150",
+    "marke": "Shimano",
+    "name": "105 Di2 FD-R7150",
+    "kategorie": "Umwerfer",
+    "merkmale": "2-fach, Di2",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Quelle: 105 Di2, Lötaufnahme",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra Di2 FD-R8150",
+      "preis": 200
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 FD-R9250",
+      "preis": 450
+     }
+    ]
+   },
+   {
+    "id": "shimano-st-r7170",
+    "marke": "Shimano",
+    "name": "105 Di2 ST-R7170",
+    "kategorie": "Schalthebel",
+    "merkmale": "12-fach, Di2, hydraulisch",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra Di2 ST-R8170",
+      "preis": 480
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace Di2 ST-R9270",
+      "preis": 900
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX Di2 ST-RX825",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-fc-r7100",
+    "marke": "Shimano",
+    "name": "105 FC-R7100",
+    "kategorie": "Kurbel",
+    "merkmale": "2-fach, 12-fach, Hollowtech II",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "52/36 Z laut Händlerseite",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 50/34, 170 mm",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 52/36",
+      "preis": 300
+     },
+     {
+      "marke": "Shimano",
+      "name": "Ultegra FC-R8100 50/34",
+      "preis": 300
+     }
+    ]
+   },
+   {
+    "id": "shimano-bt-dn300",
+    "marke": "Shimano",
+    "name": "Di2 Akku BT-DN300",
+    "kategorie": "Akku",
+    "merkmale": "Im Rahmen, für Di2 12-fach",
+    "preis": 150,
+    "abgeleitet": true,
+    "hinweis": "in der Quelle nicht genannt; interner Di2-Akku abgeleitet",
+    "alternativen": null
+   },
+   {
+    "id": "shimano-br-r7170",
+    "marke": "Shimano",
+    "name": "105 BR-R7170",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, Flat Mount",
+    "preis": null,
+    "abgeleitet": true,
+    "hinweis": "Quelle: Shimano 105 hydraulisch, Flat Mount; Sattel abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "Ultegra BR-R8170",
+      "preis": 110
+     },
+     {
+      "marke": "Shimano",
+      "name": "Dura-Ace BR-R9270",
+      "preis": 200
+     },
+     {
+      "marke": "Shimano",
+      "name": "GRX BR-RX400",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "dt-swiss-r470-specialized",
+    "marke": "DT Swiss",
+    "name": "R470 / Specialized Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Felgen DT Swiss R470, 21 mm innen, tubeless-ready; Naben Specialized",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "shimano-bb-rs500",
+    "marke": "Shimano",
+    "name": "BB-RS500",
+    "kategorie": "Innenlager",
+    "merkmale": "BSA 68 mm, 24-mm-Achse",
+    "preis": 20,
+    "abgeleitet": true,
+    "hinweis": "Quelle: Shimano BSA-Innenlager; Modell abgeleitet",
+    "alternativen": [
+     {
+      "marke": "Shimano",
+      "name": "BB-MT500",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "SM-BB52 Innenlager",
+      "preis": 20
+     },
+     {
+      "marke": "Shimano",
+      "name": "BB-MT501",
+      "preis": 20
+     }
+    ]
+   },
+   {
+    "id": "specialized-tarmac-steckachsen",
+    "marke": "Specialized",
+    "name": "Steckachsen 12 × 100 / 12 × 142 mm (Tarmac)",
+    "kategorie": "Steckachse",
+    "merkmale": "Länge und Gewinde am Rad prüfen",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ },
+ {
+  "id": "trek-2025-marlin-7-gen-3",
+  "hersteller": "Trek",
+  "modell": "Marlin 7 Gen 3",
+  "reihe": "Marlin",
+  "baujahr": 2025,
+  "kategorie": "MTB",
+  "uvp_eur": 1149,
+  "zweitnamen": [
+   "Marlin 7"
+  ],
+  "geaendert": "2026-10-25",
+  "teile": [
+   {
+    "id": "sram-sx-eagle-kette",
+    "marke": "SRAM",
+    "name": "SX Eagle Kette",
+    "kategorie": "Kette",
+    "merkmale": "12-fach",
+    "preis": 20,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Kette",
+      "preis": 25
+     },
+     {
+      "marke": "Shimano",
+      "name": "Deore CN-M6100",
+      "preis": 28
+     },
+     {
+      "marke": "Shimano",
+      "name": "SLX CN-M7100",
+      "preis": 30
+     }
+    ]
+   },
+   {
+    "id": "sram-pg-1210-11-50",
+    "marke": "SRAM",
+    "name": "PG-1210 Eagle 11-50",
+    "kategorie": "Kassette",
+    "merkmale": "12-fach, 11-50",
+    "preis": 60,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "PG-1230 Eagle 11-50",
+      "preis": 70
+     }
+    ]
+   },
+   {
+    "id": "shimano-b05s",
+    "marke": "Shimano",
+    "name": "B05S Resin",
+    "kategorie": "Bremsbelag",
+    "merkmale": "2-Kolben MTB, organisch",
+    "preis": 12,
+    "abgeleitet": true,
+    "hinweis": "abgeleitet von Shimano BR-MT200",
+    "alternativen": [
+     {
+      "marke": "Tektro",
+      "name": "E10.11",
+      "preis": 10
+     },
+     {
+      "marke": "Shimano",
+      "name": "B03S Resin",
+      "preis": 12
+     }
+    ]
+   },
+   {
+    "id": "scheibe-180",
+    "marke": "Universal",
+    "name": "Bremsscheibe 180 mm",
+    "kategorie": "Bremsscheibe",
+    "merkmale": "180 mm, Aufnahme (Center Lock oder 6-Loch) am Rad prüfen",
+    "preis": 30,
+    "abgeleitet": false,
+    "hinweis": "180 mm vorn und hinten; Quelle nennt Shimano RT10 Center Lock, aber Naben mit 6-Loch: Aufnahme prüfen",
+    "alternativen": null
+   },
+   {
+    "id": "maxxis-ardent-2-4",
+    "marke": "Maxxis",
+    "name": "Ardent 2.40",
+    "kategorie": "Reifen",
+    "merkmale": "27.5/29 x 2.4",
+    "preis": 40,
+    "abgeleitet": false,
+    "hinweis": "Maxxis Ardent EXO, 27,5 x 2.40 laut Quelle (vermutlich kleine Rahmen), große Rahmen 29 Zoll prüfen",
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "Tough Tom 2.25",
+      "preis": 20
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Rapid Rob 2.25",
+      "preis": 20
+     },
+     {
+      "marke": "Schwalbe",
+      "name": "Smart Sam 2.25",
+      "preis": 25
+     }
+    ]
+   },
+   {
+    "id": "schlauch-584-40-62",
+    "marke": "Universal",
+    "name": "Schlauch 27,5 × 1,5–2,4",
+    "kategorie": "Schlauch",
+    "merkmale": "40–62-584; Ventilart und -länge am Rad prüfen",
+    "preis": 8,
+    "abgeleitet": true,
+    "hinweis": "Größe aus dem Reifen abgeleitet; bei 29-Zoll-Laufrädern den 29-Zoll-Schlauch nehmen",
+    "alternativen": [
+     {
+      "marke": "Schwalbe",
+      "name": "AV14 Light 27,5 × 1,5–2,4",
+      "preis": 10
+     }
+    ]
+   },
+   {
+    "id": "sram-sx-eagle-schaltwerk",
+    "marke": "SRAM",
+    "name": "SX Eagle Schaltwerk",
+    "kategorie": "Schaltwerk",
+    "merkmale": "12-fach, langer Käfig",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Schaltwerk",
+      "preis": 70
+     },
+     {
+      "marke": "SRAM",
+      "name": "Apex Eagle Schaltwerk",
+      "preis": 120
+     },
+     {
+      "marke": "SRAM",
+      "name": "X01 Eagle Schaltwerk",
+      "preis": 200
+     }
+    ]
+   },
+   {
+    "id": "sram-sx-eagle-trigger",
+    "marke": "SRAM",
+    "name": "SX Eagle Trigger",
+    "kategorie": "Schalthebel",
+    "merkmale": "12-fach",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "NX Eagle Trigger",
+      "preis": 30
+     },
+     {
+      "marke": "SRAM",
+      "name": "GX Eagle Trigger",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "sram-sx-eagle-kurbel-30",
+    "marke": "SRAM",
+    "name": "SX Eagle Kurbel 30 Z",
+    "kategorie": "Kurbel",
+    "merkmale": "1-fach, 30 Z Stahl, Powerspline, Kettenlinie 49 mm",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "170 mm laut Quelle",
+    "alternativen": [
+     {
+      "marke": "SRAM",
+      "name": "SX Eagle Kurbel 32 Z (Powerspline)",
+      "preis": 50
+     },
+     {
+      "marke": "SRAM",
+      "name": "S650 Powerspline Kurbel 38 Z",
+      "preis": null
+     }
+    ]
+   },
+   {
+    "id": "shimano-br-mt200",
+    "marke": "Shimano",
+    "name": "BR-MT200",
+    "kategorie": "Bremssattel",
+    "merkmale": "hydraulisch, 2 Kolben, Post Mount",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   },
+   {
+    "id": "bontrager-kovee-formula",
+    "marke": "Bontrager",
+    "name": "Kovee / Formula Laufradsatz",
+    "kategorie": "Laufradsatz",
+    "merkmale": "Felgen Kovee 23 mm, 28 Loch, tubeless-ready; Naben Formula DC-20 / DC-22, 6-Loch",
+    "preis": null,
+    "abgeleitet": false,
+    "hinweis": "Naben Formula DC-20 LW / DC-22 LW, Schnellspanner",
+    "alternativen": null
+   },
+   {
+    "id": "truvativ-powerspline-bsa73-118",
+    "marke": "Truvativ",
+    "name": "Powerspline Innenlager BSA 73 mm, 118 mm",
+    "kategorie": "Innenlager",
+    "merkmale": "Patrone, 73 mm, Achse 118 mm",
+    "preis": 20,
+    "abgeleitet": false,
+    "hinweis": null,
+    "alternativen": null
+   }
+  ]
+ }
+]

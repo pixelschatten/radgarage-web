@@ -1,6 +1,6 @@
 """Baut den Bereich /anleitungen/ (eine Seite pro Wartungsarbeit), dazu sitemap.xml.
 
-Aufruf im Repo-Wurzelordner: python3 _quellen/anleitungen.py
+Gebaut wird über python3 _quellen/bauen.py (Anleitungen, Modellseiten, CSS, Sitemap).
 Inhalte stammen aus den App-Anleitungen (src/data/anleitungen.ts im App-Repo), hier ausführlicher.
 Ordner mit _ am Anfang veröffentlicht GitHub Pages nicht.
 
@@ -282,7 +282,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 <meta property="og:url" content="{url}">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/anleitungen/anleitungen.css?v=1">
+<link rel="stylesheet" href="/css/seiten.css?v=2">
 <meta name="theme-color" content="#F2EDE2">
 {daten}
 </head>
@@ -299,6 +299,7 @@ FUSS = '''  <footer>
     <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
     <nav>
       <a href="/anleitungen/">Anleitungen</a>
+      <a href="/raeder/">Räder und Teile</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="/impressum.html">Impressum</a>
       <a href="/datenschutz.html">Datenschutz</a>
@@ -497,26 +498,8 @@ def uebersicht(alle):
     return ''.join(out)
 
 
-def sitemap(alle):
-    pfade = [('/', '1.0'), ('/anleitungen/', '0.8')] + [(f'/anleitungen/{a["slug"]}/', '0.7') for a in alle] + [
-        ('/datenschutz.html', '0.2'), ('/impressum.html', '0.2'), ('/konto-loeschen.html', '0.2')]
-    zeilen = ''.join(f'  <url><loc>{SEITE}{p}</loc><lastmod>{STAND}</lastmod><priority>{pr}</priority></url>\n' for p, pr in pfade)
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{zeilen}</urlset>\n'
-
-
 def schreiben(pfad, text):
     voll = os.path.join(WURZEL, pfad)
     os.makedirs(os.path.dirname(voll), exist_ok=True)
     with open(voll, 'w', encoding='utf-8') as f:
         f.write(text)
-
-
-if __name__ == '__main__':
-    basis = open(os.path.join(WURZEL, '_quellen/basis.css'), encoding='utf-8').read()
-    extra = open(os.path.join(WURZEL, '_quellen/anleitungen-extra.css'), encoding='utf-8').read()
-    schreiben('anleitungen/anleitungen.css', basis + '\n' + extra)
-    schreiben('anleitungen/index.html', uebersicht(ANLEITUNGEN))
-    for a in ANLEITUNGEN:
-        schreiben(f'anleitungen/{a["slug"]}/index.html', anleitung_seite(a, ANLEITUNGEN))
-    schreiben('sitemap.xml', sitemap(ANLEITUNGEN))
-    print(f'{len(ANLEITUNGEN)} Anleitungen gebaut.')
