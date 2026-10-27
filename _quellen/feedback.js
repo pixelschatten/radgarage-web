@@ -1,4 +1,4 @@
-// Feedback ohne Anmeldung. Landet in der Tabelle feedback und geht zusätzlich als Mail an feedback@radgarage.app;
+// Feedback ohne Anmeldung. Landet in der Tabelle feedback, die tägliche Erinnerungsmail an die Admins zählt es mit;
 // gelesen und abgehakt wird es in der Werkbank unter „Feedback“.
 // Gegen Massen-Einsendungen bremst der Server (Trigger feedback_bremse, zählt je Anschluss), hier nur eine Falle für Bots.
 (() => {
