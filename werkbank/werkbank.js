@@ -1425,6 +1425,20 @@
     return div;
   }
 
+  // Text mit anklickbaren Adressen (nur http/https, öffnet in neuem Tab ohne Zugriff auf die Werkbank)
+  function mitLinks(text) {
+    const p = Object.assign(document.createElement('p'), { className: 'fb-text' });
+    let ab = 0;
+    for (const m of text.matchAll(/https?:\/\/[^\s<>()"]+/g)) {
+      p.append(text.slice(ab, m.index));
+      const url = m[0].replace(/[.,;:!?]+$/, '');
+      p.append(Object.assign(document.createElement('a'), { href: url, textContent: url, target: '_blank', rel: 'noopener noreferrer' }));
+      ab = m.index + url.length;
+    }
+    p.append(text.slice(ab));
+    return p;
+  }
+
   async function unterhaltung(id) {
     let u;
     try { u = await rpc('postfach_unterhaltung', { p_id: id }); } catch (e) { meldung($('#msg-postfach'), fehlerText(e), true); return; }
@@ -1438,7 +1452,7 @@
       if (n.richtung === 'ein' && n.spam >= 15) zusatz.push('wahrscheinlich Spam');
       d.append(Object.assign(document.createElement('div'), { className: 'meta', textContent: `${zeitDe(n.erstellt)} · ${wer}${zusatz.length ? ` · ${zusatz.join(', ')}` : ''}` }));
       if (n.betreff && n.betreff !== u.betreff) d.append(Object.assign(document.createElement('strong'), { textContent: n.betreff }));
-      d.append(Object.assign(document.createElement('p'), { className: 'fb-text', textContent: n.text || '(kein Text)' }));
+      d.append(mitLinks(n.text || '(kein Text)'));
       if (n.anhaenge && n.anhaenge.length) {
         d.append(Object.assign(document.createElement('p'), {
           className: 'meta', textContent: `Anhänge (nicht übernommen): ${n.anhaenge.map((a) => a.name).join(', ')}`,
