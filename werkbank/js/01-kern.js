@@ -536,6 +536,7 @@ function tabAusAdresse() {
   tab(name || '');
   if (name === 'freigaben') fgAnsichtSetzen(['app', 'web'].includes(unter) ? unter : 'helfer');
   if (name === 'katalog') katAnsichtSetzen(unter);
+  if (name === 'statistik') stReiterSetzen(unter);
 }
 window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
 for (const b of $$('[data-neu-laden]')) b.addEventListener('click', () => ladeOffen());

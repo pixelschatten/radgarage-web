@@ -558,10 +558,24 @@ for (const b of $$('#st-zeitraum button')) {
     ladeStatistik();
   });
 }
+// Unterreiter (App, Katalog, Website, Shops und Einnahmen, System) mit eigener Adresse (#statistik/katalog)
+let stTeil = 'app';
+function stReiterSetzen(t) {
+  const erlaubt = $$('#st-reiter button').filter((b) => !b.hidden && (b.dataset.recht !== 'system' || darf('system'))).map((b) => b.dataset.st);
+  stTeil = erlaubt.includes(t) ? t : 'app';
+  for (const b of $$('#st-reiter button')) b.setAttribute('aria-selected', String(b.dataset.st === stTeil));
+  for (const d of $$('.st-teil')) d.hidden = d.dataset.st !== stTeil;
+  const soll = stTeil === 'app' ? '#statistik' : `#statistik/${stTeil}`;
+  if (location.hash.split('/')[0] === '#statistik' && location.hash !== soll) history.replaceState(null, '', soll);
+  // Diagramme messen ihre Breite beim Zeichnen; im versteckten Teil war sie 0
+  if (stDaten) { stBreite = 0; zeichneStatistik(); zeichneKlicks(); zeichneWeb(); }
+}
+for (const b of $$('#st-reiter button')) b.addEventListener('click', () => stReiterSetzen(b.dataset.st));
+
 let stBreite = 0;
 window.addEventListener('resize', () => {
   if ($('[data-panel="statistik"]').hidden || !stDaten) return;
-  const w = $('#st-nutzer').clientWidth;
+  const w = ($('.st-teil:not([hidden]) .st-gitter') || $('#st-nutzer')).clientWidth;
   if (Math.abs(w - stBreite) < 20) return;
   stBreite = w;
   clearTimeout(window.stTimer);
