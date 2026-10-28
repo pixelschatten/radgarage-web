@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Von der Warteliste abmelden · Radgarage</title>
+<meta name="robots" content="noindex">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/seiten.css?v=2">
+<meta name="theme-color" content="#F2EDE2">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" class="logo">Radgarage</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
+  </header>
+  <main>
+    <section class="legal legal-page" id="abmelden">
+      <h2>Von der Warteliste abmelden</h2>
+      <p id="ab-text">Du bekommst dann keine Mails mehr zur Warteliste und zum Testzugang. Wir löschen deine Adresse und deine Angaben von der Liste.</p>
+      <p><strong id="ab-adresse"></strong></p>
+      <p><button class="pill" type="button" id="ab-knopf">Abmelden</button></p>
+      <p class="msg" role="status" id="ab-msg" hidden></p>
+      <p class="fine">Hast du ein Konto in der App, bleibt es davon unberührt. Mehr in der <a href="/datenschutz.html">Datenschutzerklärung</a>.</p>
+    </section>
+    <p><a class="back" href="/">Zurück zur Startseite</a></p>
+  </main>
+  <footer>
+    <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
+    <nav>
+      <a href="/impressum.html">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+    </nav>
+  </footer>
+</div>
+<script>
+  // Abmeldelink aus Mails an die Warteliste (Werkbank, Sammelmail). Erst der Klick meldet ab, damit Link-Vorschauen und
+  // Virenscanner in Postfächern niemanden versehentlich abmelden. Der Prüfwert t stammt vom Server (crm_abmelde_pruefwert).
+  (() => {
+    const SERVER = { url: 'https://axiirnfgtbmmjlfwlyfe.supabase.co', key: 'sb_publishable_dBz5uK-7wYwKKL3O8Qd0MA_pYzxTP_2' };
+    const q = new URLSearchParams(location.search);
+    const email = (q.get('e') || '').trim();
+    const t = (q.get('t') || '').trim();
+    const knopf = document.getElementById('ab-knopf');
+    const msg = document.getElementById('ab-msg');
+    const zeigen = (text, fehler) => { msg.hidden = false; msg.textContent = text; msg.classList.toggle('fehler', !!fehler); };
+    if (!email || !t) {
+      knopf.remove();
+      zeigen('Dieser Link ist unvollständig. Schreib uns an kontakt@radgarage.app, dann tragen wir dich aus.', true);
+      return;
+    }
+    document.getElementById('ab-adresse').textContent = email;
+    knopf.addEventListener('click', async () => {
+      knopf.disabled = true;
+      try {
+        const r = await fetch(`${SERVER.url}/rest/v1/rpc/crm_abmelden`, {
+          method: 'POST',
+          headers: { apikey: SERVER.key, Authorization: `Bearer ${SERVER.key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ p_email: email, p_pruefwert: t }),
+        });
+        const ok = r.ok && (await r.json()) === true;
+        if (!ok) throw new Error('abgelehnt');
+        knopf.remove();
+        document.getElementById('ab-text').textContent = 'Du bist abgemeldet. Wir schicken dir keine Mails zur Warteliste mehr.';
+        zeigen('Erledigt.');
+      } catch {
+        knopf.disabled = false;
+        zeigen('Das hat nicht geklappt. Der Link ist vielleicht beschädigt. Schreib uns an kontakt@radgarage.app, dann tragen wir dich aus.', true);
+      }
+    });
+  })();
+</script>
+</body>
+</html>
