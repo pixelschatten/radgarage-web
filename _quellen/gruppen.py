@@ -9,7 +9,7 @@ from collections import Counter, OrderedDict
 
 from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen
 from raeder import FARBEN, MIN_GRUPPE, NAMEN, alternativen, preis, teil_link, tsd
-from teile import radliste
+from teile import antrieb_paare, paar_liste, radliste
 
 ELEKTRONISCH = re.compile(r'Di2|AXS|eTap')
 
@@ -206,6 +206,21 @@ AKKU_TEXT = ('Akkus sind oft auf Rahmen und Motorsystem zugeschnitten. Ein Ersat
              'wie der verbaute oder vom Radhersteller ausdrücklich freigegeben sein.')
 
 
+def _paar_tabelle(raeder, kat):
+    """Motoren bzw. Akkus dieses Systems, jeweils mit den Gegenstücken, die am selben Rad verbaut sind."""
+    paare = antrieb_paare(raeder)
+    teil = {t['id']: t for r in raeder for t in r['teile']}
+    gegen = 'Akkus' if kat == 'Motor' else 'Motoren'
+    zeilen = []
+    for t, z in _haeufigste(raeder, kat, 99):
+        dazu = paare.get(t['id'])
+        zeilen.append(f'<tr><th scope="row">{teil_link(t)}{"<span>" + e(t["merkmale"]) + "</span>" if t["merkmale"] else ""}'
+                      f'<span>{z} {"Rad" if z == 1 else "Räder"}</span></th>'
+                      f'<td>{"<span class=paar-kopf>" + gegen + " dazu:</span>" + paar_liste(dazu.most_common(), teil) if dazu else ""}</td>'
+                      f'<td class="preis">{preis(t["preis"])}</td></tr>')
+    return f'<table class="teiltabelle paar-tabelle"><tbody>{"".join(zeilen)}</tbody></table>' if zeilen else ''
+
+
 def system_seite(pfad, raeder):
     name = raeder[0]['system']
     nav, brot = krumen([('Radgarage', '/'), ('E-Bike-Systeme', '/e-bike-systeme/'), (name, pfad)])
@@ -234,15 +249,17 @@ def system_seite(pfad, raeder):
     </div>
 ''')
     out.append(f'''    <section class="t s1 voll" aria-labelledby="motor-titel">
-      <span class="eyebrow">Motor</span>
-      <h2 id="motor-titel" style="font-size:30px;margin:6px 0 4px">Motoren von {e(name)} im Katalog</h2>
-      {_tabelle(raeder, ['Motor'], 12)}
+      <span class="eyebrow">Motor und Akku</span>
+      <h2 id="motor-titel" style="font-size:30px;margin:6px 0 4px">Welcher Akku zu welchem Motor?</h2>
+      <p>Jeder Motor von {e(name)} im Katalog mit den Akkus, die an denselben Rädern verbaut sind. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
+      <p>{e(SYSTEM_TEXT.get(name, AKKU_TEXT))}</p>
+      {_paar_tabelle(raeder, 'Motor')}
     </section>
     <section class="t k5 voll" aria-labelledby="akku-titel">
-      <span class="eyebrow">Akku</span>
-      <h2 id="akku-titel" style="font-size:30px;margin:6px 0 4px">Akkus an diesen E-Bikes</h2>
-      <p>{e(SYSTEM_TEXT.get(name, AKKU_TEXT))}</p>
-      {_tabelle(raeder, ['Akku'], 12)}
+      <span class="eyebrow">Akku und Motor</span>
+      <h2 id="akku-titel" style="font-size:30px;margin:6px 0 4px">Akkus an diesen E-Bikes und ihre Motoren</h2>
+      <p>Andersherum: Du kennst deinen Akku und suchst den Motor dazu.</p>
+      {_paar_tabelle(raeder, 'Akku')}
     </section>
 ''')
     out.append(f'''    <section class="t s1 voll" aria-labelledby="raeder-titel">
@@ -274,7 +291,7 @@ def systeme_uebersicht(systeme, alle):
     <div class="t k4 kopf">
       <span class="eyebrow">E-Bikes</span>
       <h1>Welcher Motor, welcher Akku?</h1>
-      <p class="lead">{len(ebikes)} E-Bikes im Katalog, sortiert nach Motorsystem. Jede Seite zeigt, welche Motoren und Akkus verbaut sind. Wichtig für Ersatz- und Zweitakkus: Sie müssen zum System passen.</p>
+      <p class="lead">{len(ebikes)} E-Bikes im Katalog, sortiert nach Motorsystem. Jede Seite zeigt, welche Motoren und Akkus verbaut sind und welcher Akku zu welchem Motor gehört. Wichtig für Ersatz- und Zweitakkus: Sie müssen zum System passen.</p>
     </div>
   </div>
   <section aria-label="Systeme" style="margin-top:14px">
