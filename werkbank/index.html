@@ -815,7 +815,13 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
   <section class="t eng" id="s-faktor" hidden>
     <div class="eyebrow">Schritt 2 von 2</div>
     <h2>Zweiter Faktor</h2>
-    <p class="fine">Gib den 6-stelligen Code aus deiner Authenticator-App ein.</p>
+    <div id="passkey-login" hidden>
+      <p class="fine">Bestätige mit Face ID, Touch ID oder der Bildschirmsperre deines Geräts.</p>
+      <div class="aktionen"><button class="pill" type="button" id="passkey-los">Mit Face ID / Touch ID bestätigen</button></div>
+      <div class="msg" role="status" id="msg-passkey"></div>
+      <p class="fine" style="margin-top:14px">Oder mit dem Code aus der Authenticator-App:</p>
+    </div>
+    <p class="fine" id="faktor-text">Gib den 6-stelligen Code aus deiner Authenticator-App ein.</p>
     <form id="f-faktor">
       <label id="faktor-wahl-feld" hidden>Gerät<select name="faktor" id="faktor-wahl"></select></label>
       <label>Code
@@ -1481,9 +1487,11 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <label>Abmelden nach<select id="auto-ab"><option value="15">15 Minuten</option><option value="30" selected>30 Minuten</option><option value="60">1 Stunde</option><option value="240">4 Stunden</option></select></label>
         </div>
         <div class="t">
-          <h3>Authenticator-Apps</h3>
-          <p class="fine">Jede eingetragene App kann den zweiten Faktor liefern. Ein zweites Gerät (z. B. Tablet oder Passwort-Manager) ist der einfachste Schutz, falls das Handy verloren geht.</p>
+          <h3>Zweiter Faktor</h3>
+          <p class="fine">Jede eingetragene Authenticator-App kann den zweiten Faktor liefern. Ein zweites Gerät (z. B. Tablet oder Passwort-Manager) ist der einfachste Schutz, falls das Handy verloren geht. Mit Face ID oder Touch ID bestätigst du die Anmeldung auf diesem Gerät ohne Code, die Authenticator-App bleibt als Ersatz.</p>
           <ul class="liste" id="faktoren"></ul>
+          <div class="aktionen" style="margin-top:12px" id="passkey-neu-box" hidden><button class="pill klein" type="button" id="passkey-neu">Face ID / Touch ID hinzufügen</button></div>
+          <div class="msg" role="status" id="msg-passkey-neu"></div>
           <details id="faktor-neu-box" style="margin-top:12px">
             <summary>Weiteres Gerät hinzufügen</summary>
             <form id="f-faktor-neu" autocomplete="off">
@@ -1646,16 +1654,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-16"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-16"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-16"></script>
+<script src="js/01-kern.js?v=2026-10-28-17"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-17"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-17"></script>
 <script src="js/04-postfach-crm.js?v=2026-10-28-warteliste"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-16"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-16"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-16"></script>
-<script src="js/08-konten.js?v=2026-10-28-16"></script>
-<script src="js/09-katalog.js?v=2026-10-28-16"></script>
-<script src="js/10-statistik.js?v=2026-10-28-16"></script>
-<script src="js/11-start.js?v=2026-10-28-16"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-17"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-17"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-17"></script>
+<script src="js/08-konten.js?v=2026-10-28-17"></script>
+<script src="js/09-katalog.js?v=2026-10-28-17"></script>
+<script src="js/10-statistik.js?v=2026-10-28-17"></script>
+<script src="js/11-start.js?v=2026-10-28-17"></script>
 </body>
 </html>

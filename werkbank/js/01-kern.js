@@ -222,6 +222,11 @@ async function weiter() {
   const { data: faktoren, error: e2 } = await sb.auth.mfa.listFactors();
   if (e2) throw e2;
   const bestaetigt = faktoren.totp.filter((f) => f.status === 'verified');
+  // Face ID / Touch ID (WebAuthn) gibt es nur zusätzlich zur Authenticator-App, nur in Browsern, die es können
+  passkeyFaktoren = passkeyMoeglich() ? faktoren.webauthn.filter((f) => f.status === 'verified') : [];
+  $('#passkey-login').hidden = !passkeyFaktoren.length;
+  $('#faktor-text').hidden = !!passkeyFaktoren.length;
+  meldung($('#msg-passkey'), '');
   if (bestaetigt.length) {
     faktorId = bestaetigt[0].id;
     $('#f-faktor').reset();
@@ -270,6 +275,34 @@ $('#f-einrichten').addEventListener('submit', (ev) => {
   });
 });
 $('#f-faktor').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
+
+// ----- Face ID / Touch ID als zweiter Faktor (WebAuthn, Relying Party radgarage.app) -----
+
+let passkeyFaktoren = [];
+const passkeyMoeglich = () => !!(window.PublicKeyCredential && navigator.credentials);
+// Abbruch im Systemdialog ist kein Fehler, der erklärt werden muss
+const passkeyFehler = (e) => /NotAllowed|abort|cancel/i.test(`${e && (e.name || '')} ${e && (e.message || '')}`)
+  ? 'Abgebrochen. Nochmal versuchen oder den Code aus der Authenticator-App nehmen.' : fehlerText(e);
+$('#passkey-los').addEventListener('click', async () => {
+  const b = $('#passkey-los');
+  b.disabled = true;
+  meldung($('#msg-passkey'), '');
+  try {
+    let letzterFehler = null;
+    // Mehrere Geräte eingetragen: der Reihe nach, das passende meldet sich im Systemdialog
+    for (const f of passkeyFaktoren) {
+      const { error } = await sb.auth.mfa.webauthn.authenticate({ factorId: f.id });
+      if (!error) { await werkbank(); return; }
+      letzterFehler = error;
+      if (/NotAllowed|abort|cancel/i.test(`${error.name || ''} ${error.message || ''}`)) break;
+    }
+    throw letzterFehler || new Error('Kein Gerät eingetragen.');
+  } catch (e) {
+    meldung($('#msg-passkey'), passkeyFehler(e), true);
+  } finally {
+    b.disabled = false;
+  }
+});
 
 // Notfall: Wiederherstellungscode löscht die Faktoren, danach neu einrichten
 $('#f-notfall').addEventListener('submit', (ev) => {

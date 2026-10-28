@@ -319,7 +319,7 @@ async function ladeSicherheit() {
   meldung($('#msg-codes'), '');
   meldung($('#msg-sitzungen'), '');
   const [faktoren, codes] = await Promise.all([
-    sb.auth.mfa.listFactors().then((r) => r.data ? r.data.totp.filter((f) => f.status === 'verified') : []),
+    sb.auth.mfa.listFactors().then((r) => r.data ? [...r.data.totp, ...r.data.webauthn].filter((f) => f.status === 'verified') : []),
     rpc('wiederherstellung_status').catch(() => null),
   ]);
   codesOffen = codes ? codes.offen : null;
@@ -341,8 +341,10 @@ function zeichneStatus(faktoren, codes) {
     return li;
   };
   const offen = codes ? codes.offen : 0;
+  const apps = faktoren.filter((f) => f.factor_type !== 'webauthn');
+  const passkeys = faktoren.filter((f) => f.factor_type === 'webauthn');
   $('#sicher-status').replaceChildren(
-    punkt(faktoren.length > 0, 'Zweiter Faktor', faktoren.length === 1 ? '1 Authenticator-App eingetragen' : `${faktoren.length} Authenticator-Apps eingetragen`),
+    punkt(apps.length > 0, 'Zweiter Faktor', (apps.length === 1 ? '1 Authenticator-App' : `${apps.length} Authenticator-Apps`) + (passkeys.length ? ` und ${passkeys.length === 1 ? '1 Gerät' : `${passkeys.length} Geräte`} mit Face ID / Touch ID` : '') + ' eingetragen'),
     punkt(offen >= 3 || faktoren.length > 1, 'Notfall-Zugang', offen ? `${offen} Wiederherstellungscodes übrig` + (faktoren.length > 1 ? ', dazu ein Ersatzgerät' : '') : (faktoren.length > 1 ? 'Ersatzgerät eingetragen, Codes fehlen noch' : 'Noch keine Wiederherstellungscodes')),
     punkt(true, 'Automatisch abmelden', `nach ${$('#auto-ab').selectedOptions[0].textContent}`),
     punkt(true, 'Sitzung nur in diesem Tab', 'Schließen des Tabs meldet dich ab'));
@@ -350,11 +352,14 @@ function zeichneStatus(faktoren, codes) {
 
 function zeichneFaktoren(faktoren) {
   const ul = $('#faktoren');
+  const apps = faktoren.filter((f) => f.factor_type !== 'webauthn');
+  $('#passkey-neu-box').hidden = !passkeyMoeglich();
   ul.replaceChildren(...faktoren.map((f) => {
+    const passkey = f.factor_type === 'webauthn';
     const li = document.createElement('li');
     const links = document.createElement('div');
     links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' }),
-      Object.assign(document.createElement('div'), { className: 'neben', textContent: `Eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
+      Object.assign(document.createElement('div'), { className: 'neben', textContent: `${passkey ? 'Face ID / Touch ID' : 'Authenticator-App'}, eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
     const umb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Umbenennen' });
     umb.addEventListener('click', () => {
       const form = formular([['name', 'Name der App oder des Geräts']], { name: f.friendly_name || '' }, 'Speichern');
@@ -373,10 +378,12 @@ function zeichneFaktoren(faktoren) {
       dialog('Authenticator umbenennen', form);
     });
     const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Entfernen' });
-    b.disabled = faktoren.length < 2;
-    b.title = faktoren.length < 2 ? 'Das letzte Gerät lässt sich nicht entfernen. Füge zuerst ein anderes hinzu.' : '';
+    // Die letzte Authenticator-App bleibt: Die App fragt beim Admin-Zugang nur nach ihrem Code
+    const letzteApp = !passkey && apps.length < 2;
+    b.disabled = letzteApp;
+    b.title = letzteApp ? 'Die letzte Authenticator-App lässt sich nicht entfernen. Füge zuerst eine andere hinzu.' : '';
     b.addEventListener('click', async () => {
-      if (!window.confirm(`„${f.friendly_name}“ entfernen? Codes von diesem Gerät gelten dann nicht mehr.`)) return;
+      if (!window.confirm(passkey ? `„${f.friendly_name}“ entfernen? Face ID / Touch ID auf diesem Gerät gilt dann nicht mehr.` : `„${f.friendly_name}“ entfernen? Codes von diesem Gerät gelten dann nicht mehr.`)) return;
       b.disabled = true;
       const { error } = await sb.auth.mfa.unenroll({ factorId: f.id });
       if (error) { window.alert(fehlerText(error)); b.disabled = false; return; }
@@ -430,6 +437,29 @@ async function neuerFaktorZu(aufraeumen) {
 }
 $('#faktor-neu-abbrechen').addEventListener('click', () => neuerFaktorZu(true));
 
+// Face ID / Touch ID dieses Geräts als weiteren zweiten Faktor eintragen
+$('#passkey-neu').addEventListener('click', async () => {
+  const b = $('#passkey-neu');
+  b.disabled = true;
+  meldung($('#msg-passkey-neu'), '');
+  try {
+    const { data: alle } = await sb.auth.mfa.listFactors();
+    for (const x of (alle ? alle.all : []).filter((x) => x.status !== 'verified')) await sb.auth.mfa.unenroll({ factorId: x.id });
+    const vorhanden = new Set((alle ? alle.all : []).map((x) => x.friendly_name));
+    const basis = /iPhone|iPad/.test(navigator.userAgent) ? 'iPhone/iPad' : /Mac/.test(navigator.userAgent) ? 'Mac' : /Android/.test(navigator.userAgent) ? 'Android' : 'Gerät';
+    let name = `${basis} (Face ID / Touch ID)`;
+    for (let i = 2; vorhanden.has(name); i += 1) name = `${basis} ${i} (Face ID / Touch ID)`;
+    const { error } = await sb.auth.mfa.webauthn.register({ friendlyName: name });
+    if (error) throw error;
+    meldung($('#msg-passkey-neu'), `Eingetragen als „${name}“. Beim nächsten Anmelden reicht hier Face ID / Touch ID.`);
+    ladeSicherheit();
+  } catch (e) {
+    meldung($('#msg-passkey-neu'), passkeyFehler(e), true);
+  } finally {
+    b.disabled = false;
+  }
+});
+
 // Wiederherstellungscodes
 function zeichneCodesStatus(c) {
   const t = $('#codes-status');
@@ -456,7 +486,7 @@ $('#codes-neu').addEventListener('click', async () => {
     codesOffen = st ? st.offen : null;
     zeichneCodesStatus(st);
     const { data } = await sb.auth.mfa.listFactors();
-    zeichneStatus(data ? data.totp.filter((f) => f.status === 'verified') : [], st);
+    zeichneStatus(data ? [...data.totp, ...data.webauthn].filter((f) => f.status === 'verified') : [], st);
   } catch (e) {
     meldung($('#msg-codes'), fehlerText(e), true);
   }
