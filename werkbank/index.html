@@ -258,9 +258,9 @@ textarea { resize: vertical; font-size: 15px; }
 .pf-antwort-leiste { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-top: 8px; }
 .pf-antwort-leiste .fine { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
 /* Liste der Unterhaltungen */
-#pf-liste { display: grid; gap: 0; background: var(--surface2); border-radius: 20px; overflow: hidden auto; }
-#pf-liste:empty { display: none; }
-#pf-liste > p { padding: 14px 16px; margin: 0; }
+#pf-liste, #ko-liste { display: grid; gap: 0; background: var(--surface2); border-radius: 20px; overflow: hidden auto; }
+#pf-liste:empty, #ko-liste:empty { display: none; }
+#pf-liste > p, #ko-liste > p { padding: 14px 16px; margin: 0; }
 .pf-zeile { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; border: 0; border-top: 1.5px solid var(--line); background: transparent; color: var(--text); font: inherit; padding: 12px 16px; cursor: pointer; }
 .pf-zeile:first-child { border-top: 0; }
 .pf-zeile:hover, .pf-zeile:focus-visible { background: var(--surface); }
@@ -419,13 +419,59 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 .app-kopf { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
 .app-kopf h3 { margin: 0; }
 .pf-verlauf { display: flex; flex-direction: column; gap: 10px; overflow: auto; overscroll-behavior: contain; }
-#pf-liste { max-height: 560px; margin-top: 4px; }
+#pf-liste, #ko-liste { max-height: 560px; margin-top: 4px; }
 .pf-nachricht { border-radius: 18px 18px 18px 6px; padding: 10px 14px 12px; background: var(--surface); max-width: 86%; align-self: flex-start; }
 .pf-nachricht.aus { background: var(--k4); color: var(--ink); align-self: flex-end; border-radius: 18px 18px 6px 18px; }
 .pf-nachricht:has(.pf-original:not([hidden])) { max-width: 100%; width: 100%; }
 .pf-nachricht .meta { font-size: 13px; color: var(--muted); }
 .pf-nachricht.aus .meta { color: var(--ink2); }
 .pf-nachricht .fb-text { margin: 6px 0 0; }
+.crm-reiter { flex-wrap: wrap; border-radius: 22px; margin-bottom: 14px; }
+.pf-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
+.pf-meta span { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface); color: var(--ink2); }
+.pf-meta .wv { background: var(--k3); color: var(--ink); }
+.pf-meta .zu { background: var(--k1); color: var(--ink); }
+.pf-werkzeuge { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pf-werkzeuge select, .pf-werkzeuge input { height: 34px; padding: 0 10px; font-size: 14px; border-radius: 999px; width: auto; }
+.pf-werkzeuge .msg { flex: 1 1 160px; margin: 0; }
+.pf-baustein { height: 34px; padding: 0 10px; font-size: 14px; border-radius: 999px; width: auto; max-width: 220px; }
+.dlg-box.mail.mit-person { width: min(1180px, 100%); }
+.pf-koerper { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; }
+.pf-haupt { min-height: 0; display: flex; flex-direction: column; gap: 12px; grid-column: 1; grid-row: 1; }
+.pf-haupt .pf-verlauf { flex: 1; min-height: 120px; margin: 0 -8px; padding: 4px 8px; }
+.pf-person { grid-column: 2; grid-row: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; border-left: 1.5px solid var(--line); padding-left: 16px; }
+.pf-person > summary { display: none; }
+.pf-person.solo { border: 0; padding: 0; overflow: visible; }
+.pf-abschnitt + .pf-abschnitt { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.pf-abschnitt h4 { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.pf-fakten { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+.pf-fakt { display: grid; font-size: 13px; color: var(--muted); min-width: 0; }
+.pf-fakt strong { color: var(--ink); font-size: 14px; overflow-wrap: anywhere; }
+.pf-worte { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.pf-worte input { width: 130px; height: 30px; padding: 0 10px; font-size: 13px; border-radius: 999px; }
+.pf-notizen { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 6px; }
+.pf-notizen li { background: var(--k2); color: var(--ink); border-radius: 12px; padding: 8px 10px; }
+.pf-notizen li p { margin: 0 0 2px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pf-notizen .fine { color: var(--ink2); }
+.pf-person textarea { width: 100%; min-height: 60px; font-size: 14px; }
+.pf-mini-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 14px; }
+.pf-mini-liste li { overflow-wrap: anywhere; }
+.pf-mini-liste .fine { display: block; }
+.tb-liste li { align-items: start; }
+.tb-text { white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.sm-art { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--k4); color: var(--ink); }
+.sm-hinweis { background: var(--surface); border-radius: 14px; padding: 10px 12px; font-size: 14px; }
+.sm-ok { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; }
+.sm-ok input { width: auto; margin-top: 3px; }
+@media (max-width: 900px) {
+  .pf-koerper { display: flex; flex-direction: column; gap: 10px; }
+  .pf-person { order: -1; flex: none; max-height: 45vh; border: 1.5px solid var(--line); border-radius: 14px; padding: 8px 12px; }
+  .pf-person > summary { display: list-item; cursor: pointer; font-weight: 700; }
+  .pf-person[open] > summary { margin-bottom: 8px; }
+  .pf-person.solo { max-height: none; border: 0; padding: 0; }
+  .pf-person.solo > summary { display: none; }
+  .pf-haupt { flex: 1; }
+}
 .crm-kachel #pf-suche { flex: 1 1 200px; min-width: 0; }
 .zahl-klein { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--k1); color: var(--ink); font-size: 13px; vertical-align: middle; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 10px; }
@@ -894,7 +940,15 @@ table.rechte td.nein { color: var(--muted); }
 
     <!-- CRM: vorerst der Mail-Client, später weitere Werkzeuge rund um Nutzerkontakt -->
     <section data-panel="crm" hidden>
-      <!-- E-Mail-CRM: Mails an Konten, Antworten darauf und Mails an kontakt@ (postfach.sql) -->
+      <div class="segment crm-reiter" role="radiogroup" aria-label="Bereich im CRM" id="crm-ansicht">
+        <button type="button" role="radio" data-ansicht="postfach" aria-checked="true">Postfach</button>
+        <button type="button" role="radio" data-ansicht="kontakte" aria-checked="false">Kontakte</button>
+        <button type="button" role="radio" data-ansicht="bausteine" aria-checked="false">Textbausteine</button>
+        <button type="button" role="radio" data-ansicht="kennzahlen" aria-checked="false">Kennzahlen</button>
+      </div>
+      <datalist id="crm-schlagworte"></datalist>
+      <!-- E-Mail-CRM: Mails an Konten, Antworten darauf und Mails an kontakt@ (postfach.sql, crm.sql) -->
+      <div data-crm="postfach">
       <div class="t k5 crm-kachel" id="postfach" data-recht="konten_betreuen">
         <div class="mail-kachel">
           <div><h3>E-Mail-CRM <span class="zahl-klein" id="pf-zahl-neu" hidden></span></h3><p class="fine">Persönliche Mails im Radgarage-Design und die Antworten darauf, je Person als Unterhaltung.</p></div>
@@ -906,15 +960,87 @@ table.rechte td.nein { color: var(--muted); }
         <div class="st-kopf" style="margin-top:12px">
           <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
             <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
+            <button type="button" role="radio" data-status="mir" aria-checked="false">Mir zugewiesen</button>
+            <button type="button" role="radio" data-status="wiedervorlage" aria-checked="false">Wiedervorlage</button>
             <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
             <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
             <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
           </div>
-          <input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off" aria-label="Unterhaltungen suchen">
+          <input type="search" id="pf-suche" placeholder="Adresse, Name, Betreff oder #Schlagwort" autocomplete="off" aria-label="Unterhaltungen suchen">
         </div>
         <div class="msg" role="status" id="msg-postfach"></div>
         <div class="karten" id="pf-liste"></div>
         <p class="fine" style="margin-top:10px">Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
+      </div>
+      </div>
+
+      <!-- Kontakte: Konten und Warteliste (aus Brevo abgeglichen), Sammelmail an eine Gruppe -->
+      <div data-crm="kontakte" hidden>
+        <div class="t k1">
+          <div class="mail-kachel">
+            <div><h3>Kontakte <span class="opt" id="ko-zahl"></span></h3><p class="fine" id="ko-stand">Konten aus der App und die bestätigte Warteliste von radgarage.app.</p></div>
+            <div class="aktionen" style="margin:0">
+              <button class="pill" type="button" id="ko-sammel" data-recht="konten_verwalten">Sammelmail an diese Gruppe</button>
+              <button class="pill ghost klein" type="button" id="ko-abgleich">Warteliste abgleichen</button>
+            </div>
+          </div>
+          <div class="zeile" style="margin-top:12px">
+            <label>Gruppe<select id="ko-gruppe">
+              <option value="alle">Alle</option>
+              <optgroup label="Konten">
+                <option value="konten">Alle Konten</option>
+                <option value="premium">Mit Premium</option>
+                <option value="ohne_rad">Noch ohne Rad</option>
+                <option value="inaktiv">30 Tage nicht aktiv</option>
+                <option value="neu">Neu (14 Tage)</option>
+              </optgroup>
+              <optgroup label="Warteliste">
+                <option value="warteliste">Ganze Warteliste</option>
+                <option value="tester">Mit Testzugang</option>
+                <option value="tester_iphone">Testzugang, iPhone</option>
+                <option value="tester_android">Testzugang, Android</option>
+                <option value="nur_bescheid">Nur Bescheid sagen</option>
+              </optgroup>
+            </select></label>
+            <label>Schlagwort<select id="ko-wort"><option value="">Alle</option></select></label>
+            <label>Suchen<input type="search" id="ko-suche" placeholder="Adresse oder Radmarke" autocomplete="off"></label>
+          </div>
+          <div class="msg" role="status" id="msg-kontakte"></div>
+          <div class="karten" id="ko-liste"></div>
+          <p class="fine" style="margin-top:10px">Sammelmails an Konten nur mit Infos zum Dienst (Störung, Wartung, neue Bedingungen), keine Werbung. An die Warteliste nur zu Testzugang und Start, mit Abmeldelink. Höchstens 250 Empfänger je Mail.</p>
+        </div>
+        <details class="t" id="sm-box" style="margin-top:14px">
+          <summary><h3>Bisherige Sammelmails</h3><span class="fine" id="sm-zahl"></span></summary>
+          <ul class="liste" id="sm-liste" style="margin-top:12px"></ul>
+        </details>
+      </div>
+
+      <!-- Textbausteine für häufige Antworten, gemeinsam fürs Team -->
+      <div data-crm="bausteine" hidden>
+        <div class="t k3">
+          <div class="mail-kachel">
+            <div><h3>Textbausteine</h3><p class="fine">Im Mail-Fenster über „Textbaustein …“ an der Stelle des Cursors einfügen. Ohne Anrede und Signatur, die stehen dort schon. <code>{vorname}</code> wird zum Vornamen.</p></div>
+            <div class="aktionen" style="margin:0"><button class="pill" type="button" id="tb-neu">Neuer Textbaustein</button></div>
+          </div>
+          <div class="msg" role="status" id="msg-bausteine"></div>
+          <ul class="liste tb-liste" id="tb-liste" style="margin-top:12px"></ul>
+        </div>
+      </div>
+
+      <!-- Kennzahlen: nur Summen über alle Unterhaltungen -->
+      <div data-crm="kennzahlen" hidden>
+        <div class="st-kopf">
+          <div><h2>Kennzahlen</h2></div>
+          <div class="segment" role="radiogroup" aria-label="Zeitraum" id="kz-zeitraum">
+            <button type="button" role="radio" data-tage="7" aria-checked="false">7 Tage</button>
+            <button type="button" role="radio" data-tage="30" aria-checked="true">30 Tage</button>
+            <button type="button" role="radio" data-tage="90" aria-checked="false">90 Tage</button>
+            <button type="button" role="radio" data-tage="365" aria-checked="false">1 Jahr</button>
+          </div>
+        </div>
+        <div class="msg" role="status" id="msg-kennzahlen"></div>
+        <div class="kacheln" id="kz-kacheln"></div>
+        <div class="st-gitter" id="kz-gitter"></div>
       </div>
     </section>
 
@@ -1086,6 +1212,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-3"></script>
+<script src="werkbank.js?v=2026-10-28-6"></script>
 </body>
 </html>
