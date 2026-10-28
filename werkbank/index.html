@@ -200,7 +200,7 @@ details.vorlage[open] { display: grid; gap: 8px; }
 .pflicht-check { border-radius: 14px; padding: 10px 14px; font-size: 14px; background: var(--surface); color: var(--text); }
 .pflicht-check strong { display: block; margin-bottom: 2px; }
 .pflicht-check.ok { background: var(--k4); color: var(--ink); }
-textarea { resize: vertical; font-size: 15px; }
+textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 #einfuegen-ergebnis li { grid-template-columns: 1fr; }
 #einfuegen-ergebnis .zeilentext { font-size: 13px; color: var(--muted); overflow-wrap: anywhere; }
 #einfuegen-ergebnis select, #einfuegen-ergebnis input { padding: 8px 10px; font-size: 14px; }
@@ -472,6 +472,20 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
   .pf-person.solo > summary { display: none; }
   .pf-haupt { flex: 1; }
 }
+.wort-leiste { position: sticky; top: 8px; z-index: 3; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 10px 0 6px; padding: 10px 14px; border-radius: 18px; background: var(--accent); color: var(--on-accent); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+.wort-leiste .link-knopf { color: inherit; font-size: 14px; }
+.wort-leiste input { width: 160px; height: 34px; padding: 0 12px; font-size: 14px; border-radius: 999px; }
+.wort-leiste .pill.ghost { color: inherit; border-color: currentColor; }
+.wort-leiste .pill:not(.ghost) { background: var(--on-accent); color: var(--accent); }
+.wort-leiste .msg { flex-basis: 100%; margin: 0; }
+.wort-leiste .msg:empty { display: none; }
+.ko-zeile { display: flex; align-items: flex-start; border-top: 1.5px solid var(--line); }
+.ko-zeile:first-child { border-top: 0; }
+.ko-zeile .pf-zeile { border-top: 0; padding-left: 8px; }
+input.wahl { flex: none; width: 18px; height: 18px; margin: 16px 0 0 16px; accent-color: var(--accent); cursor: pointer; }
+#kt-liste .mit-bild input.wahl { margin: 0 4px 0 0; align-self: center; }
+@media (max-width: 520px) { #kt-liste .mit-bild input.wahl + .ava { display: none; } }
+.chip.wort { background: var(--k3); color: var(--ink); padding-right: 10px; }
 .crm-kachel #pf-suche { flex: 1 1 200px; min-width: 0; }
 .zahl-klein { display: inline-block; min-width: 22px; padding: 0 6px; border-radius: 999px; background: var(--k1); color: var(--ink); font-size: 13px; vertical-align: middle; }
 .fb-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 6px 0 10px; }
@@ -927,11 +941,13 @@ table.rechte td.nein { color: var(--muted); }
       </details>
       <div class="t" style="margin-top:14px" data-recht="konten_sehen">
         <h3>Registrierte Konten <span class="opt" id="kt-zahl"></span></h3>
-        <p class="fine">Was in einer Garage steht, ist hier nicht zu sehen, nur die Anzahl der Räder.</p>
+        <p class="fine">Was in einer Garage steht, ist hier nicht zu sehen, nur die Anzahl der Räder. <span data-recht="konten_betreuen">Konten ankreuzen, um mehreren auf einmal ein Schlagwort zu geben.</span></p>
         <div class="zeile">
-          <label>Suchen<input type="search" id="kt-suche" placeholder="E-Mail-Adresse"></label>
+          <label>Suchen<input type="search" id="kt-suche" placeholder="E-Mail-Adresse oder #Schlagwort"></label>
           <label>Zeigen<select id="kt-filter"><option value="">Alle</option><option value="premium">Mit Premium</option><option value="familie">In einer Familiengarage</option><option value="rolle">Mit Rolle</option><option value="gesperrt">Gesperrt</option><option value="unbestaetigt">E-Mail nicht bestätigt</option></select></label>
+          <label data-recht="konten_betreuen">Schlagwort<select id="kt-wort"><option value="">Alle</option></select></label>
         </div>
+        <div class="aktionen" style="margin:10px 0 0" data-recht="konten_verwalten"><button class="pill klein" type="button" id="kt-sammel" hidden>Sammelmail</button></div>
         <div class="msg" role="status" id="msg-konten"></div>
         <ul class="liste" id="kt-liste" style="margin-top:12px"></ul>
         <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="kt-mehr" hidden>Weitere zeigen</button><button class="knopf-weich" type="button" id="csv-konten">Liste als CSV</button></div>
@@ -1005,6 +1021,7 @@ table.rechte td.nein { color: var(--muted); }
             <label>Schlagwort<select id="ko-wort"><option value="">Alle</option></select></label>
             <label>Suchen<input type="search" id="ko-suche" placeholder="Adresse oder Radmarke" autocomplete="off"></label>
           </div>
+          <p class="fine" style="margin:8px 0 0">Ankreuzen, um mehreren auf einmal ein Schlagwort zu geben. Mit Gruppe „Alle“ und einem Schlagwort geht die Sammelmail an Konten und Warteliste zusammen.</p>
           <div class="msg" role="status" id="msg-kontakte"></div>
           <div class="karten" id="ko-liste"></div>
           <p class="fine" style="margin-top:10px">Sammelmails an Konten nur mit Infos zum Dienst (Störung, Wartung, neue Bedingungen), keine Werbung. An die Warteliste nur zu Testzugang und Start, mit Abmeldelink. Höchstens 250 Empfänger je Mail.</p>
@@ -1212,6 +1229,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-6"></script>
+<script src="werkbank.js?v=2026-10-28-7"></script>
 </body>
 </html>
