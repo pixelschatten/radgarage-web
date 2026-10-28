@@ -3176,6 +3176,8 @@
       meldung($('#msg-uebersicht'), fehlerText(e), true);
     }
     ladeBetrieb();
+    if (darf('system')) ladeSteuerung();
+    ladeNachfrage();
     ladePapierkorb();
     ladeVerlauf();
     ladeShops();
@@ -3476,6 +3478,130 @@
       : 'Keine Fehler bei Brevo in den letzten 7 Tagen.';
   }
   $('#be-neu').addEventListener('click', ladeBetrieb);
+
+  // ----- App steuern (app_steuerung_lesen / _setzen, nur Super-Admin) -----
+
+  const STEUER_TEXTE = ['banner_text', 'banner_link', 'wartung_text', 'mindest_version', 'update_text'];
+  function steuerungFuellen(st) {
+    const f = $('#f-steuer');
+    for (const k of STEUER_TEXTE) f.elements[k].value = st[k] || '';
+    f.elements.banner_art.value = st.banner_art || 'info';
+    f.elements.banner_bis.value = st.banner_bis ? new Date(st.banner_bis).toLocaleDateString('sv-SE') : '';
+    f.elements.wartung.checked = !!st.wartung;
+    f.elements.premium_aktiv.checked = !!st.premium_aktiv;
+    $('#st-geaendert').textContent = st.von
+      ? `Zuletzt geändert ${new Date(st.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} von ${st.von}.` : '';
+  }
+  async function ladeSteuerung() {
+    const msg = $('#f-steuer .msg');
+    try {
+      steuerungFuellen(await rpc('app_steuerung_lesen'));
+      meldung(msg, '');
+    } catch (e) {
+      meldung(msg, fehlerText(e), true);
+    }
+  }
+  $('#steuer-neu').addEventListener('click', ladeSteuerung);
+  $('#f-steuer').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async (msg) => {
+      const p = { banner_art: f.elements.banner_art.value, wartung: f.elements.wartung.checked, premium_aktiv: f.elements.premium_aktiv.checked };
+      for (const k of STEUER_TEXTE) p[k] = f.elements[k].value.trim();
+      // „Bis“ gilt bis zum Ende des Tages
+      p.banner_bis = f.elements.banner_bis.value ? new Date(`${f.elements.banner_bis.value}T23:59:59`).toISOString() : '';
+      if (p.premium_aktiv && !window.confirm('Premium-Funktionen sind dann nur noch nach Kauf nutzbar (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
+      if (p.mindest_version && !window.confirm(`Alle App-Versionen unter ${p.mindest_version} zeigen dann nur noch „Bitte aktualisieren“. Ist die neue Version in beiden Stores freigegeben?`)) return;
+      steuerungFuellen(await rpc('app_steuerung_setzen', { p }));
+      meldung(msg, 'Gespeichert. Die App holt es beim nächsten Öffnen.');
+    });
+  });
+
+  // ----- Gesucht, aber nicht im Katalog (katalog_nachfrage_liste) -----
+
+  const KURZ_NF = 10;
+  let nfAlle = false;
+  function nachfrageZeigen() {
+    const extra = $$('#nf-liste li[data-extra="1"]');
+    for (const li of extra) li.hidden = !nfAlle;
+    $('#nf-auf').hidden = !extra.length;
+    $('#nf-auf').textContent = nfAlle ? 'Weniger zeigen' : `Alle ${zahlDe(extra.length + KURZ_NF)} zeigen`;
+    $('#nf-auf').setAttribute('aria-expanded', String(nfAlle));
+  }
+  $('#nf-auf').addEventListener('click', () => { nfAlle = !nfAlle; nachfrageZeigen(); });
+
+  function alsVorlageSuchen(begriff) {
+    tab('erfassen');
+    $('#vorlage').open = true;
+    const s = $('#vorlage-suche');
+    s.value = begriff;
+    s.dispatchEvent(new Event('input'));
+    s.scrollIntoView({ block: 'center' });
+  }
+
+  async function ladeNachfrage() {
+    const ul = $('#nf-liste');
+    const msg = $('#msg-nachfrage');
+    let d;
+    try {
+      d = await rpc('katalog_nachfrage_liste', { p_tage: 90 });
+      meldung(msg, '');
+    } catch (e) {
+      ul.replaceChildren();
+      meldung(msg, fehlerText(e), true);
+      return;
+    }
+    const begriffe = d.begriffe || [];
+    $('#nf-zahl').textContent = begriffe.length ? `(${zahlDe(begriffe.length)})` : '';
+    ul.replaceChildren(...begriffe.map((b, i) => {
+      const li = document.createElement('li');
+      li.dataset.extra = i >= KURZ_NF ? '1' : '';
+      const links = document.createElement('div');
+      const zuletzt = new Date(`${b.zuletzt}T12:00:00`).toLocaleDateString('de-DE', { day: 'numeric', month: 'short' });
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: b.begriff }),
+        Object.assign(document.createElement('span'), { className: 'neben',
+          textContent: `${zahlDe(b.anzahl)}× gesucht, zuletzt ${zuletzt}${b.eigenes ? `, ${zahlDe(b.eigenes)}× selbst angelegt` : ''}` }));
+      if (b.im_katalog) links.append(' ', Object.assign(document.createElement('span'), { className: 'chip gut', style: 'padding-right:10px',
+        textContent: `inzwischen ${zahlDe(b.im_katalog)} ${b.im_katalog === 1 ? 'passendes Rad' : 'passende Räder'} im Katalog` }));
+      const knoepfe = Object.assign(document.createElement('div'), { className: 'nf-knoepfe' });
+      const erfassen = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Erfassen' });
+      erfassen.title = 'Öffnet „Rad erfassen“ und sucht ein ähnliches Rad als Vorlage';
+      erfassen.addEventListener('click', () => alsVorlageSuchen(b.begriff));
+      const erledigt = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Erledigt' });
+      erledigt.title = 'Aus der Liste nehmen (erfasst oder kein Rad)';
+      erledigt.addEventListener('click', async () => {
+        erledigt.disabled = true;
+        try {
+          await rpc('katalog_nachfrage_erledigen', { p_begriff: b.begriff, p_erledigt: true });
+          li.remove();
+          meldung(msg, `„${b.begriff}“ ist erledigt.`);
+        } catch (e) {
+          erledigt.disabled = false;
+          meldung(msg, fehlerText(e), true);
+        }
+      });
+      knoepfe.append(erfassen, erledigt);
+      li.append(links, knoepfe);
+      return li;
+    }));
+    if (!begriffe.length) ul.innerHTML = '<li class="leer">Noch nichts. Sobald in der App jemand ein Rad sucht, das fehlt, steht es hier.</li>';
+    nachfrageZeigen();
+
+    const vs = d.vorschlaege || [];
+    $('#nf-vorschlaege-box').hidden = !vs.length;
+    $('#nf-vorschlaege-zahl').textContent = `(${zahlDe(vs.length)})`;
+    $('#nf-vorschlaege').replaceChildren(...vs.map((v) => {
+      const li = document.createElement('li');
+      const links = document.createElement('div');
+      links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: v.titel || 'ohne Namen' }),
+        Object.assign(document.createElement('span'), { className: 'neben',
+          textContent: `${v.anzahl === 1 ? '1 Vorschlag' : `${zahlDe(v.anzahl)} Vorschläge`}, zuletzt ${new Date(v.zuletzt).toLocaleDateString('de-DE')}` }));
+      const knopf = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Erfassen' });
+      knopf.addEventListener('click', () => alsVorlageSuchen(v.titel || ''));
+      li.append(links, knopf);
+      return li;
+    }));
+  }
 
   // ----- Registrierte Konten -----
 
@@ -4598,6 +4724,7 @@
 
   let stTage = 90;
   let stDaten = null;
+  let stKlicks = null;
   const SERIE = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)'];
   const zahlDe = (n) => Number(n || 0).toLocaleString('de-DE');
   const prozent = (teil, ganz) => (ganz ? Math.round((teil / ganz) * 100) : 0);
@@ -4861,6 +4988,7 @@
 
   async function ladeStatistik() {
     meldung($('#msg-statistik'), 'Lade …');
+    const klicks = rpc('werkbank_klicks', { p_tage: stTage }).catch(() => null);
     try {
       stDaten = await rpc('werkbank_statistik', { p_tage: stTage });
       meldung($('#msg-statistik'), '');
@@ -4868,6 +4996,8 @@
     } catch (e) {
       meldung($('#msg-statistik'), fehlerText(e), true);
     }
+    stKlicks = await klicks;
+    zeichneKlicks();
     if (darf('system')) ladeSystem();
   }
 
@@ -4996,6 +5126,95 @@
     $('#st-stand').textContent = `Stand ${new Date().toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })}. Nur Summen, keine einzelnen Personen. Tage nach deutscher Zeit.${ab ? ' Die Verläufe beginnen kurz vor dem ersten Eintrag.' : ''}`;
   }
 
+  // Klicks auf „Zum Shop“ (werkbank_klicks): nur Tagessummen je Shop, Stelle in der App und Kategorie
+  const HERKUNFT = { teil: 'Teil-Seite', merkliste: 'Merkliste', einkauf: 'Einkaufsliste', versicherung: 'Versicherungstipp', '': 'ohne Angabe' };
+  function zeichneKlicks() {
+    const ziel = $('#st-shops');
+    ziel.replaceChildren();
+    const k = stKlicks;
+    if (!k) return;
+    const pro = stTage > 120 ? 'pro Woche' : 'pro Tag';
+    // Tage ohne Klick auffüllen, damit die Zeitachse durchläuft
+    const n = {};
+    for (const t of k.tage || []) n[t.tag] = t.n;
+    const tage = [];
+    for (let i = stTage - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const tag = d.toLocaleDateString('sv-SE');
+      tage.push({ tag, n: n[tag] || 0 });
+    }
+    const erster = tage.findIndex((t) => t.n > 0);
+    const kv = buendeln(erster < 0 ? [] : tage.slice(Math.max(0, Math.min(erster - 1, tage.length - 7))), ['n']);
+    let c = karte(ziel, `Klicks auf „Zum Shop“: ${zahlDe(k.summe)}`, `${pro}, aus der App, inklusive Versicherungstipp`, true);
+    zeitDiagramm(c.plot, kv.punkte, [{ name: 'Klicks', feld: 'n', farbe: SERIE[0] }], { art: 'saeulen' });
+    tabelle(c.det, [kv.woche ? 'Woche ab' : 'Tag', 'Klicks'], kv.punkte.filter((p) => p.n).reverse().map((p) => [tagText(p.tag, true), zahlDe(p.n)]));
+
+    const sh = (k.shops || []).map((x) => ({ label: x.name, wert: x.n, tippName: 'Klicks' }));
+    c = karte(ziel, 'Nach Shop', 'Welcher Shop angetippt wurde');
+    balken(c.plot, sh, SERIE[1]);
+    tabelle(c.det, ['Shop', 'Klicks', 'Anteil'], sh.map((z) => [z.label, zahlDe(z.wert), `${prozent(z.wert, k.summe)} %`]));
+
+    const he = (k.herkunft || []).map((x) => ({ label: HERKUNFT[x.name] || x.name, wert: x.n, tippName: 'Klicks' }));
+    c = karte(ziel, 'Nach Stelle in der App', 'Wo der Knopf angetippt wurde');
+    balken(c.plot, he, SERIE[2]);
+    tabelle(c.det, ['Stelle', 'Klicks'], he.map((z) => [z.label, zahlDe(z.wert)]));
+
+    const ka = (k.kategorien || []).map((x) => ({ label: x.name, wert: x.n, tippName: 'Klicks' }));
+    c = karte(ziel, 'Nach Teil-Kategorie', 'Die zwölf häufigsten, nur von der Teil-Seite');
+    balken(c.plot, ka, SERIE[3]);
+    tabelle(c.det, ['Kategorie', 'Klicks'], ka.map((z) => [z.label, zahlDe(z.wert)]));
+
+    if (k.einnahmen) zeichneEinnahmen(ziel, k.einnahmen);
+  }
+
+  const monatText = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });
+  function zeichneEinnahmen(ziel, liste) {
+    // Monatssummen als Säulen, dazu die Einträge zum Löschen
+    const je = {};
+    for (const e of liste) je[e.monat] = (je[e.monat] || 0) + Number(e.betrag);
+    const monate = Object.keys(je).sort().map((m) => ({ tag: m, text: monatText(m), betrag: Math.round(je[m] * 100) / 100 }));
+    const gesamt = liste.reduce((a, e) => a + Number(e.betrag), 0);
+    const c = karte(ziel, `Einnahmen: ${euro(gesamt)}`, 'Eingetragene Auszahlungen je Monat, die letzten zwölf, unabhängig vom Zeitraum oben');
+    balken(c.plot, monate.slice().reverse().slice(0, 12).map((m) => ({ label: m.text, wert: m.betrag, text: euro(m.betrag), tippName: 'Summe' })), SERIE[3]);
+    tabelle(c.det, ['Monat', 'Summe'], monate.slice().reverse().map((m) => [m.text, euro(m.betrag)]));
+
+    const monat = $('#f-einnahme').elements.monat;
+    if (!monat.value) monat.value = new Date().toLocaleDateString('sv-SE').slice(0, 7);
+    $('#ein-liste').replaceChildren(...liste.map((e) => {
+      const tr = document.createElement('tr');
+      const weg = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Löschen' });
+      weg.addEventListener('click', async () => {
+        if (!window.confirm(`${e.quelle}, ${monatText(e.monat)}, ${euro(e.betrag)} löschen?`)) return;
+        try {
+          await rpc('einnahme_loeschen', { p_id: e.id });
+          ladeStatistik();
+        } catch (err) {
+          meldung($('#f-einnahme .msg'), fehlerText(err), true);
+        }
+      });
+      const td = document.createElement('td');
+      td.append(weg);
+      for (const v of [monatText(e.monat), e.quelle, euro(e.betrag), e.notiz || '']) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+      tr.append(td);
+      return tr;
+    }));
+    if (!liste.length) $('#ein-liste').innerHTML = '<tr><td colspan="5" class="fine">Noch keine Einträge.</td></tr>';
+  }
+  $('#f-einnahme').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const f = ev.target;
+    mitKnopf(f, async (msg) => {
+      const betrag = Number(f.elements.betrag.value.replace(/\./g, '').replace(',', '.'));
+      if (!Number.isFinite(betrag)) throw new Error('Betrag bitte als Zahl, z. B. 12,50.');
+      await rpc('einnahme_speichern', { p: { monat: `${f.elements.monat.value}-01`, quelle: f.elements.quelle.value.trim(), betrag, notiz: f.elements.notiz.value } });
+      f.elements.betrag.value = '';
+      f.elements.notiz.value = '';
+      meldung(msg, 'Eingetragen.');
+      ladeStatistik();
+    });
+  });
+
   for (const b of $$('#st-zeitraum button')) {
     b.addEventListener('click', () => {
       stTage = Number(b.dataset.tage);
@@ -5010,7 +5229,7 @@
     if (Math.abs(w - stBreite) < 20) return;
     stBreite = w;
     clearTimeout(window.stTimer);
-    window.stTimer = setTimeout(zeichneStatistik, 150);
+    window.stTimer = setTimeout(() => { zeichneStatistik(); zeichneKlicks(); }, 150);
   });
 
 

@@ -324,6 +324,11 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .dlg-box .aktion { padding: 12px 0; border-top: 1.5px solid var(--line); }
 .dlg-box .aktion:first-of-type { border-top: 0; }
 .chip.gut { background: var(--k4); }
+.steuer-gitter { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-top: 10px; }
+.steuer-block { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin: 0; min-width: 0; background: var(--bg); }
+.steuer-block legend { font-weight: 700; padding: 0 6px; }
+.steuer-block textarea { width: 100%; }
+.liste li .nf-knoepfe { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
 .status { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .status li { display: flex; gap: 10px; align-items: baseline; }
 .status li b { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; background: var(--ink); color: var(--bg); }
@@ -885,6 +890,42 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         </details>
         <div class="msg" role="status" id="msg-betrieb"></div>
       </div>
+      <!-- App steuern (nur Super-Admin, app-steuerung.sql) -->
+      <form class="t k2" id="f-steuer" data-recht="system" style="margin-bottom:14px" autocomplete="off">
+        <h3>App steuern</h3>
+        <p class="fine">Kommt beim nächsten Öffnen der App an (ohne Update). <span id="st-geaendert"></span></p>
+        <div class="steuer-gitter">
+          <fieldset class="steuer-block">
+            <legend>Mitteilung oben in der Garage</legend>
+            <label>Text<textarea name="banner_text" rows="2" maxlength="300" placeholder="z. B. Neu: Das Wartungsheft gibt es jetzt als PDF."></textarea></label>
+            <div class="zeile">
+              <label>Art<select name="banner_art"><option value="info">Hinweis</option><option value="neu">Neu</option><option value="warnung">Warnung</option></select></label>
+              <label>Bis (optional)<input type="date" name="banner_bis"></label>
+            </div>
+            <label>Link „Mehr dazu“ (optional)<input type="url" name="banner_link" maxlength="300" placeholder="https://radgarage.app/…"></label>
+            <p class="fine">Wer sie wegtippt, sieht sie erst bei einem neuen Text wieder.</p>
+          </fieldset>
+          <fieldset class="steuer-block">
+            <legend>Wartung</legend>
+            <label class="haken"><input type="checkbox" name="wartung"> Wartungshinweis zeigen</label>
+            <label>Text (optional)<textarea name="wartung_text" rows="2" maxlength="300" placeholder="Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen."></textarea></label>
+            <p class="fine">Die App läuft weiter, die Garage liegt auf dem Handy.</p>
+          </fieldset>
+          <fieldset class="steuer-block">
+            <legend>Pflicht-Update</legend>
+            <label>Mindestversion<input name="mindest_version" pattern="\d+\.\d+\.\d+" maxlength="12" placeholder="z. B. 1.1.0"></label>
+            <label>Text (optional)<textarea name="update_text" rows="2" maxlength="300" placeholder="Diese Version ist zu alt für den Katalog und die Sicherung deiner Garage."></textarea></label>
+            <p class="fine">Ältere Versionen zeigen nur noch „Bitte aktualisieren“ mit Link in den Store. Erst setzen, wenn die neue Version in beiden Stores freigegeben ist.</p>
+          </fieldset>
+          <fieldset class="steuer-block">
+            <legend>Premium</legend>
+            <label class="haken"><input type="checkbox" name="premium_aktiv"> Premium-Funktionen nur nach Kauf</label>
+            <p class="fine">Aus heißt: alles frei wie jetzt. Wirkt erst in App-Versionen mit eingebautem Kauf, ältere bleiben frei.</p>
+          </fieldset>
+        </div>
+        <div class="aktionen" style="margin-top:12px"><button class="pill" type="submit">Speichern</button><button class="knopf-weich" type="button" id="steuer-neu">Neu laden</button></div>
+        <div class="msg" role="status"></div>
+      </form>
       <div class="t k3" style="margin-bottom:14px">
         <h3>Heute zu tun</h3>
         <div class="aufgaben" id="ue-aufgaben"><p class="fine">Lade …</p></div>
@@ -909,6 +950,17 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <p class="fine" style="margin-top:14px">Katalog als Tabelle für Excel oder Numbers:</p>
           <div class="aktionen"><button class="knopf-weich" type="button" id="csv-raeder">Räder (CSV)</button><button class="knopf-weich" type="button" id="csv-teile">Teile (CSV)</button><button class="knopf-weich" type="button" id="csv-zuordnung">Räder mit Teilen (CSV)</button></div>
         </div>
+      </div>
+      <div class="t k3" style="margin-top:14px" id="nachfrage">
+        <h3>Gesucht, aber nicht im Katalog <span class="opt" id="nf-zahl"></span></h3>
+        <p class="fine">Was in der App bei „Rad hinzufügen“ ohne Treffer gesucht wurde, letzte 90 Tage, häufigste zuerst. Nur der Begriff, nie wer ihn gesucht hat.</p>
+        <ul class="liste" id="nf-liste" style="margin-top:12px"></ul>
+        <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="nf-auf" hidden aria-expanded="false" aria-controls="nf-liste"></button></div>
+        <details class="be-details" id="nf-vorschlaege-box" hidden>
+          <summary>Offene Rad-Vorschläge aus der App <span class="fine" id="nf-vorschlaege-zahl"></span></summary>
+          <ul class="liste" id="nf-vorschlaege" style="margin-top:10px"></ul>
+        </details>
+        <div class="msg" role="status" id="msg-nachfrage"></div>
       </div>
       <div class="t k5" style="margin-top:14px">
         <h3>Shops</h3>
@@ -956,6 +1008,22 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       <div class="st-gitter" id="st-garagen"></div>
       <p class="st-abschnitt">Katalog und Mithilfe</p>
       <div class="st-gitter" id="st-katalog"></div>
+      <p class="st-abschnitt">Shops und Einnahmen</p>
+      <div class="st-gitter" id="st-shops"></div>
+      <form class="t" id="f-einnahme" data-recht="system" style="margin-top:14px" autocomplete="off">
+        <h3>Einnahmen</h3>
+        <p class="fine">Auszahlungen von Hand eintragen (Awin, hepster, später App Store und Google Play). Nur du siehst sie.</p>
+        <div class="zeile">
+          <label>Monat<input type="month" name="monat" required></label>
+          <label>Quelle<input name="quelle" list="ein-quellen" required maxlength="40" placeholder="z. B. Awin"></label>
+          <label>Betrag in €<input name="betrag" inputmode="decimal" required pattern="-?\d+([.,]\d{1,2})?" placeholder="12,50"></label>
+          <label>Notiz (optional)<input name="notiz" maxlength="200"></label>
+        </div>
+        <datalist id="ein-quellen"><option value="Awin"><option value="hepster"><option value="App Store"><option value="Google Play"></datalist>
+        <div class="aktionen" style="margin-top:10px"><button class="pill klein" type="submit">Eintragen</button></div>
+        <div class="msg" role="status"></div>
+        <div class="tabelle-scroll" style="margin-top:12px"><table><thead><tr><th>Monat</th><th>Quelle</th><th>Betrag</th><th>Notiz</th><th><span class="sr">Löschen</span></th></tr></thead><tbody id="ein-liste"></tbody></table></div>
+      </form>
       <p class="st-abschnitt" data-recht="system">System</p>
       <div class="st-gitter" id="st-system" data-recht="system"></div>
       <p class="fine" style="margin-top:14px" id="st-stand"></p>
@@ -1277,6 +1345,6 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-8"></script>
+<script src="werkbank.js?v=2026-10-28-9"></script>
 </body>
 </html>
