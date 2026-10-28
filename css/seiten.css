@@ -457,3 +457,19 @@ body.eingebettet { padding: 8px; }
 @media (max-width: 700px) { .gefragt .antworten { grid-template-columns: 1fr; } .vergleichstabelle.unterschied { min-width: 0; } }
 .gruppen-tabelle td:nth-child(3) { white-space: nowrap; color: var(--muted); font-size: 15px; }
 @media (max-width: 600px) { .gruppen-tabelle td:first-of-type { width: 100%; } .gruppen-tabelle td:nth-child(3) { width: calc(100% - 80px); } }
+/* Motor und Akku: Gegenstücke als kleine Liste */
+.paar-kopf { display: block; font-size: 14px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.teiltabelle td .paar-kopf { margin-top: 6px; }
+.paar-tabelle td .paar-kopf { margin-top: 0; }
+ul.paare { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+ul.paare li { font-size: 15px; padding: 5px 12px; border-radius: 999px; background: rgba(255, 255, 255, .5); }
+ul.paare li a { font-weight: 700; color: var(--ink); }
+ul.paare small { color: var(--muted); font-size: 13px; white-space: nowrap; }
+:root[data-theme="dark"] ul.paare li { background: rgba(255, 255, 255, .08); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) ul.paare li { background: rgba(255, 255, 255, .08); } }
+.paar-tabelle th { width: 34%; }
+@media (max-width: 600px) { .paar-tabelle th { width: auto; } .paar-tabelle td, .paar-tabelle td:first-of-type, .paar-tabelle .preis { display: block; width: auto; text-align: left; } .paar-tabelle .preis:empty { display: none; } }
+.paar-tabelle th span { display: block; font-size: 14px; font-weight: 400; color: var(--muted); }
+.paar-tabelle th a { color: var(--ink); }
+.kat-tabelle ul.paare { white-space: normal; min-width: 260px; }
+section > ul.paare { margin-top: 10px; }

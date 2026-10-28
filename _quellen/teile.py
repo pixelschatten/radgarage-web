@@ -3,11 +3,12 @@
 Daten: _quellen/teile-auszug.json (alle geprüften Teile, Abfrage _quellen/teile-auszug.sql) und
 _quellen/katalog-auszug.json (Räder mit ihren Teilen). Gebaut wird über python3 _quellen/bauen.py.
 """
+import re
 from collections import Counter, OrderedDict
 
 from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, suchfeld
 from raeder import (ANLEITUNG, FARBEN, NAMEN, RICHTWERT_KM, TEILE, alternativen, preis, shoplinks, slug,
-                    teilname, tsd)
+                    teil_link, teilname, tsd)
 
 # Kategorien in der Reihenfolge der Übersicht, mit Mehrzahl für Überschriften.
 KATEGORIEN = OrderedDict([
@@ -24,6 +25,28 @@ MIN_KATEGORIE = 5  # Kategorien mit weniger Teilen sind für Google zu dünn und
 
 def kat_pfad(kat):
     return f'/teile/{slug(kat)}/'
+
+
+SCHALTAKKU = re.compile(r'Di2|AXS|eTap')  # Akkus der elektronischen Schaltung, nicht des E-Antriebs
+
+
+def antrieb_paare(raeder):
+    """Teil-ID -> Counter der Gegenstücke: zu jedem Motor die Akkus, die mit ihm am selben Rad verbaut sind, und umgekehrt."""
+    m = {}
+    for r in raeder:
+        motoren = {t['id'] for t in r['teile'] if t['kategorie'] == 'Motor'}
+        akkus = {t['id'] for t in r['teile'] if t['kategorie'] == 'Akku' and not SCHALTAKKU.search(t['name'])}
+        for mo in motoren:
+            for ak in akkus:
+                m.setdefault(mo, Counter())[ak] += 1
+                m.setdefault(ak, Counter())[mo] += 1
+    return m
+
+
+def paar_liste(dazu, teil):
+    """Gegenstücke als kleine Linkliste, häufigste zuerst: [(id, anzahl)] -> HTML."""
+    li = ''.join(f'<li>{teil_link(teil[i])} <small>{n} {"Rad" if n == 1 else "Räder"}</small></li>' for i, n in dazu)
+    return f'<ul class="paare">{li}</ul>' if li else ''
 
 
 def verbaut_an(alle):
@@ -61,7 +84,7 @@ def radliste(raeder):
     return f'<ul class="radliste">{"".join(li)}</ul>'
 
 
-def teil_seite(t, raeder, verbaut):
+def teil_seite(t, raeder, verbaut, paare=None):
     name = teilname(t)
     kat = t['kategorie']
     pfad = f'/teile/{t["id"]}/'
@@ -125,6 +148,22 @@ def teil_seite(t, raeder, verbaut):
       {"<div class='actions'>" + anleitung + "</div>" if anleitung else ""}
     </section>
 ''')
+    dazu = (paare or {}).get(t['id'])
+    if dazu and kat in ('Motor', 'Akku'):
+        teil = {x['id']: x for r in raeder for x in r['teile']}
+        gegen = 'Akku' if kat == 'Motor' else 'Motor'
+        ueber = f'Passende Akkus zu {name}' if kat == 'Motor' else f'Passende Motoren zu {name}'
+        text = (f'Mit diesem Motor sind im Katalog diese Akkus verbaut, häufigste zuerst. ' if kat == 'Motor' else
+                f'Diesen Akku treiben im Katalog diese Motoren an, häufigste zuerst. ')
+        text += ('Ein Ersatz- oder Zweitakku muss zum Motorsystem und zum Rahmen passen: Nimm dieselbe Bezeichnung wie '
+                 'am Rad oder einen Akku, den der Radhersteller für dein Modell freigibt.')
+        out.append(f'''    <section class="t k4 voll" aria-labelledby="paar-titel">
+      <span class="eyebrow">Passt zusammen · {e(NAMEN.get(gegen, gegen))}</span>
+      <h2 id="paar-titel" style="font-size:30px;margin:6px 0 4px">{e(ueber)}</h2>
+      <p>{text}</p>
+      {paar_liste(dazu.most_common(), teil)}
+    </section>
+''')
     if alt:
         karten = ''.join(ersatzkarte(a, i, len(verbaut.get(a['id'], []))) for i, a in enumerate(alt[:12]))
         mehr = f'<p class="klein">Und {len(alt) - 12} weitere passende Teile.</p>' if len(alt) > 12 else ''
@@ -156,17 +195,25 @@ def teil_seite(t, raeder, verbaut):
     return ''.join(out)
 
 
-def kategorie_seite(kat, teile, verbaut):
+def kategorie_seite(kat, teile, verbaut, paare=None):
     mehrzahl = KATEGORIEN.get(kat, kat)
     pfad = kat_pfad(kat)
     nav, brot = krumen([('Radgarage', '/'), ('Teile', '/teile/'), (mehrzahl, pfad)])
     titel = f'{mehrzahl} fürs Fahrrad: welche passen an welches Rad? | Radgarage'
     beschr = f'{len(teile)} {mehrzahl} im Katalog der Radgarage, mit Richtpreis, passenden Rädern und Ersatz.'
     teile = sorted(teile, key=lambda t: (-len(verbaut.get(t['id'], [])), teilname(t).lower()))
+    teil = {x['id']: x for rs in verbaut.values() for r in rs for x in r['teile']}
+    gegen = {'Motor': 'Akkus', 'Akku': 'Motoren'}.get(kat)
+
+    def dazu(t):
+        d = (paare or {}).get(t['id'])
+        if not gegen or not d:
+            return ''
+        return f'<span class="paar-kopf">{gegen} dazu:</span>{paar_liste(d.most_common(4), teil)}'
     zeilen = ''.join(
         f'<tr><th scope="row"><a href="/teile/{e(t["id"])}/">{e(teilname(t))}</a>'
         f'{"<span>" + e(t["merkmale"]) + "</span>" if t["merkmale"] else ""}</th>'
-        f'<td>{len(verbaut.get(t["id"], []))} Räder</td><td class="preis">{preis(t["preis"])}</td></tr>'
+        f'<td>{len(verbaut.get(t["id"], []))} Räder{dazu(t)}</td><td class="preis">{preis(t["preis"])}</td></tr>'
         for t in teile)
     return ''.join([kopf(titel, beschr, pfad, [brot], robots=len(teile) < MIN_KATEGORIE), nav, f'''  <main>
   <div class="bento uebersicht">
@@ -218,6 +265,7 @@ def uebersicht_seite(nach_kat):
 def bauen(alle, schreiben):
     """Schreibt alle Teileseiten und gibt die Pfade für die Sitemap zurück (nur indexierte Seiten)."""
     verbaut = verbaut_an(alle)
+    paare = antrieb_paare(alle)
     nach_kat = OrderedDict((k, []) for k in KATEGORIEN)
     for t in TEILE.values():
         nach_kat.setdefault(t['kategorie'], []).append(t)
@@ -226,12 +274,12 @@ def bauen(alle, schreiben):
     seiten = ['/teile/']
     schreiben('teile/index.html', uebersicht_seite(nach_kat))
     for k, ts in nach_kat.items():
-        schreiben(kat_pfad(k).strip('/') + '/index.html', kategorie_seite(k, ts, verbaut))
+        schreiben(kat_pfad(k).strip('/') + '/index.html', kategorie_seite(k, ts, verbaut, paare))
         if len(ts) >= MIN_KATEGORIE:
             seiten.append(kat_pfad(k))
     for t in TEILE.values():
         raeder = verbaut.get(t['id'], [])
-        schreiben(f'teile/{t["id"]}/index.html', teil_seite(t, raeder, verbaut))
+        schreiben(f'teile/{t["id"]}/index.html', teil_seite(t, raeder, verbaut, paare))
         if indexieren(t, raeder):
             seiten.append(f'/teile/{t["id"]}/')
     return seiten
