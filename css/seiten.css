@@ -290,6 +290,27 @@ footer { padding-bottom: 40px; }
 .text-abschnitt p, .text-abschnitt ul { max-width: 46em; }
 .text-abschnitt p + p { margin-top: 10px; }
 
+/* Rechner auf Ratgeberseiten (Reifengrößen, Verschleiß) und Finder */
+.werkzeug-form { display: grid; gap: 10px; max-width: 640px; margin-top: 12px; }
+.werkzeug-form > label { font-weight: 800; color: var(--ink); }
+.werkzeug-form input[type=text], .werkzeug-form select { width: 100%; font: inherit; font-size: 18px; font-weight: 600; padding: 14px 18px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+.werkzeug-form input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.werkzeug-form output { font-family: var(--display); font-size: 20px; margin-left: 4px; }
+.werkzeug-form .wahl { grid-template-columns: repeat(3, 1fr); }
+.ergebnis { padding: 14px 18px; border-radius: 18px; background: rgba(255, 255, 255, .45); color: var(--ink); }
+.ergebnis p + p { margin-top: 8px; }
+.ergebnis b { font-family: var(--display); font-size: 24px; }
+:root[data-theme="dark"] .ergebnis { background: rgba(255, 255, 255, .06); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ergebnis { background: rgba(255, 255, 255, .06); } }
+.vr-tabelle { min-width: 560px; margin-top: 14px; }
+.vr-summe { margin-top: 12px !important; font-size: 18px; }
+.vr-summe b { font-family: var(--display); font-size: 26px; }
+.finder { display: grid; grid-template-columns: repeat(3, 1fr) auto; gap: 10px; max-width: 900px; margin-top: 14px; align-items: end; }
+.finder label { display: grid; gap: 4px; font-weight: 800; font-size: 14px; color: var(--ink); }
+.finder select { width: 100%; font: inherit; font-size: 16px; font-weight: 600; padding: 12px 14px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
+.finder select:disabled { opacity: .55; }
+@media (max-width: 700px) { .werkzeug-form .wahl { grid-template-columns: 1fr; } .vr-tabelle { min-width: 0; } .finder { grid-template-columns: 1fr; } }
+
 /* Modellseiten: Verschleißteile als Kacheln, alle Teile als Tabelle nach Gruppen. */
 .voll { grid-column: span 12; }
 .zwischen { font-size: 30px; margin: 14px 0 12px; }
@@ -406,3 +427,5 @@ footer { padding-bottom: 40px; }
 :root[data-theme="dark"] .chips a { background: rgba(255, 255, 255, .08); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chips a { background: rgba(255, 255, 255, .08); } }
 @media (max-width: 700px) { .gefragt .antworten { grid-template-columns: 1fr; } .vergleichstabelle.unterschied { min-width: 0; } }
+.gruppen-tabelle td:nth-child(3) { white-space: nowrap; color: var(--muted); font-size: 15px; }
+@media (max-width: 600px) { .gruppen-tabelle td:first-of-type { width: 100%; } .gruppen-tabelle td:nth-child(3) { width: calc(100% - 80px); } }

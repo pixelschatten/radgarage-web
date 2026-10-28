@@ -82,7 +82,83 @@ def laden():
         if s[:1].isdigit():
             s = f'{r["marke_slug"]}-{s}'
         r['reihe_pfad'] = f'/raeder/{r["marke_slug"]}/{s}/' if zahl[(r['marke_slug'], r['reihe'])] > 1 else None
+    # Schaltgruppe und Motorsystem, mit Seite ab MIN_GRUPPE Rädern
+    for feld, fn, basis in (('gruppe', schaltgruppe, '/schaltgruppen/'), ('system', motorsystem, '/e-bike-systeme/')):
+        anzahl = {}
+        for r in raeder:
+            r[feld] = fn(r)
+            anzahl[r[feld]] = anzahl.get(r[feld], 0) + 1
+        for r in raeder:
+            r[feld + '_pfad'] = f'{basis}{slug(r[feld])}/' if r[feld] and anzahl[r[feld]] >= MIN_GRUPPE else None
     return raeder
+
+
+SHIMANO_LINIE = re.compile(r'^(.*?)\s*(?:RD-|$)')
+SRAM_WEG = re.compile(r'\(.*?\)|\bSchaltwerk\b|\b1[123]-fach\b|\bmechanisch\b|\beTap\b|\b[DE][12]\b')
+
+
+def _fach(r):
+    for kat in ('Kassette', 'Kette', 'Schaltwerk', 'Schalthebel'):
+        for t in r['teile']:
+            if t['kategorie'] == kat:
+                m = re.search(r'(\d{1,2})-fach', t.get('merkmale') or '')
+                if m:
+                    return int(m.group(1))
+    return None
+
+
+def schaltgruppe(r):
+    """Name der Schaltgruppe aus dem verbauten Schaltwerk, z. B. „Shimano XT 12-fach“, oder None."""
+    sw = next((t for t in r['teile'] if t['kategorie'] == 'Schaltwerk'), None)
+    if not sw:
+        return None
+    marke, name = sw['marke'], sw['name']
+    if 'Nabenschaltung' in name or marke in ('Rohloff', 'enviolo'):
+        if marke == 'Rohloff':
+            return 'Rohloff Speedhub'
+        if marke == 'enviolo':
+            return 'enviolo Nabenschaltung'
+        m = re.match(r'(Nexus|Alfine) (\d+)-Gang', name)
+        return f'Shimano {m.group(1)} {m.group(2)}-Gang' if m else None
+    fach = _fach(r)
+    if not fach:
+        return None
+    if marke == 'Shimano':
+        linie = SHIMANO_LINIE.match(name).group(1).replace('Deore XT', 'XT').strip()
+        if not linie:
+            return None
+        if 'LinkGlide' in name:
+            linie += ' LinkGlide'
+        return f'Shimano {linie} {fach}-fach'
+    if marke == 'SRAM':
+        linie = re.sub(r'\s+', ' ', SRAM_WEG.sub(' ', name)).strip().replace('XO1', 'X01')
+        if 'AXS' in name and 'AXS' not in linie:
+            linie += ' AXS'
+        return f'SRAM {linie} {fach}-fach' if linie else None
+    if marke == 'microSHIFT':
+        linie = re.sub(r'\s+(Schaltwerk.*|RD-.*)$', '', name).strip()
+        return f'microSHIFT {linie} {fach}-fach' if linie and not linie.startswith(('RD', 'MS')) else None
+    return None
+
+
+MOTOR_SYSTEME = [  # (Name, Bedingung auf Motor-Marke und -Name)
+    ('Bosch Smart System', lambda m, n, x: m == 'Bosch' and 'Smart System' in f'{n} {x}'),
+    ('Bosch ohne Smart System', lambda m, n, x: m == 'Bosch'),
+    ('Shimano', lambda m, n, x: m == 'Shimano'), ('Yamaha', lambda m, n, x: m == 'Yamaha'),
+    ('Giant SyncDrive', lambda m, n, x: m == 'Giant'), ('Specialized Turbo', lambda m, n, x: m == 'Specialized'),
+    ('TQ', lambda m, n, x: m == 'TQ'), ('Pinion MGU', lambda m, n, x: m == 'Pinion'),
+    ('Mahle', lambda m, n, x: m == 'Mahle'), ('Brose', lambda m, n, x: m == 'Brose'), ('Fazua', lambda m, n, x: m == 'Fazua'),
+]
+
+
+def motorsystem(r):
+    mo = next((t for t in r['teile'] if t['kategorie'] == 'Motor'), None)
+    if not mo:
+        return None
+    return next((n for n, wenn in MOTOR_SYSTEME if wenn(mo['marke'], mo['name'], mo.get('merkmale') or '')), None)
+
+
+MIN_GRUPPE = 5  # eigene Seite für Schaltgruppen und Motorsysteme erst ab so vielen Rädern
 
 
 def preis(p):
@@ -380,6 +456,8 @@ def kurz_gefragt(r):
     elif kette:
         fach = _speed(kette)
         text = (f'Eine {fach}-fach-Kette. ' if fach else '') + f'Ab Werk ist {teil_link(kette)} montiert.' + _ersatz(kette)
+        if r.get('gruppe_pfad'):
+            text += f' Mehr zur Schaltgruppe: <a href="{r["gruppe_pfad"]}">{e(r["gruppe"])}</a>.'
         fragen.append((f'Welche Kette braucht {wer}?', text))
     reifen = [t for t in teile if t['kategorie'] == 'Reifen']
     if reifen:
@@ -401,6 +479,13 @@ def kurz_gefragt(r):
         if any(re.search(r'tubeless|tlr|tle|tcs|2bliss', f'{t["name"]} {t["merkmale"] or ""}', re.I) for t in reifen):
             text += ' Die Reifen sind tubeless-fähig. Ein Ersatzschlauch gehört trotzdem ins Pannenset.'
         fragen.append((f'Welcher Schlauch passt in {wer}?', text))
+    akku, motor = erstes('Akku'), erstes('Motor')
+    if motor and akku and 'Di2' not in akku['name']:
+        text = (f'Verbaut ist {teil_link(motor)}{" (" + e(motor["merkmale"]) + ")" if motor["merkmale"] else ""} '
+                f'mit {teil_link(akku)}{" (" + e(akku["merkmale"]) + ")" if akku["merkmale"] else ""}.')
+        if r.get('system_pfad'):
+            text += f' Welche Akkus zum System passen: <a href="{r["system_pfad"]}">{e(r["system"])}</a>.'
+        fragen.append((f'Welcher Motor und Akku stecken im {e(r["modell"])}?', text))
     kassette = erstes('Kassette')
     if kassette and len(fragen) < 4:
         fragen.append((f'Welche Kassette hat {wer}?',
@@ -480,7 +565,11 @@ def vergleich_kasten(r, alle):
 
 # Anleitungen, die zum Rad passen: nach verbauten Teilen und Radart
 RAD_ANLEITUNGEN = [
-    ('kette-wechseln', lambda r, k: 'Kette' in k), ('bremsbelaege-wechseln', lambda r, k: 'Bremsbelag' in k),
+    ('kettenverschleiss-messen', lambda r, k: 'Kette' in k), ('kette-wechseln', lambda r, k: 'Kette' in k),
+    ('kette-reinigen-oelen', lambda r, k: 'Kette' in k),
+    ('schaltung-einstellen', lambda r, k: (r.get('gruppe') or '').endswith('-fach')),
+    ('bremsbelaege-wechseln', lambda r, k: 'Bremsbelag' in k),
+    ('scheibenbremse-schleift', lambda r, k: 'Bremsscheibe' in k),
     ('reifen-wechseln', lambda r, k: 'Reifen' in k), ('schlauch-wechseln', lambda r, k: 'Schlauch' in k),
     ('kassette-wechseln', lambda r, k: 'Kassette' in k), ('bremsscheibe-wechseln', lambda r, k: 'Bremsscheibe' in k),
     ('innenlager-wechseln', lambda r, k: 'Innenlager' in k or 'Kurbel' in k),
@@ -623,13 +712,28 @@ def uebersicht_seite(alle, gesamt):
       <h1>Was ist an deinem Rad verbaut?</h1>
       <p class="lead">Der Katalog der Radgarage kennt über {tsd(gesamt)} Fahrräder von {len(m)} Marken mit allen verbauten Teilen. Such dein Modell oder wähl die Marke und sieh, welche Kette, Beläge und Reifen passen.</p>
       {suchfeld('raeder')}
+      <form class="finder" action="#" aria-label="Rad nach Marke, Modell und Jahr finden">
+        <label>Marke<select name="marke"><option value="">Marke wählen</option>{''.join(f'<option value="{s}">{e(rs[0]["hersteller"])}</option>' for s, rs in m.items())}</select></label>
+        <label>Modell<select name="modell" disabled><option value="">Modell</option></select></label>
+        <label>Jahr<select name="jahr" disabled><option value="">Jahr</option></select></label>
+        <button class="pill" type="submit" disabled>Zum Rad</button>
+      </form><script src="/js/finder.js?v=1" defer></script>
     </div>
   </div>
+  <section aria-label="Wissen" style="margin-top:14px">
+    <div class="chips">{WISSEN_CHIPS}</div>
+  </section>
   <section aria-label="Marken" style="margin-top:14px">
     <div class="karten">{marken_kacheln}</div>
   </section>
   </main>
 ''', FUSS])
+
+
+# Ratgeber- und Übersichtsseiten, die von den Übersichten aus verlinkt werden
+WISSEN = [('/schaltgruppen/', 'Schaltgruppen'), ('/e-bike-systeme/', 'E-Bike-Systeme'), ('/reifengroessen/', 'Reifengrößen'),
+          ('/verschleissrechner/', 'Verschleißrechner')]
+WISSEN_CHIPS = ''.join(f'<a href="{p}">{e(n)}</a>' for p, n in WISSEN)
 
 
 def reihen(alle):

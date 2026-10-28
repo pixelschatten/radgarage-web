@@ -13,9 +13,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import anleitungen as an
 import extras as ex
 import feedback as fb
+import gruppen as gr
 import raeder as ra
 import seiten as se
 import teile as te
+import wissen as wi
 
 
 def lesen(pfad):
@@ -77,7 +79,7 @@ if __name__ == '__main__':
     schreiben('anleitungen/index.html', an.uebersicht(an.ANLEITUNGEN))
     for a in an.ANLEITUNGEN:
         schreiben(f'anleitungen/{a["slug"]}/index.html', an.anleitung_seite(a, an.ANLEITUNGEN))
-        seiten.append(f'/anleitungen/{a["slug"]}/')
+        seiten.append((f'/anleitungen/{a["slug"]}/', a.get('stand', an.STAND)))
     werte = ex.zahlen(alle, ra.TEILE)
     schreiben('raeder/vorschlag.js', lesen('_quellen/vorschlag.js'))
     schreiben('raeder/rechner.js', lesen('_quellen/rechner.js'))
@@ -93,6 +95,9 @@ if __name__ == '__main__':
         schreiben(pfad.strip('/') + '/index.html', ra.reihe_seite(pfad, rs))
         seiten.append((pfad, max(r['geaendert'] for r in rs)))
     seiten += te.bauen(alle, schreiben)
+    seiten += gr.bauen(alle, schreiben)
+    seiten += wi.bauen(alle, schreiben, lesen)
+    schreiben('js/finder.js', lesen('_quellen/finder.js'))
     schreiben('ueber-uns/index.html', se.ueber_uns(len(alle), len(ra.TEILE), int(werte['marken'])))
     schreiben('so-pruefen-wir/index.html', se.methodik(len(alle), len(ra.TEILE), neuestes))
     seiten += [('/ueber-uns/', an.STAND), ('/so-pruefen-wir/', neuestes)]
@@ -104,10 +109,10 @@ if __name__ == '__main__':
     ex.handseiten(werte, alle, lesen, an.schreiben)
     seiten += ['/datenschutz.html', '/impressum.html', '/konto-loeschen.html']
     # Seiten ohne eigenes Datum bekommen den Stand der Anleitungen bzw. des Katalogs.
-    seiten = [s if isinstance(s, tuple) else (s, max(an.STAND, neuestes) if s.startswith(('/raeder/', '/teile/')) else an.STAND)
+    seiten = [s if isinstance(s, tuple) else (s, max(an.STAND, neuestes) if s.startswith(('/raeder/', '/teile/', '/schaltgruppen/', '/e-bike-systeme/')) else an.STAND)
               for s in seiten]
     sitemaps(seiten)
-    weg = aufraeumen('raeder') + aufraeumen('teile')
+    weg = aufraeumen('raeder') + aufraeumen('teile') + aufraeumen('schaltgruppen') + aufraeumen('e-bike-systeme')
     bilder = ex.vorschaubilder(alle)
     print(f'{len(an.ANLEITUNGEN)} Anleitungen, {len(alle)} Räder, {len(ra.TEILE)} Teile, {len(seiten)} Seiten in der Sitemap, '
           f'{bilder} Vorschaubilder neu, {weg} alte Seiten entfernt.')

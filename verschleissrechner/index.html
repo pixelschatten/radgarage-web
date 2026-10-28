@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Verschleißrechner: wann Kette, Beläge und Reifen fällig sind</title>
+<meta name="description" content="Wann muss die Fahrradkette gewechselt werden, wie lange halten Bremsbeläge und Reifen? Der Rechner schätzt es aus deinen Kilometern, Wetter und Gelände.">
+<link rel="canonical" href="https://radgarage.app/verschleissrechner/">
+<meta property="og:type" content="article">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Radgarage">
+<meta property="og:title" content="Verschleißrechner: wann Kette, Beläge und Reifen fällig sind">
+<meta property="og:description" content="Wann muss die Fahrradkette gewechselt werden, wie lange halten Bremsbeläge und Reifen? Der Rechner schätzt es aus deinen Kilometern, Wetter und Gelände.">
+<meta property="og:image" content="https://radgarage.app/img/werkstatt.jpg">
+<meta property="og:url" content="https://radgarage.app/verschleissrechner/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/seiten.css?v=5">
+<meta name="theme-color" content="#F2EDE2">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Anleitungen", "item": "https://radgarage.app/anleitungen/"}, {"@type": "ListItem", "position": 3, "name": "Verschleißrechner", "item": "https://radgarage.app/verschleissrechner/"}]}</script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" class="logo">Radgarage</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
+    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+  </header>
+  <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/anleitungen/">Anleitungen</a></li><li><span aria-current="page">Verschleißrechner</span></li></ol></nav>
+  <main>
+  <article class="bento anl">
+    <div class="t k1 kopf">
+      <span class="eyebrow">Ratgeber · Verschleiß</span>
+      <h1>Verschleißrechner</h1>
+      <p class="lead">Wann ist die Kette fällig, wann die Bremsbeläge? Stell ein, wie viel und wo du fährst, und der Rechner schätzt, wie oft du welches Teil tauschen musst und was das im Jahr kostet.</p>
+    </div>
+    <div class="daten">
+      <div class="t s2"><span class="eyebrow">Kette</span><div class="wert">6.000 km</div></div>
+      <div class="t s2"><span class="eyebrow">Bremsbeläge</span><div class="wert">3.000 km</div></div>
+    </div>
+    <section class="t k2 voll verschleiss-rechner" aria-labelledby="vr-titel" data-teile='[{&quot;k&quot;:&quot;kette&quot;,&quot;n&quot;:&quot;Kette&quot;,&quot;km&quot;:6000,&quot;preis&quot;:25},{&quot;k&quot;:&quot;kassette&quot;,&quot;n&quot;:&quot;Kassette&quot;,&quot;km&quot;:15000,&quot;preis&quot;:50},{&quot;k&quot;:&quot;belaege&quot;,&quot;n&quot;:&quot;Bremsbeläge (vorn und hinten)&quot;,&quot;km&quot;:3000,&quot;preis&quot;:24},{&quot;k&quot;:&quot;reifen&quot;,&quot;n&quot;:&quot;Reifen (beide)&quot;,&quot;km&quot;:6000,&quot;preis&quot;:60}]'>
+      <span class="eyebrow">Rechner</span>
+      <h2 id="vr-titel" style="font-size:30px;margin:6px 0 10px">Dein Fahrprofil</h2>
+      <form class="werkzeug-form" action="#">
+        <label for="vr-km">Kilometer im Jahr: <output for="vr-km" class="vr-km-wert">3.000 km</output></label>
+        <input type="range" id="vr-km" min="500" max="20000" step="500" value="3000">
+        <fieldset><legend>Wie fährst du meistens?</legend><div class="wahl">
+          <label><input type="checkbox" name="ebike"> E-Bike</label>
+          <label><input type="checkbox" name="nass"> Oft bei Nässe</label>
+          <label><input type="checkbox" name="gelaende"> Viel Gelände oder Berge</label>
+        </div></fieldset>
+      </form>
+      <div class="tabelle-rahmen"><table class="vergleichstabelle vr-tabelle">
+        <thead><tr><th scope="col">Teil</th><th scope="col">Wechsel</th><th scope="col">Bei dir</th><th scope="col" class="zahl">Pro Jahr</th></tr></thead>
+        <tbody><tr data-teil="kette"><th scope="row">Kette</th><td class="v-km">etwa alle 6.000 km</td><td class="v-zeit">–</td><td class="zahl v-euro">–</td></tr><tr data-teil="kassette"><th scope="row">Kassette</th><td class="v-km">etwa alle 15.000 km</td><td class="v-zeit">–</td><td class="zahl v-euro">–</td></tr><tr data-teil="belaege"><th scope="row">Bremsbeläge (vorn und hinten)</th><td class="v-km">etwa alle 3.000 km</td><td class="v-zeit">–</td><td class="zahl v-euro">–</td></tr><tr data-teil="reifen"><th scope="row">Reifen (beide)</th><td class="v-km">etwa alle 6.000 km</td><td class="v-zeit">–</td><td class="zahl v-euro">–</td></tr></tbody>
+      </table></div>
+      <p class="vr-summe">Teilekosten zusammen etwa <b>–</b> im Jahr.</p>
+      <p class="klein">Grobe Schätzung mit Richtwerten und Beispielpreisen (Kette 25 €, Kassette 50 €, Beläge 2 × 12 €, Reifen 2 × 30 €), ohne Werkstatt. E-Bike, Nässe und Gelände verkürzen die Abstände um Schätzfaktoren. Ab etwa 80 % lohnt sich ein Blick aufs Teil. Messen ersetzt der Rechner nicht.</p>
+    </section>
+    <section class="t s2 fragen" aria-labelledby="fragen-titel">
+      <span class="eyebrow">Häufige Fragen</span>
+      <h2 id="fragen-titel" style="font-size:30px;margin:6px 0 8px">Wann ist was fällig?</h2>
+      <details><summary>Wann muss die Fahrradkette gewechselt werden?</summary><p>Als Richtwert nach etwa 6.000 km, entscheidend ist aber die Messung: Bei 11- und 12-fach-Ketten ab 0,5 % Längung, bei 10-fach und weniger ab 0,75 %. Wie das geht, steht in der Anleitung <a href="/anleitungen/kettenverschleiss-messen/">Kettenverschleiß messen</a>.</p></details><details><summary>Wie lange halten Bremsbeläge?</summary><p>Organische Beläge an Scheibenbremsen halten im Schnitt etwa 3.000 km, bei Bergtouren, Nässe und am E-Bike oft nur die Hälfte. Getauscht wird, wenn der Belag dünner als etwa 0,5 mm ist.</p></details><details><summary>Wie lange hält ein Fahrradreifen?</summary><p>Rund 6.000 km sind ein guter Richtwert, hinten weniger als vorne. Leichte Rennreifen halten kürzer, robuste Trekkingreifen deutlich länger. Abgefahrenes Profil oder Risse in der Flanke sind das Zeichen zum Wechseln.</p></details><details><summary>Wann ist die Kassette fällig?</summary><p>Meist nach zwei bis drei Ketten, also grob 15.000 km. Springt eine neue Kette auf einzelnen Ritzeln, ist die Kassette verschlissen.</p></details>
+    </section>
+    <aside class="t k4 app">
+      <div>
+        <span class="eyebrow">Für dein Rad</span>
+        <h2 style="margin:6px 0 8px">Genauer geht es mit deinem Modell</h2>
+        <p>Auf jeder Radseite rechnet die Radgarage mit den Teilen, die an deinem Rad verbaut sind. In der App zählt sie deine echten Kilometer mit und erinnert dich ans Prüfen.</p>
+      </div>
+      <div class="actions"><a class="pill" href="/raeder/">Rad suchen</a><a class="pill ghost" href="/#anmelden">Testplatz sichern</a></div>
+    </aside>
+    <nav class="t s2 voll rad-anleitungen" aria-label="Passende Anleitungen">
+      <span class="eyebrow">Selbst machen</span>
+      <h2 style="font-size:26px;margin:6px 0 10px">Passende Anleitungen</h2>
+      <div class="chips"><a href="/anleitungen/kettenverschleiss-messen/">Kettenverschleiß messen</a><a href="/anleitungen/kette-wechseln/">Fahrradkette wechseln</a><a href="/anleitungen/bremsbelaege-wechseln/">Bremsbeläge wechseln (Scheibenbremse)</a><a href="/anleitungen/reifen-wechseln/">Fahrradreifen wechseln</a><a href="/anleitungen/kassette-wechseln/">Kassette wechseln</a></div>
+    </nav>
+  </article>
+  <p class="hinweis">Richtwerte wie in der App der Radgarage. Wie wir zu den Werten kommen: <a href="/so-pruefen-wir/">So prüfen wir</a>. Stand: Oktober 2026.</p>
+  </main>
+<script src="/js/verschleiss.js?v=1" defer></script>
+  <footer>
+    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
+    <nav aria-label="Fußzeile">
+      <a href="/raeder/">Räder</a>
+      <a href="/teile/">Ersatzteile</a>
+      <a href="/anleitungen/">Anleitungen</a>
+      <a href="/feedback/">Feedback</a>
+      <a href="/ueber-uns/">Über uns</a>
+      <a href="/so-pruefen-wir/">So prüfen wir</a>
+      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
+      <a href="/impressum.html">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+      <a href="/konto-loeschen.html">Konto löschen</a>
+    </nav>
+  </footer>
+</div>
+</body>
+</html>
