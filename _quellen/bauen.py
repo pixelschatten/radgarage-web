@@ -14,6 +14,7 @@ import anleitungen as an
 import extras as ex
 import feedback as fb
 import raeder as ra
+import seiten as se
 import teile as te
 
 
@@ -48,6 +49,26 @@ def sitemap(seiten):
     return f'<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n{zeilen}</urlset>\n'
 
 
+# Eine Sitemap je Bereich, damit die Search Console zeigt, welcher Bereich wie gut im Index ist.
+# sitemap.xml ist der Index darüber, so wie er in der Search Console eingereicht ist.
+BEREICHE = [('raeder', ('/raeder/',)), ('teile', ('/teile/',)),
+            ('ratgeber', ('/anleitungen/', '/reifengroessen/', '/verschleissrechner/', '/schaltgruppen/',
+                          '/e-bike-systeme/', '/unterhaltskosten/')),
+            ('seiten', ('',))]
+
+
+def sitemaps(seiten):
+    rest = list(seiten)
+    eintraege = []
+    for name, praefixe in BEREICHE:
+        teil = [s for s in rest if s[0].startswith(praefixe)]
+        rest = [s for s in rest if s not in teil]
+        schreiben(f'sitemap-{name}.xml', sitemap(teil))
+        eintraege.append(f'  <sitemap><loc>{an.SEITE}/sitemap-{name}.xml</loc><lastmod>{max(d for _, d in teil)}</lastmod></sitemap>\n')
+    schreiben('sitemap.xml', '<?xml version="1.0" encoding="UTF-8"?>\n'
+              '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + ''.join(eintraege) + '</sitemapindex>\n')
+
+
 if __name__ == '__main__':
     schreiben('css/seiten.css', '\n'.join(lesen(f'_quellen/{n}') for n in ['basis.css', 'anleitungen-extra.css', 'raeder-extra.css']))
     alle = ra.laden()
@@ -72,6 +93,9 @@ if __name__ == '__main__':
         schreiben(pfad.strip('/') + '/index.html', ra.reihe_seite(pfad, rs))
         seiten.append((pfad, max(r['geaendert'] for r in rs)))
     seiten += te.bauen(alle, schreiben)
+    schreiben('ueber-uns/index.html', se.ueber_uns(len(alle), len(ra.TEILE), int(werte['marken'])))
+    schreiben('so-pruefen-wir/index.html', se.methodik(len(alle), len(ra.TEILE), neuestes))
+    seiten += [('/ueber-uns/', an.STAND), ('/so-pruefen-wir/', neuestes)]
     schreiben('feedback/index.html', fb.seite())
     schreiben('feedback/feedback.js', lesen('_quellen/feedback.js'))
     seiten.append('/feedback/')
@@ -82,7 +106,7 @@ if __name__ == '__main__':
     # Seiten ohne eigenes Datum bekommen den Stand der Anleitungen bzw. des Katalogs.
     seiten = [s if isinstance(s, tuple) else (s, max(an.STAND, neuestes) if s.startswith(('/raeder/', '/teile/')) else an.STAND)
               for s in seiten]
-    schreiben('sitemap.xml', sitemap(seiten))
+    sitemaps(seiten)
     weg = aufraeumen('raeder') + aufraeumen('teile')
     bilder = ex.vorschaubilder(alle)
     print(f'{len(an.ANLEITUNGEN)} Anleitungen, {len(alle)} Räder, {len(ra.TEILE)} Teile, {len(seiten)} Seiten in der Sitemap, '

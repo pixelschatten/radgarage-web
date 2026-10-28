@@ -26,7 +26,8 @@ RICHTWERT_KM = {'Kette': 6000, 'Kassette': 15000, 'Bremsbelag': 3000, 'Reifen': 
 ANLEITUNG = {
     'Kette': 'kette-wechseln', 'Kassette': 'kassette-wechseln', 'Bremsbelag': 'bremsbelaege-wechseln',
     'Bremsscheibe': 'bremsscheibe-wechseln', 'Reifen': 'reifen-wechseln', 'Schlauch': 'schlauch-wechseln',
-    'Lenkerband': 'lenkerband-wickeln', 'Innenlager': 'innenlager-wechseln',
+    'Lenkerband': 'lenkerband-wickeln', 'Innenlager': 'innenlager-wechseln', 'Kurbel': 'innenlager-wechseln',
+    'Lenker': 'lenkerband-wickeln',
 }
 SHOPS = [
     ('bike-components', 'https://www.bike-components.de/de/s/?keywords={q}'),
@@ -90,6 +91,39 @@ def preis(p):
 
 def teilname(t):
     return t['name'] if t['name'].lower().startswith(t['marke'].lower()) or t['marke'] == 'Universal' else f'{t["marke"]} {t["name"]}'
+
+
+# Felgendurchmesser nach ETRTO und wie man die Größe im Laden nennt
+FELGEN = OrderedDict([
+    (622, '28 bzw. 29 Zoll (700C)'), (584, '27,5 Zoll (650B)'), (571, '26 Zoll (650C)'), (559, '26 Zoll'),
+    (507, '24 Zoll'), (406, '20 Zoll'), (355, '18 Zoll'), (305, '16 Zoll'),
+])
+ZOLL_FELGE = {'29': 622, '28': 622, '700': 622, '27.5': 584, '650b': 584, '26': 559, '24': 507, '20': 406, '16': 305}
+
+
+def reifen_groesse(t):
+    """Breite in mm und Felge nach ETRTO aus Name und Merkmalen eines Reifens.
+
+    Gibt (breite, felge, ungefaehr) zurück oder None. „ungefaehr“ heißt: aus einer Zoll-Breite umgerechnet.
+    """
+    s = f'{t["name"]} {t.get("merkmale") or ""}'.replace(',', '.').replace('×', 'x')
+    m = re.search(r'(?<![\d.])(\d{2})-(\d{3})(?!\d)', s)
+    if m and int(m.group(2)) in FELGEN:
+        return int(m.group(1)), int(m.group(2)), False
+    m = re.search(r'\b700\s*x\s*(\d{2})\s*c?\b', s, re.I)
+    if m:
+        return int(m.group(1)), 622, False
+    if re.search(r'27\.5\s*/\s*29', s):
+        return None  # Reifen gibt es in beiden Größen, welche verbaut ist, steht nicht fest
+    m = re.search(r'(?<![\d.])(29|28|27\.5|26|24|20|16|650b)\s*x\s*(\d\.\d{1,2})(?!\d)', s, re.I)
+    if m:
+        return round(float(m.group(2)) * 25.4), ZOLL_FELGE[m.group(1).lower()], True
+    return None
+
+
+def groesse_text(g):
+    breite, felge, ungefaehr = g
+    return f'{"ca. " if ungefaehr else ""}{breite}-{felge}'
 
 
 def teil_link(t):
@@ -240,6 +274,7 @@ def rad_seite(r, alle):
       {uvp}
     </div>
 ''')
+    out.append(kurz_gefragt(r))
     if vers:
         karten = ''.join(verschleiss_kachel(t, FARBEN[i % len(FARBEN)]) for i, t in enumerate(vers))
         out.append(f'''    <section class="voll" aria-labelledby="vers-titel">
@@ -270,6 +305,8 @@ def rad_seite(r, alle):
       <p class="klein">* Aus den übrigen Teilen erschlossen, bitte am Rad prüfen. Preise sind Richtpreise ohne Gewähr.</p>
     </section>
 ''')
+    out.append(vergleich_kasten(r, alle))
+    out.append(anleitungen_fuers_rad(r))
     out.append(vorschlag_form(r, titel_name))
     out.append(f'''    <aside class="t k4 app">
       <div>
@@ -288,7 +325,7 @@ def rad_seite(r, alle):
     if andere:
         out.append(f'''    <section class="t mehr" aria-labelledby="mehr-titel">
       <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Räder von {e(r["hersteller"])}</h2>
-      <div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(andere))}</div>
+      <div class="karten">{"".join(radkarte(x, i, mit_jahr=x["modell"] == r["modell"]) for i, x in enumerate(andere))}</div>
     </section>
 ''')
     aehnlich = aehnliche(r, alle)
@@ -307,6 +344,163 @@ def rad_seite(r, alle):
         out.append('<script src="/raeder/rechner.js?v=1" defer></script>\n')
     out.append(FUSS)
     return ''.join(out)
+
+
+def _speed(t):
+    m = re.search(r'(\d{1,2})-fach', t.get('merkmale') or '')
+    return int(m.group(1)) if m else None
+
+
+def _ersatz(t, n=2):
+    alt = [a for a in alternativen(t['id']) if a['marke'] != 'Universal'][:n]
+    return f' Als Ersatz passen laut Katalog auch {" und ".join(teil_link(a) for a in alt)}.' if alt else ''
+
+
+def kurz_gefragt(r):
+    """Die Fragen, mit denen Radfahrer nach ihrem Modell suchen, mit einem Antwortsatz aus dem Katalog."""
+    teile = r['teile']
+    wer = f'das {e(r["modell"])} ({r["baujahr"]})'
+    fragen = []
+
+    def erstes(kat):
+        return next((t for t in teile if t['kategorie'] == kat), None)
+    belaege = [t for t in teile if t['kategorie'] == 'Bremsbelag']
+    if belaege:
+        t = belaege[0]
+        text = f'Ab Werk sind {teil_link(t)} verbaut{" (" + e(t["merkmale"]) + ")" if t["merkmale"] else ""}.'
+        if len(belaege) > 1 and belaege[1]['id'] != t['id']:
+            text += f' Hinten: {teil_link(belaege[1])}.'
+        text += _ersatz(t)
+        if t['abgeleitet']:
+            text += ' Die Beläge haben wir aus der Bremse erschlossen, schau beim Kauf kurz auf deine Bremse.'
+        fragen.append((f'Welche Bremsbeläge passen an {wer}?', text))
+    kette, riemen = erstes('Kette'), erstes('Riemen')
+    if riemen and not kette:
+        fragen.append((f'Welche Kette braucht {wer}?', f'Keine: Es fährt mit Riemen, verbaut ist {teil_link(riemen)}. Ein Riemen hält meist deutlich länger als eine Kette.'))
+    elif kette:
+        fach = _speed(kette)
+        text = (f'Eine {fach}-fach-Kette. ' if fach else '') + f'Ab Werk ist {teil_link(kette)} montiert.' + _ersatz(kette)
+        fragen.append((f'Welche Kette braucht {wer}?', text))
+    reifen = [t for t in teile if t['kategorie'] == 'Reifen']
+    if reifen:
+        t = reifen[0]
+        g = reifen_groesse(t)
+        if g:
+            text = (f'{groesse_text(g)} nach ETRTO: {"etwa " if g[2] else ""}{g[0]} mm breit, Felge {g[1]} mm, '
+                    f'im Laden meist {FELGEN[g[1]]} genannt. Ab Werk: {teil_link(t)}.')
+        else:
+            text = f'Ab Werk ist {teil_link(t)} montiert{" (" + e(t["merkmale"]) + ")" if t["merkmale"] else ""}.'
+        if len(reifen) > 1 and reifen[1]['id'] != t['id']:
+            g2 = reifen_groesse(reifen[1])
+            text += f' Hinten: {teil_link(reifen[1])}{" (" + groesse_text(g2) + ")" if g2 else ""}.'
+        text += ' Wie die Angaben zusammenhängen, steht in der <a href="/reifengroessen/">Übersicht der Reifengrößen</a>.'
+        fragen.append((f'Welche Reifengröße hat {wer}?', text))
+    schlauch = erstes('Schlauch')
+    if schlauch:
+        text = f'{teil_link(schlauch)}{" (" + e(schlauch["merkmale"]) + ")" if schlauch["merkmale"] else ""}.'
+        if any(re.search(r'tubeless|tlr|tle|tcs|2bliss', f'{t["name"]} {t["merkmale"] or ""}', re.I) for t in reifen):
+            text += ' Die Reifen sind tubeless-fähig. Ein Ersatzschlauch gehört trotzdem ins Pannenset.'
+        fragen.append((f'Welcher Schlauch passt in {wer}?', text))
+    kassette = erstes('Kassette')
+    if kassette and len(fragen) < 4:
+        fragen.append((f'Welche Kassette hat {wer}?',
+                       f'{teil_link(kassette)}{" (" + e(kassette["merkmale"]) + ")" if kassette["merkmale"] else ""}.' + _ersatz(kassette)))
+    if not fragen:
+        return ''
+    inhalt = ''.join(f'<div><h3>{q}</h3><p>{a}</p></div>' for q, a in fragen)
+    return f'''    <section class="t s1 voll gefragt" aria-labelledby="gefragt-titel">
+      <span class="eyebrow">Kurz gefragt</span>
+      <h2 id="gefragt-titel" style="font-size:30px;margin:6px 0 4px">Das Wichtigste zum {e(r["modell"])}</h2>
+      <div class="antworten">{inhalt}</div>
+    </section>
+'''
+
+
+def nachbar(r, alle):
+    """Das Rad, mit dem man dieses am ehesten verwechselt: dasselbe Modell aus dem nächsten Jahr,
+    sonst eine andere Ausstattung derselben Reihe aus dem gleichen oder nächsten Jahr."""
+    gleich = [x for x in alle if x['id'] != r['id'] and x['marke_slug'] == r['marke_slug'] and x['modell'] == r['modell']]
+    if gleich:
+        return min(gleich, key=lambda x: (abs(x['baujahr'] - r['baujahr']), -x['baujahr']))
+    reihe = [x for x in alle if x['id'] != r['id'] and x['marke_slug'] == r['marke_slug'] and x['reihe'] == r['reihe']
+             and abs(x['baujahr'] - r['baujahr']) <= 1 and len(x['teile']) >= 6]
+    if reihe:
+        return min(reihe, key=lambda x: (abs(x['baujahr'] - r['baujahr']), abs((x['uvp_eur'] or 0) - (r['uvp_eur'] or 0)), x['modell']))
+    return None
+
+
+def unterschiede(r, n):
+    """Teile, die sich zwischen zwei Rädern unterscheiden, in der Reihenfolge der Gruppen."""
+    reihenfolge = [k for _, ks in GRUPPEN for k in ks]
+    zeilen = []
+    for kat in reihenfolge:
+        a = [t for t in r['teile'] if t['kategorie'] == kat]
+        b = [t for t in n['teile'] if t['kategorie'] == kat]
+        if {t['id'] for t in a} == {t['id'] for t in b}:
+            continue
+        zeilen.append((kat, a, b))
+    return zeilen
+
+
+def vergleich_kasten(r, alle):
+    n = nachbar(r, alle)
+    if not n:
+        return ''
+    n_name = f'{n["modell"]} ({n["baujahr"]})'
+    diff = unterschiede(r, n)
+    if not diff:
+        satz = (f'Laut Katalog sind die Teile beim {e(r["modell"])} ({r["baujahr"]}) und beim <a href="{n["pfad"]}">{e(n_name)}</a> gleich. '
+                'Unterschiede gibt es dann meist bei Farben, Rahmendetails oder Ausstattung, die wir nicht erfassen.')
+        tabelle = ''
+    else:
+        satz = (f'Gegenüber dem <a href="{n["pfad"]}">{e(n_name)}</a> unterscheiden sich {len(diff)} '
+                f'{"Teil" if len(diff) == 1 else "Teile"}.')
+
+        def zelle(ts):
+            return ', '.join(teil_link(t) for t in ts) if ts else '–'
+        zeilen = ''.join(
+            f'<tr><th scope="row">{e(NAMEN.get(k, k))}</th><td data-label="{e(r["modell"])} ({r["baujahr"]})">{zelle(a)}</td>'
+            f'<td data-label="{e(n_name)}">{zelle(b)}</td></tr>' for k, a, b in diff[:8])
+        mehr = f'<p class="klein">Und {len(diff) - 8} weitere Unterschiede.</p>' if len(diff) > 8 else ''
+        tabelle = f'''<div class="tabelle-rahmen"><table class="vergleichstabelle unterschied">
+        <thead><tr><th scope="col">Teil</th><th scope="col">{e(r["modell"])} ({r["baujahr"]})</th><th scope="col">{e(n_name)}</th></tr></thead>
+        <tbody>{zeilen}</tbody></table></div>{mehr}'''
+    if r['uvp_eur'] and n['uvp_eur'] and round(r['uvp_eur']) != round(n['uvp_eur']):
+        satz += f' Die UVP lag bei {tsd(round(r["uvp_eur"]))} € statt {tsd(round(n["uvp_eur"]))} €.'
+    titel = (f'{r["baujahr"]} oder {n["baujahr"]}: was ist anders?' if n['modell'] == r['modell']
+             else f'Was ist anders als beim {n["modell"]}?')
+    return f'''    <section class="t k3 voll nachbar-vgl" aria-labelledby="vgl-titel">
+      <span class="eyebrow">Vergleich</span>
+      <h2 id="vgl-titel" style="font-size:30px;margin:6px 0 4px">{e(titel)}</h2>
+      <p>{satz}</p>
+      {tabelle}
+    </section>
+'''
+
+
+# Anleitungen, die zum Rad passen: nach verbauten Teilen und Radart
+RAD_ANLEITUNGEN = [
+    ('kette-wechseln', lambda r, k: 'Kette' in k), ('bremsbelaege-wechseln', lambda r, k: 'Bremsbelag' in k),
+    ('reifen-wechseln', lambda r, k: 'Reifen' in k), ('schlauch-wechseln', lambda r, k: 'Schlauch' in k),
+    ('kassette-wechseln', lambda r, k: 'Kassette' in k), ('bremsscheibe-wechseln', lambda r, k: 'Bremsscheibe' in k),
+    ('innenlager-wechseln', lambda r, k: 'Innenlager' in k or 'Kurbel' in k),
+    ('lenkerband-wickeln', lambda r, k: r['kategorie'] in ('Rennrad', 'Gravel', 'E-Gravel')),
+]
+
+
+def anleitungen_fuers_rad(r):
+    kats = {t['kategorie'] for t in r['teile']}
+    da = {a['slug']: a for a in ANLEITUNGEN}
+    passend = [da[s] for s, wenn in RAD_ANLEITUNGEN if s in da and wenn(r, kats)]
+    if not passend:
+        return ''
+    links = ''.join(f'<a href="/anleitungen/{a["slug"]}/">{e(a["h1"])}</a>' for a in passend)
+    return f'''    <nav class="t s2 voll rad-anleitungen" aria-label="Anleitungen für dieses Rad">
+      <span class="eyebrow">Selbst machen</span>
+      <h2 style="font-size:26px;margin:6px 0 10px">Anleitungen für dein {e(r["modell"])}</h2>
+      <div class="chips">{links}</div>
+    </nav>
+'''
 
 
 GRUENDE = [
@@ -342,8 +536,10 @@ def vorschlag_form(r, titel_name):
 '''
 
 
-def radkarte(r, i=0, ebene='h3', zeige_marke=False):
+def radkarte(r, i=0, ebene='h3', zeige_marke=False, mit_jahr=False):
     name = r['name'] if zeige_marke else r['modell']
+    if mit_jahr:
+        name += f' ({r["baujahr"]})'
     return (f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{r["pfad"]}">'
             f'<span class="eyebrow">{e(r["hersteller"])} · {r["baujahr"]}</span><{ebene}>{e(name)}</{ebene}>'
             f'<span class="meta">{e(r["kategorie"])} · {len(r["teile"])} Teile</span></a>')

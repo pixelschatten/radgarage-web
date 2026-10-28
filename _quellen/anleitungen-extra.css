@@ -77,3 +77,7 @@
   .karte { min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .karte { transition: none; } .karte:hover { transform: none; } }
+
+/* Textseiten (Über uns, So prüfen wir) */
+.text-abschnitt p, .text-abschnitt ul { max-width: 46em; }
+.text-abschnitt p + p { margin-top: 10px; }

@@ -7,6 +7,11 @@ on:
   schedule:
     - cron: '15 22 * * *'  # 22:15 UTC, nach der täglichen Füllrunde
   workflow_dispatch:
+    inputs:
+      alle_melden:
+        description: 'Alle Seiten per IndexNow an Bing melden (sonst nur geänderte)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -55,3 +60,13 @@ jobs:
             -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/pages/builds" \
             || echo "Pages-Build konnte nicht angestoßen werden, er startet dann mit dem nächsten Push."
+      - name: Geänderte Seiten an Bing melden (IndexNow)
+        if: steps.speichern.outputs.neu == 'ja' || inputs.alle_melden
+        run: |
+          # Kurz warten, bis GitHub Pages die neuen Seiten ausliefert
+          sleep 90
+          if [ "${{ inputs.alle_melden }}" = "true" ]; then
+            python3 _quellen/indexnow.py --alle
+          else
+            git diff --name-only HEAD~1 HEAD | python3 _quellen/indexnow.py
+          fi

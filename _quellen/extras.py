@@ -67,7 +67,15 @@ def beliebt(alle, anzahl=8):
             reihen.setdefault(r['reihe_pfad'], []).append(r)
     top = sorted(reihen.items(), key=lambda x: (-len(x[1]), x[0]))[:anzahl]
     links = ''.join(f'<a href="{p}">{e(rs[0]["hersteller"])} {e(rs[0]["reihe"])}</a>' for p, rs in top)
-    return f'<!--beliebt-->\n        <nav class="beliebt" aria-label="Beliebte Reihen">{links}</nav>\n        <!--/beliebt-->'
+    # Dazu die Marken mit den meisten Rädern, damit die Startseite die großen Markenseiten direkt verlinkt
+    zahl = {}
+    for r in alle:
+        zahl.setdefault(r['marke_slug'], [r['hersteller'], 0])[1] += 1
+    marken = sorted(zahl.items(), key=lambda x: (-x[1][1], x[0]))[:anzahl]
+    m_links = ''.join(f'<a href="/raeder/{s}/">{e(n)}</a>' for s, (n, _) in marken)
+    return (f'<!--beliebt-->\n        <nav class="beliebt" aria-label="Beliebte Reihen">{links}</nav>\n'
+            f'        <nav class="beliebt marken" aria-label="Marken"><span>Marken:</span>{m_links}<a href="/raeder/">alle</a></nav>\n'
+            f'        <!--/beliebt-->')
 
 
 def handseiten(werte, alle, lesen, schreiben):
