@@ -54,3 +54,49 @@
 .kat-tabelle th { width: auto; color: var(--ink); }
 .kat-tabelle th span { display: block; font-weight: 500; font-size: 14px; color: var(--muted); }
 .kat-tabelle td { white-space: nowrap; }
+
+/* Suche nach Rad oder Teil (Übersichten, Startseite, Fehlerseite), Vorschläge per /js/suche.js */
+.t:has(> .suche) { overflow: visible; z-index: 2; }
+.suche { position: relative; margin-top: 18px; max-width: 640px; display: block; }
+.suche input[type=search] { width: 100%; font: inherit; font-size: 18px; font-weight: 600; padding: 16px 20px 16px 52px; border-radius: 999px; border: 2px solid transparent; background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23554D41' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 20px 50%; color: var(--text); box-shadow: 0 6px 18px var(--shadow); -webkit-appearance: none; appearance: none; }
+:root[data-theme="dark"] .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); } }
+.suche input[type=search]:focus-visible { outline: none; border-color: var(--accent); }
+.suche input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.suche .treffer { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 8px); margin: 0; padding: 6px; list-style: none; background: var(--surface2); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 18px 40px var(--shadow); max-height: min(60vh, 440px); overflow-y: auto; }
+.suche .treffer a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 11px 14px; border-radius: 14px; text-decoration: none; color: var(--text); }
+.suche .treffer b { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.suche .treffer span { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.suche .treffer [aria-selected=true] a, .suche .treffer a:hover { background: var(--surface); }
+.suche .treffer .leer { padding: 12px 14px; color: var(--muted); font-size: 15px; }
+.suche-info { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* Unterhalt-Rechner */
+.rechner { margin-top: 14px; padding: 16px 20px; border-radius: 20px; background: rgba(255, 255, 255, .45); display: grid; gap: 8px; max-width: 560px; }
+:root[data-theme="dark"] .rechner { background: rgba(255, 255, 255, .06); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rechner { background: rgba(255, 255, 255, .06); } }
+.rechner label { font-weight: 800; color: var(--ink); }
+.rechner output { font-family: var(--display); font-size: 20px; margin-left: 4px; }
+.rechner input[type=range] { width: 100%; accent-color: var(--accent); height: 28px; }
+.rechner p { font-size: 17px; }
+.rechner b { font-family: var(--display); font-size: 24px; }
+
+/* Handy: Kennzahlen zwei nebeneinander, Vergleichstabelle als Karten pro Ausstattung */
+@media (max-width: 600px) {
+  .anl .daten { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .anl .daten .t { padding: 16px 18px; border-radius: 22px; }
+  .anl .daten .t:nth-child(3):last-child { grid-column: span 2; }
+  .wert { font-size: 23px; }
+  .tabelle-rahmen { overflow: visible; margin: 0; }
+  .vergleichstabelle { min-width: 0; }
+  .vergleichstabelle thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .vergleichstabelle, .vergleichstabelle tbody, .vergleichstabelle tr, .vergleichstabelle th, .vergleichstabelle td { display: block; }
+  .vergleichstabelle tr { padding: 12px 0; border-top: 1px solid var(--line); }
+  .vergleichstabelle tbody th, .vergleichstabelle td { border-top: 0; padding: 2px 0; }
+  .vergleichstabelle tbody th { font-size: 18px; margin-bottom: 4px; }
+  .vergleichstabelle td { display: grid; grid-template-columns: 118px 1fr; gap: 10px; font-size: 15px; }
+  .vergleichstabelle td::before { content: attr(data-label); color: var(--muted); font-weight: 700; font-size: 13px; }
+  .vergleichstabelle .zahl { text-align: left; white-space: normal; }
+  .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; }
+}

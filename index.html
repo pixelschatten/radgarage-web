@@ -13,6 +13,14 @@
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
 <meta name="theme-color" content="#F2EDE2">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="de_DE">
+<meta property="og:site_name" content="Radgarage">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">{"@context": "https://schema.org", "@graph": [{"@type": "Organization", "@id": "https://radgarage.app/#org", "name": "Radgarage", "url": "https://radgarage.app/", "logo": "https://radgarage.app/img/icon-512.png", "email": "kontakt@radgarage.app"}, {"@type": "WebSite", "@id": "https://radgarage.app/#website", "url": "https://radgarage.app/", "name": "Radgarage", "inLanguage": "de", "publisher": {"@id": "https://radgarage.app/#org"}}, {"@type": "FAQPage", "@id": "https://radgarage.app/#fragen", "mainEntity": [{"@type": "Question", "name": "Wann kommt die App?", "acceptedAnswer": {"@type": "Answer", "text": "Gerade testen wir mit Freunden, danach mit 200 Testern. Wenn alles rund läuft, kommt die Radgarage in den App Store und zu Google Play. Ein festes Datum gibt es noch nicht. Trag dich ein, dann sagen wir dir Bescheid."}}, {"@type": "Question", "name": "Was kostet die Radgarage?", "acceptedAnswer": {"@type": "Answer", "text": "Im Alltag nichts: Bis zu drei Räder, Teilekatalog, Verschleiß und Wartungsheft sind gratis. Premium kostet einmalig 4,99 €, ohne Abo. Unsere Tester bekommen Premium zum Start geschenkt."}}, {"@type": "Question", "name": "Gibt es die App für iPhone und Android?", "acceptedAnswer": {"@type": "Answer", "text": "Ja, für beide. Tester bekommen fürs iPhone eine Einladung über TestFlight und für Android einen Download-Link."}}, {"@type": "Question", "name": "Brauche ich ein Konto?", "acceptedAnswer": {"@type": "Answer", "text": "Nein, die App läuft auch ohne. Mit Konto meldest du dich per Apple, Google oder E-Mail-Code an, ganz ohne Passwort. Dann ist deine Garage gesichert und zieht mit aufs neue Handy."}}, {"@type": "Question", "name": "Woher kommen die Daten im Katalog?", "acceptedAnswer": {"@type": "Answer", "text": "Aus Herstellerangaben und Testberichten. Jedes Rad wird geprüft, bevor es online geht. Findest du trotzdem einen Fehler, hilft „Stimmt etwas nicht?“ auf der Radseite oder „Verbesserung vorschlagen“ in der App."}}, {"@type": "Question", "name": "Mein Rad fehlt im Katalog. Was nun?", "acceptedAnswer": {"@type": "Answer", "text": "Jeden Tag kommen neue Räder dazu. Sag uns über das Feedback, welches Rad fehlt, dann kommt es auf die Liste. In der App kannst du jedes Rad auch selbst anlegen."}}, {"@type": "Question", "name": "Was passiert mit meiner E-Mail-Adresse?", "acceptedAnswer": {"@type": "Answer", "text": "Wir schreiben dir nur zum Testzugang und zum Start der App. Du bestätigst deine Adresse per Mail und kannst dich in jeder Mail mit einem Klick abmelden. Persönliche Daten verkaufen wir nicht."}}]}]}</script>
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
 <style>
 @font-face { font-family: "Manrope"; font-style: normal; font-weight: 200 800; font-display: swap; src: url("fonts/manrope-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
 @font-face { font-family: "Manrope"; font-style: normal; font-weight: 200 800; font-display: swap; src: url("fonts/manrope-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
@@ -220,6 +228,58 @@ body { padding-top: env(safe-area-inset-top, 0px); }
   .kopfnav a { flex: 1; text-align: center; padding: 9px 4px; font-size: 15px; }
   .kopfnav a:hover, .kopfnav a[aria-current] { background: var(--bg); }
 }
+/* Katalog-Band mit Suche, häufige Fragen */
+.katalogband { padding-block: 0 14px; }
+.katalogband .such { overflow: visible; z-index: 2; }
+.hero .katalog .num { font-size: clamp(48px, 5.4vw, 76px); }
+.katalogband .such { grid-column: span 8; grid-row: span 2; padding: 34px 34px 30px; }
+.katalogband .such > p { max-width: 34em; color: var(--ink2); }
+.katalogband .mini { grid-column: span 4; text-decoration: none; display: flex; flex-direction: column; gap: 6px; transition: transform .15s ease; }
+.katalogband .mini:hover { transform: translateY(-3px); }
+.katalogband .mini h3 { margin: 4px 0 0; }
+.beliebt { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.beliebt a { text-decoration: none; font-weight: 700; font-size: 15px; padding: 8px 14px; border-radius: 999px; background: rgba(255, 255, 255, .5); color: var(--ink); }
+:root[data-theme="dark"] .beliebt a { background: rgba(255, 255, 255, .08); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .beliebt a { background: rgba(255, 255, 255, .08); } }
+.beliebt a:hover { background: var(--surface2); }
+.suche { position: relative; margin-top: 18px; max-width: 640px; display: block; }
+.suche input[type=search] { width: 100%; font: inherit; font-size: 18px; font-weight: 600; padding: 16px 20px 16px 52px; border-radius: 999px; border: 2px solid transparent; background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23554D41' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 20px 50%; color: var(--text); box-shadow: 0 6px 18px var(--shadow); -webkit-appearance: none; appearance: none; }
+:root[data-theme="dark"] .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); } }
+.suche input[type=search]:focus-visible { outline: none; border-color: var(--accent); }
+.suche input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.suche .treffer { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 8px); margin: 0; padding: 6px; list-style: none; background: var(--surface2); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 18px 40px var(--shadow); max-height: min(60vh, 440px); overflow-y: auto; }
+.suche .treffer a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 11px 14px; border-radius: 14px; text-decoration: none; color: var(--text); }
+.suche .treffer b { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.suche .treffer span { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.suche .treffer [aria-selected=true] a, .suche .treffer a:hover { background: var(--surface); }
+.suche .treffer .leer { padding: 12px 14px; color: var(--muted); font-size: 15px; }
+.suche-info, .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.faq { padding-block: 0 14px; }
+.faq .t { grid-column: span 12; padding: 34px 36px; }
+.fragenliste { margin: 8px 0 14px; columns: 2 380px; column-gap: 36px; }
+.fragenliste details { break-inside: avoid; border-top: 1px solid var(--line); padding: 14px 0; }
+.fragenliste summary { font-weight: 800; font-size: 18px; cursor: pointer; color: var(--ink); }
+.fragenliste details p { margin-top: 8px; }
+@media (max-width: 900px) {
+  .katalogband .such { grid-column: span 12; grid-row: auto; padding: 28px 24px; }
+  .katalogband .mini { grid-column: span 6; }
+}
+@media (max-width: 600px) {
+  .katalogband .mini { grid-column: span 12; }
+  /* Am Handy ohne die Bildschirme in den Funktionskacheln, die Startseite wird sonst sehr lang */
+  .raster .f .phonebox, .community .phonebox { display: none; }
+  .community .text { padding-bottom: 30px; }
+  .f.tall { padding-bottom: 22px; }
+  .f { display: block; }
+  .f .ic { float: left; width: 42px; height: 42px; border-radius: 14px; margin: 0 14px 6px 0; }
+  .f .ic svg { width: 22px; height: 22px; }
+  .f h3 { min-height: 42px; display: flex; align-items: center; margin-bottom: 8px; }
+  .f p { clear: both; }
+  .faq .t { padding: 26px 22px; }
+  .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; }
+}
+@media (prefers-reduced-motion: reduce) { .katalogband .mini { transition: none; } .katalogband .mini:hover { transform: none; } }
 </style>
 </head>
 <body>
@@ -253,9 +313,9 @@ body { padding-top: env(safe-area-inset-top, 0px); }
         <p>Die ersten 200 testen die App vor dem Store und bekommen Premium zum Start geschenkt.</p>
       </div>
       <div class="t k1 katalog">
-        <div class="num">500+</div>
+        <div class="num" data-zahl="raeder-rund">1.300+</div>
         <h3>Räder im Katalog</h3>
-        <p>Von 24 Marken, mit über 1.300 Teilen. Und es werden täglich mehr.</p>
+        <p>Von <span data-zahl="marken">36</span> Marken, mit über <span data-zahl="teile-ueber">2.200</span> Teilen. Und es werden täglich mehr.</p>
       </div>
     </section>
 
@@ -303,6 +363,28 @@ body { padding-top: env(safe-area-inset-top, 0px); }
           <p class="umfrage">Noch nicht sicher? Hilf uns mit einer <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">2-Minuten-Umfrage</a>, anonym und ohne Anmeldung.</p>
         </form>
       </div>
+    </section>
+
+    <section class="katalogband bento" id="katalog" aria-labelledby="k-titel">
+      <div class="t k5 such">
+        <div class="eyebrow">Schon jetzt, ganz ohne App</div>
+        <h2 id="k-titel">Schau, was an deinem Rad verbaut ist.</h2>
+        <p>Über <span data-zahl="raeder-ueber">1.300</span> Räder mit allen Teilen, Richtpreisen und passendem Ersatz. Tipp einfach dein Modell ein.</p>
+        <form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-start">Rad oder Teil suchen</label><input type="search" id="suche-start" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-start-liste"><ul class="treffer" id="suche-start-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=1" defer></script>
+        <!--beliebt-->
+        <nav class="beliebt" aria-label="Beliebte Reihen"><a href="/raeder/cannondale/topstone-carbon/">Cannondale Topstone Carbon</a><a href="/raeder/cannondale/topstone/">Cannondale Topstone</a><a href="/raeder/scott/scale/">Scott Scale</a><a href="/raeder/cube/kathmandu-hybrid/">Cube Kathmandu Hybrid</a><a href="/raeder/cube/reaction-hybrid/">Cube Reaction Hybrid</a><a href="/raeder/specialized/tarmac-sl8/">Specialized Tarmac SL8</a><a href="/raeder/specialized/turbo-levo/">Specialized Turbo Levo</a><a href="/raeder/scott/spark/">Scott Spark</a></nav>
+        <!--/beliebt-->
+      </div>
+      <a class="t k3 mini" href="/anleitungen/">
+        <div class="eyebrow">Selbst machen</div>
+        <h3>Anleitungen</h3>
+        <p>Kette, Beläge, Reifen und mehr wechseln, mit Werkzeugliste, Dauer und Werkstattpreis.</p>
+      </a>
+      <a class="t k1 mini" href="/teile/">
+        <div class="eyebrow">Was passt?</div>
+        <h3>Ersatzteile</h3>
+        <p>Für jedes Teil die Räder, an denen es verbaut ist, und was stattdessen passt.</p>
+      </a>
     </section>
 
     <section class="funktionen" id="funktionen" aria-labelledby="f-titel">
@@ -363,7 +445,7 @@ body { padding-top: env(safe-area-inset-top, 0px); }
         </div>
         <div class="t k5 f">
           <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5.5 11h13v9.5h-13z"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 14.5v2.5"/></svg></span>
-          <h3>Bald mit Konto, ohne Passwort</h3>
+          <h3>Mit Konto, ohne Passwort</h3>
           <p>Anmelden per Apple, Google oder E-Mail-Code. Deine Garage ist gesichert und zieht mit aufs neue Handy. Persönliche Daten verkaufen wir nicht.</p>
         </div>
       </div>
@@ -424,6 +506,23 @@ body { padding-top: env(safe-area-inset-top, 0px); }
       </div>
     </section>
 
+    <section class="faq bento" id="fragen" aria-labelledby="q-titel">
+      <div class="t s1">
+        <div class="eyebrow">Häufige Fragen</div>
+        <h2 id="q-titel">Gut zu wissen.</h2>
+        <div class="fragenliste">
+          <details><summary>Wann kommt die App?</summary><p>Gerade testen wir mit Freunden, danach mit 200 Testern. Wenn alles rund läuft, kommt die Radgarage in den App Store und zu Google Play. Ein festes Datum gibt es noch nicht. Trag dich ein, dann sagen wir dir Bescheid.</p></details>
+          <details><summary>Was kostet die Radgarage?</summary><p>Im Alltag nichts: Bis zu drei Räder, Teilekatalog, Verschleiß und Wartungsheft sind gratis. Premium kostet einmalig 4,99 €, ohne Abo. Unsere Tester bekommen Premium zum Start geschenkt.</p></details>
+          <details><summary>Gibt es die App für iPhone und Android?</summary><p>Ja, für beide. Tester bekommen fürs iPhone eine Einladung über TestFlight und für Android einen Download-Link.</p></details>
+          <details><summary>Brauche ich ein Konto?</summary><p>Nein, die App läuft auch ohne. Mit Konto meldest du dich per Apple, Google oder E-Mail-Code an, ganz ohne Passwort. Dann ist deine Garage gesichert und zieht mit aufs neue Handy.</p></details>
+          <details><summary>Woher kommen die Daten im Katalog?</summary><p>Aus Herstellerangaben und Testberichten. Jedes Rad wird geprüft, bevor es online geht. Findest du trotzdem einen Fehler, hilft „Stimmt etwas nicht?“ auf der Radseite oder „Verbesserung vorschlagen“ in der App.</p></details>
+          <details><summary>Mein Rad fehlt im Katalog. Was nun?</summary><p>Jeden Tag kommen neue Räder dazu. Sag uns über das Feedback, welches Rad fehlt, dann kommt es auf die Liste. In der App kannst du jedes Rad auch selbst anlegen.</p></details>
+          <details><summary>Was passiert mit meiner E-Mail-Adresse?</summary><p>Wir schreiben dir nur zum Testzugang und zum Start der App. Du bestätigst deine Adresse per Mail und kannst dich in jeder Mail mit einem Klick abmelden. Persönliche Daten verkaufen wir nicht.</p></details>
+        </div>
+        <p class="fine">Noch eine Frage? Schreib uns über das <a href="/feedback/">Feedback</a> oder an kontakt@radgarage.app.</p>
+      </div>
+    </section>
+
     <section class="schluss bento" aria-labelledby="s-titel">
       <div class="t k1">
         <div class="eyebrow">Bald für iPhone und Android</div>
@@ -435,15 +534,17 @@ body { padding-top: env(safe-area-inset-top, 0px); }
   </main>
 
   <footer>
-    <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
-    <nav>
-      <a href="anleitungen/">Anleitungen</a>
-      <a href="feedback/">Feedback</a>
+    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
+    <nav aria-label="Fußzeile">
+      <a href="/raeder/">Räder</a>
+      <a href="/teile/">Ersatzteile</a>
+      <a href="/anleitungen/">Anleitungen</a>
+      <a href="/feedback/">Feedback</a>
       <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="impressum.html">Impressum</a>
-      <a href="datenschutz.html">Datenschutz</a>
-      <a href="konto-loeschen.html">Konto löschen</a>
+      <a href="/impressum.html">Impressum</a>
+      <a href="/datenschutz.html">Datenschutz</a>
+      <a href="/konto-loeschen.html">Konto löschen</a>
     </nav>
   </footer>
 </div>

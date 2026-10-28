@@ -9,7 +9,7 @@ import re
 from collections import OrderedDict
 from urllib.parse import quote_plus
 
-from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen
+from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, suchfeld
 
 GRUPPEN = [
     ('Antrieb', ['Kette', 'Kassette', 'Riemen', 'Schaltwerk', 'Umwerfer', 'Schalthebel', 'Kurbel', 'Motor', 'Akku']),
@@ -150,10 +150,16 @@ def wartung_kasten(r, w):
     if w['riemen']:
         zusatz.append('Der Riemen hält meist deutlich länger als eine Kette und ist nicht eingerechnet.')
     jahr = round(w['summe'] * JAHRES_KM / 1000)
+    rechner = f'''<div class="rechner" data-je1000="{w["summe"]:.4f}">
+        <label for="km-jahr">Deine Kilometer im Jahr: <output for="km-jahr" class="rechner-km">{tsd(JAHRES_KM)} km</output></label>
+        <input type="range" id="km-jahr" min="500" max="20000" step="500" value="{JAHRES_KM}">
+        <p>Teilekosten etwa <b class="rechner-euro">{tsd(jahr)} €</b> im Jahr.</p>
+      </div>'''
     return f'''    <section class="t k2 voll wartung" aria-labelledby="wk-titel">
       <span class="eyebrow">Unterhalt</span>
       <h2 id="wk-titel" style="font-size:30px;margin:6px 0 4px">Was kostet das {e(r["modell"])} im Unterhalt?</h2>
-      <p>Rund <b>{euro_genau(w["summe"])} pro 1.000 km</b> für {liste(w)}. Bei {tsd(JAHRES_KM)} km im Jahr sind das etwa <b>{jahr} € Teilekosten</b>.</p>
+      <p>Rund <b>{euro_genau(w["summe"])} pro 1.000 km</b> für {liste(w)}. Schieb den Regler auf deine Kilometer im Jahr.</p>
+      {rechner}
       <table class="teiltabelle"><tbody>{zeilen}</tbody></table>
       <p class="klein">Nur Teile, ohne Werkstatt. Gerechnet mit Richtpreisen und typischen Wechselabständen, die je nach Fahrweise, Wetter und Pflege stark schwanken. {" ".join(zusatz)} In der App rechnet die Radgarage mit deinen eigenen Kilometern.</p>
     </section>
@@ -211,14 +217,17 @@ def rad_seite(r, alle):
     kurz = [NAMEN.get(k, k) for k in ['Kette', 'Bremsbelag', 'Reifen'] if any(t['kategorie'] == k for t in teile)]
     beschr = (f'Welche {", ".join(kurz[:-1]) + " und " + kurz[-1] if len(kurz) > 1 else "Teile"} hat das {titel_name}? '
               f'Alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.')
-    produkt = {
-        '@context': 'https://schema.org', '@type': 'Product', 'name': titel_name,
-        'brand': {'@type': 'Brand', 'name': r['hersteller']}, 'model': r['modell'], 'category': r['kategorie'],
-        'url': SEITE + r['pfad'],
-        'hasPart': [{'@type': 'Product', 'name': teilname(t), 'brand': {'@type': 'Brand', 'name': t['marke']},
-                     'category': t['kategorie']} for t in teile if t['marke'] != 'Universal'],
+    # Als Liste der verbauten Teile, nicht als „Product“: Google erwartet bei Produkten ein Angebot mit
+    # festem Preis oder Bewertungen, und unsere Richtpreise sind nur Anhaltswerte.
+    teileliste = {
+        '@context': 'https://schema.org', '@type': 'ItemList', 'name': f'Verbaute Teile am {titel_name}',
+        'numberOfItems': len(teile),
+        'itemListElement': [dict({'@type': 'ListItem', 'position': i + 1, 'name': teilname(t)},
+                                 **({'url': f'{SEITE}/teile/{t["id"]}/'} if t['id'] in TEILE else {}))
+                            for i, t in enumerate(teile)],
     }
-    out = [kopf(titel, beschr, r['pfad'], [produkt, brot]), nav, '  <main>\n  <article class="bento anl rad">\n']
+    out = [kopf(titel, beschr, r['pfad'], [teileliste, brot], bild=f'{SEITE}/img/raeder/{r["id"]}.png'), nav,
+           '  <main>\n  <article class="bento anl rad">\n']
     uvp = f'<div class="t s2"><span class="eyebrow">Preis neu (UVP)</span><div class="wert">{round(r["uvp_eur"]):,} €</div></div>'.replace(',', '.') if r['uvp_eur'] else ''
     out.append(f'''    <div class="t k5 kopf">
       <span class="eyebrow">{e(r["kategorie"])} · Modelljahr {r["baujahr"]}</span>
@@ -271,16 +280,22 @@ def rad_seite(r, alle):
       <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
     </aside>
 ''')
-    # Erst andere Ausstattungen derselben Reihe (gleiches Jahr zuerst), dann die Marke, dann gleiche Radart.
+    # Erst andere Ausstattungen derselben Reihe, dann dieselbe Radart der Marke, jeweils nahe am Modelljahr.
     marke = [x for x in alle if x['marke_slug'] == r['marke_slug'] and x['id'] != r['id']]
-    marke.sort(key=lambda x: (x['reihe'] != r['reihe'], abs(x['baujahr'] - r['baujahr']), x['kategorie'] != r['kategorie']))
+    marke.sort(key=lambda x: (x['reihe'] != r['reihe'], x['kategorie'] != r['kategorie'], abs(x['baujahr'] - r['baujahr']),
+                              x['modell']))
     andere = marke[:6]
-    if len(andere) < 3:
-        andere += [x for x in alle if x['marke_slug'] != r['marke_slug'] and x['kategorie'] == r['kategorie']][:3 - len(andere)]
     if andere:
         out.append(f'''    <section class="t mehr" aria-labelledby="mehr-titel">
       <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Räder von {e(r["hersteller"])}</h2>
       <div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(andere))}</div>
+    </section>
+''')
+    aehnlich = aehnliche(r, alle)
+    if aehnlich:
+        out.append(f'''    <section class="t mehr" aria-labelledby="aehnlich-titel">
+      <h2 id="aehnlich-titel" style="font-size:30px;margin:14px 0 12px">Ähnliche Räder anderer Marken</h2>
+      <div class="karten">{"".join(radkarte(x, i + 1, zeige_marke=True) for i, x in enumerate(aehnlich))}</div>
     </section>
 ''')
     out.append(f'''  </article>
@@ -288,6 +303,8 @@ def rad_seite(r, alle):
   </main>
 ''')
     out.append('<script src="/raeder/vorschlag.js?v=1" defer></script>\n')
+    if w:
+        out.append('<script src="/raeder/rechner.js?v=1" defer></script>\n')
     out.append(FUSS)
     return ''.join(out)
 
@@ -325,10 +342,30 @@ def vorschlag_form(r, titel_name):
 '''
 
 
-def radkarte(r, i=0, ebene='h3'):
+def radkarte(r, i=0, ebene='h3', zeige_marke=False):
+    name = r['name'] if zeige_marke else r['modell']
     return (f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{r["pfad"]}">'
-            f'<span class="eyebrow">{e(r["hersteller"])} · {r["baujahr"]}</span><{ebene}>{e(r["modell"])}</{ebene}>'
+            f'<span class="eyebrow">{e(r["hersteller"])} · {r["baujahr"]}</span><{ebene}>{e(name)}</{ebene}>'
             f'<span class="meta">{e(r["kategorie"])} · {len(r["teile"])} Teile</span></a>')
+
+
+def aehnliche(r, alle, anzahl=3):
+    """Gleiche Radart anderer Marken aus einem nahen Modelljahr, mit ähnlichem Neupreis, je Marke höchstens ein Rad."""
+    kandidaten = [x for x in alle if x['marke_slug'] != r['marke_slug'] and x['kategorie'] == r['kategorie']
+                  and abs(x['baujahr'] - r['baujahr']) <= 1 and len(x['teile']) >= 8]
+
+    def abstand(x):
+        preis_abstand = abs(x['uvp_eur'] - r['uvp_eur']) if x['uvp_eur'] and r['uvp_eur'] else 10**6
+        return (preis_abstand, abs(x['baujahr'] - r['baujahr']), x['id'])
+    gewaehlt, marken_ = [], set()
+    for x in sorted(kandidaten, key=abstand):
+        if x['marke_slug'] in marken_:
+            continue
+        gewaehlt.append(x)
+        marken_.add(x['marke_slug'])
+        if len(gewaehlt) == anzahl:
+            break
+    return gewaehlt
 
 
 def marken(alle):
@@ -388,7 +425,8 @@ def uebersicht_seite(alle, gesamt):
     <div class="t k5 kopf">
       <span class="eyebrow">Räder und Teile</span>
       <h1>Was ist an deinem Rad verbaut?</h1>
-      <p class="lead">Der Katalog der Radgarage kennt über {gesamt} Fahrräder mit allen verbauten Teilen. Such dir Marke und Modell aus und sieh, welche Kette, Beläge und Reifen passen.</p>
+      <p class="lead">Der Katalog der Radgarage kennt über {tsd(gesamt)} Fahrräder von {len(m)} Marken mit allen verbauten Teilen. Such dein Modell oder wähl die Marke und sieh, welche Kette, Beläge und Reifen passen.</p>
+      {suchfeld('raeder')}
     </div>
   </div>
   <section aria-label="Marken" style="margin-top:14px">
@@ -438,10 +476,10 @@ def reihe_seite(pfad, rs):
             guenstig = (r, w['summe'])
         uvp = f'{tsd(round(r["uvp_eur"]))} €' if r['uvp_eur'] else '–'
         zeilen.append(
-            f'<tr><th scope="row"><a href="{r["pfad"]}">{e(r["modell"])}</a></th><td>{r["baujahr"]}</td>'
-            f'<td class="zahl">{uvp}</td><td>{_erstes(r, "Schaltwerk", "Motor")}</td>'
-            f'<td>{_erstes(r, "Bremssattel", "Bremsbelag")}</td><td>{_erstes(r, "Reifen")}</td>'
-            f'<td class="zahl">{euro_genau(w["summe"]) if w else "–"}</td></tr>')
+            f'<tr><th scope="row"><a href="{r["pfad"]}">{e(r["modell"])}</a></th><td data-label="Jahr">{r["baujahr"]}</td>'
+            f'<td class="zahl" data-label="UVP">{uvp}</td><td data-label="Schaltung">{_erstes(r, "Schaltwerk", "Motor")}</td>'
+            f'<td data-label="Bremse">{_erstes(r, "Bremssattel", "Bremsbelag")}</td><td data-label="Reifen">{_erstes(r, "Reifen")}</td>'
+            f'<td class="zahl" data-label="Unterhalt je 1.000 km">{euro_genau(w["summe"]) if w else "–"}</td></tr>')
     satz = ''
     if guenstig and len(rs) > 2:
         satz = (f' Am günstigsten im Unterhalt ist das {e(guenstig[0]["modell"])} ({guenstig[0]["baujahr"]}) '
