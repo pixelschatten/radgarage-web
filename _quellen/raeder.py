@@ -6,7 +6,8 @@ Daten: _quellen/katalog-auszug.json, erzeugt mit der Abfrage _quellen/katalog-au
 import json
 import os
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
+from statistics import median
 from urllib.parse import quote_plus
 
 from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, suchfeld
@@ -247,7 +248,26 @@ def liste(w):
     return ', '.join(namen[:-1]) + ' und ' + namen[-1]
 
 
-def wartung_kasten(r, w):
+TYP_MEHRZAHL = {'Rennrad': 'Rennräder', 'Gravel': 'Gravelbikes', 'MTB': 'Mountainbikes', 'E-MTB': 'E-Mountainbikes',
+                'Trekking': 'Trekkingräder', 'E-Trekking': 'E-Trekkingräder', 'Fitness': 'Fitnessräder',
+                'E-City': 'E-Cityräder', 'E-Gravel': 'E-Gravelbikes', 'E-Bike': 'E-Bikes'}
+_TYP_MEDIAN = {}
+
+
+def typ_median(alle, typ):
+    """Median der Unterhaltskosten je 1.000 km für einen Radtyp (ab 20 Rädern), einmal pro Lauf gerechnet."""
+    if not _TYP_MEDIAN:
+        je = defaultdict(list)
+        for x in alle:
+            w = wartungskosten(x['teile'])
+            if w:
+                je[x['kategorie']].append(w['summe'])
+        _TYP_MEDIAN.update({k: median(v) for k, v in je.items() if len(v) >= 20})
+        _TYP_MEDIAN.setdefault('', None)
+    return _TYP_MEDIAN.get(typ)
+
+
+def wartung_kasten(r, w, alle):
     zeilen = ''.join(
         f'<tr><th scope="row">{e(NAMEN.get(p["teil"]["kategorie"], p["teil"]["kategorie"]))}</th>'
         f'<td>{teil_link(p["teil"])}<span>{"2 × " if p["anzahl"] == 2 else ""}{preis(p["teil"]["preis"])}, '
@@ -260,6 +280,10 @@ def wartung_kasten(r, w):
     if w['riemen']:
         zusatz.append('Der Riemen hält meist deutlich länger als eine Kette und ist nicht eingerechnet.')
     jahr = round(w['summe'] * JAHRES_KM / 1000)
+    mittel = typ_median(alle, r['kategorie'])
+    vergleich = (f'<p class="klein">Zum Vergleich: {e(TYP_MEHRZAHL.get(r["kategorie"], r["kategorie"]))} im Katalog liegen im Mittel bei '
+                 f'{euro_genau(mittel)} je 1.000 km. <a href="/unterhaltskosten/">Unterhaltskosten nach Radtyp</a></p>'
+                 if mittel else '<p class="klein"><a href="/unterhaltskosten/">Unterhaltskosten nach Radtyp</a></p>')
     rechner = f'''<div class="rechner" data-je1000="{w["summe"]:.4f}">
         <label for="km-jahr">Deine Kilometer im Jahr: <output for="km-jahr" class="rechner-km">{tsd(JAHRES_KM)} km</output></label>
         <input type="range" id="km-jahr" min="500" max="20000" step="500" value="{JAHRES_KM}">
@@ -272,6 +296,7 @@ def wartung_kasten(r, w):
       {rechner}
       <table class="teiltabelle"><tbody>{zeilen}</tbody></table>
       <p class="klein">Nur Teile, ohne Werkstatt. Gerechnet mit Richtpreisen und typischen Wechselabständen, die je nach Fahrweise, Wetter und Pflege stark schwanken. {" ".join(zusatz)} In der App rechnet die Radgarage mit deinen eigenen Kilometern.</p>
+      {vergleich}
     </section>
 '''
 
@@ -360,7 +385,7 @@ def rad_seite(r, alle):
 ''')
     w = wartungskosten(teile)
     if w:
-        out.append(wartung_kasten(r, w))
+        out.append(wartung_kasten(r, w, alle))
     gruppen = []
     for name, kats in GRUPPEN:
         g = [t for t in teile if t['kategorie'] in kats]
@@ -732,7 +757,7 @@ def uebersicht_seite(alle, gesamt):
 
 # Ratgeber- und Übersichtsseiten, die von den Übersichten aus verlinkt werden
 WISSEN = [('/schaltgruppen/', 'Schaltgruppen'), ('/e-bike-systeme/', 'E-Bike-Systeme'), ('/reifengroessen/', 'Reifengrößen'),
-          ('/verschleissrechner/', 'Verschleißrechner')]
+          ('/verschleissrechner/', 'Verschleißrechner'), ('/unterhaltskosten/', 'Unterhaltskosten')]
 WISSEN_CHIPS = ''.join(f'<a href="{p}">{e(n)}</a>' for p, n in WISSEN)
 
 

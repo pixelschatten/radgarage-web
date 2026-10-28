@@ -11,6 +11,16 @@ import json
 import os
 
 SEITE = 'https://radgarage.app'
+
+# Store-Start: Sobald die App im App Store und bei Google Play ist, die App-Store-Nummer eintragen und STORE_LIVE auf True
+# setzen, dann python3 _quellen/bauen.py. Danach zeigt jede Seite oben „App laden“ statt „Testzugang sichern“, iPhones
+# bekommen den Smart App Banner von Safari, und die Startseite meldet die App als SoftwareApplication (ohne Bewertungen,
+# solange es keine echten gibt). Checkliste: Projektdateien seo/store-start-checkliste.md.
+APP_STORE_ID = ''              # Zahl aus der App-Store-Adresse apps.apple.com/de/app/radgarage/id<Zahl>
+PLAY_PAKET = 'app.radgarage'
+STORE_LIVE = False
+APP_STORE_URL = f'https://apps.apple.com/de/app/id{APP_STORE_ID}' if APP_STORE_ID else ''
+PLAY_URL = f'https://play.google.com/store/apps/details?id={PLAY_PAKET}'
 STAND = '2026-10-28'
 WURZEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -453,6 +463,29 @@ def kopfnav(pfad):
     return f'<nav class="kopfnav" aria-label="Hauptmenü">{links}</nav>'
 
 
+def kopf_knopf():
+    if STORE_LIVE:
+        return '<a class="pill" href="/#app">App laden</a>'
+    return '<a class="pill" href="/#anmelden">Testzugang sichern</a>'
+
+
+def store_meta():
+    """Smart App Banner für Safari auf dem iPhone, erst ab Store-Start."""
+    return f'<meta name="apple-itunes-app" content="app-id={APP_STORE_ID}">\n' if STORE_LIVE and APP_STORE_ID else ''
+
+
+def app_schema():
+    """SoftwareApplication für die Startseite, erst ab Store-Start. Bewertungen erst eintragen, wenn es echte gibt."""
+    if not STORE_LIVE:
+        return ''
+    app = {'@context': 'https://schema.org', '@type': 'SoftwareApplication', 'name': 'Radgarage', 'url': SEITE + '/',
+           'operatingSystem': 'iOS, Android', 'applicationCategory': 'UtilitiesApplication', 'inLanguage': 'de',
+           'description': 'App und Teilekatalog für Fahrräder: verbaute Teile, passender Ersatz, Verschleiß und Wartung.',
+           'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'EUR'},
+           'publisher': {'@id': SEITE + '/#org'}, 'sameAs': [u for u in (APP_STORE_URL, PLAY_URL) if u]}
+    return f'<script type="application/ld+json">{json.dumps(app, ensure_ascii=False)}</script>'
+
+
 def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werkstatt.jpg', robots=False):
     url = SEITE + pfad
     daten = '\n'.join(
@@ -479,14 +512,14 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/seiten.css?v={CSS_VERSION}">
 <meta name="theme-color" content="#F2EDE2">
-{daten}
+{store_meta()}{daten}
 </head>
 <body>
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
     {kopfnav(pfad)}
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    {kopf_knopf()}
   </header>
 '''
 
@@ -495,7 +528,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 5  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 6  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
@@ -510,12 +543,14 @@ FUSS_INHALT = f'''  <footer>
       <a href="/feedback/">Feedback</a>
       <a href="/ueber-uns/">Über uns</a>
       <a href="/so-pruefen-wir/">So prüfen wir</a>
+      <a href="/fuer-vereine/">Für Vereine</a>
       <a href="{UMFRAGE}" target="_blank" rel="noopener">Zur Umfrage</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="/impressum.html">Impressum</a>
       <a href="/datenschutz.html">Datenschutz</a>
       <a href="/konto-loeschen.html">Konto löschen</a>
     </nav>
+    <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 '''
 
@@ -725,6 +760,9 @@ def uebersicht(alle):
       <a class="t k1 karte" href="/verschleissrechner/"><span class="eyebrow">Rechner</span><h3>Verschleißrechner</h3><span class="meta">Wann Kette, Beläge und Reifen fällig sind</span></a>
       <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Rechner</span><h3>Reifengrößen</h3><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
       <a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Wissen</span><h3>Schaltgruppen</h3><span class="meta">Welche Kette und Kassette zu deiner Gruppe passen</span></a>
+      <a class="t k3 karte" href="/unterhaltskosten/"><span class="eyebrow">Auswertung</span><h3>Unterhaltskosten</h3><span class="meta">Was ein Fahrrad je 1.000 km kostet, nach Radtyp</span></a>
+      <a class="t k4 karte" href="/einbetten/"><span class="eyebrow">Für deine Website</span><h3>Rechner einbetten</h3><span class="meta">Kostenlos, ohne Cookies</span></a>
+      <a class="t k5 karte" href="/e-bike-systeme/"><span class="eyebrow">Wissen</span><h3>E-Bike-Systeme</h3><span class="meta">Welcher Motor, welcher Akku</span></a>
     </div>
   </section>
   <div class="bento anl" style="margin-top:14px">

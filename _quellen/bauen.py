@@ -11,6 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import anleitungen as an
+import auswertung as au
 import extras as ex
 import feedback as fb
 import gruppen as gr
@@ -100,7 +101,10 @@ if __name__ == '__main__':
     schreiben('js/finder.js', lesen('_quellen/finder.js'))
     schreiben('ueber-uns/index.html', se.ueber_uns(len(alle), len(ra.TEILE), int(werte['marken'])))
     schreiben('so-pruefen-wir/index.html', se.methodik(len(alle), len(ra.TEILE), neuestes))
-    seiten += [('/ueber-uns/', an.STAND), ('/so-pruefen-wir/', neuestes)]
+    schreiben('fuer-vereine/index.html', se.fuer_vereine(len(alle), len(an.ANLEITUNGEN)))
+    seiten += [('/ueber-uns/', an.STAND), ('/so-pruefen-wir/', neuestes), ('/fuer-vereine/', an.STAND)]
+    seiten += au.bauen(alle, schreiben, neuestes)
+    schreiben('js/zaehler.js', lesen('_quellen/zaehler.js'))
     schreiben('feedback/index.html', fb.seite())
     schreiben('feedback/feedback.js', lesen('_quellen/feedback.js'))
     seiten.append('/feedback/')
