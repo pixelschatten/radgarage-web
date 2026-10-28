@@ -11,7 +11,7 @@ import json
 import os
 
 SEITE = 'https://radgarage.app'
-STAND = '2026-10-27'
+STAND = '2026-10-28'
 WURZEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 ANLEITUNGEN = [
@@ -247,6 +247,178 @@ ANLEITUNGEN = [
         'video': '',
         'verwandt': ['kette-wechseln', 'kassette-wechseln', 'lenkerband-wickeln'],
     },
+    {
+        'slug': 'kettenverschleiss-messen', 'farbe': 'k4', 'teil': 'Kette', 'stand': '2026-10-28',
+        'h1': 'Kettenverschleiß messen',
+        'titel': 'Kettenverschleiß messen: so erkennst du, wann die Kette fällig ist',
+        'beschreibung': 'Kettenverschleiß in zwei Minuten messen: mit Kettenlehre oder Zollstock. Ab welchem Wert die Kette raus muss und warum sich frühes Wechseln lohnt.',
+        'lead': 'Eine Kette wird mit der Zeit länger, weil Bolzen und Hülsen verschleißen. Wer das rechtzeitig misst, wechselt nur die Kette statt gleich Kassette und Kettenblätter.',
+        'level': 'Leicht', 'zeit': 'ca. 5 Min.', 'minuten': 5, 'werkstatt': 'oft kostenlos',
+        'wann': [
+            'Etwa alle 500 bis 1.000 km, bei Regen, Matsch und E-Bikes öfter.',
+            'Wenn die Schaltung unsauber wird oder die Kette auf einzelnen Ritzeln springt.',
+            'Immer vor dem Kauf einer neuen Kassette: Eine gelängte Kette ruiniert auch die neue.',
+        ],
+        'werkzeug': [('Kettenverschleißlehre', 10)],
+        'schritte': [
+            ('Kette sauber wischen', 'Wisch die Kette mit einem Lappen ab, damit Schmutz das Ergebnis nicht verfälscht. Schalte hinten auf ein mittleres Ritzel, damit die Kette gespannt ist.'),
+            ('Lehre einsetzen', 'Hänge die Lehre mit dem Haken in eine Rolle ein und senke die andere Seite auf die Kette. Lies die Seite für 0,5 % und die für 0,75 % ab.'),
+            ('Ergebnis einordnen', 'Fällt die 0,5-%-Seite ganz ein, ist eine 11- oder 12-fach-Kette fällig. Bei 10-fach und weniger gilt 0,75 % als Grenze. Fällt auch die 0,75-%-Seite ein, prüf die Kassette gleich mit.'),
+            ('Ohne Lehre messen', 'Leg einen Zollstock an einen Bolzen und zähl 24 Glieder ab. Neu messen sie genau 304,8 mm (12 Zoll). Sind es 1,5 mm mehr, ist die Kette um etwa 0,5 % gelängt.'),
+        ],
+        'tipp': 'Miss an zwei, drei Stellen der Kette. Und schreib dir die Kilometer dazu: Dann weißt du beim nächsten Mal, wie schnell deine Kette verschleißt.',
+        'fragen': [
+            ('Warum sieht man den Verschleiß nicht?', 'Die Längung entsteht innen an Bolzen und Hülsen. Von außen sieht eine abgenutzte Kette oft noch gut aus. Nur Messen zeigt, wie weit sie ist.'),
+            ('Wie genau sind einfache Kettenlehren?', 'Für die Entscheidung „wechseln oder nicht“ reichen sie. Sie messen den Abstand über die Rollen, das schließt etwas Rollenverschleiß mit ein und zeigt eher etwas zu früh als zu spät an.'),
+        ],
+        'app': 'Die Radgarage zählt die Kilometer deiner Kette mit und erinnert dich ab etwa 80 % des Richtwerts ans Messen. Danach rechnet sie mit deinem eigenen Messwert weiter.',
+        'suche': 'kettenverschleiß messen fahrrad',
+        'video': '',
+        'verwandt': ['kette-wechseln', 'kette-reinigen-oelen', 'kassette-wechseln'],
+    },
+    {
+        'slug': 'kette-reinigen-oelen', 'farbe': 'k5', 'teil': 'Kette', 'stand': '2026-10-28',
+        'h1': 'Fahrradkette reinigen und ölen',
+        'titel': 'Fahrradkette reinigen und ölen: richtig und sparsam',
+        'beschreibung': 'Fahrradkette in 10 Minuten reinigen und ölen: welches Öl, wie viel, wie oft. So läuft die Kette leise und hält deutlich länger.',
+        'lead': 'Eine saubere, richtig geölte Kette läuft leiser, schaltet besser und hält länger. Wichtig ist nicht viel Öl, sondern Öl an der richtigen Stelle.',
+        'level': 'Leicht', 'zeit': 'ca. 10 Min.', 'minuten': 10, 'werkstatt': 'ca. 5–15 €',
+        'wann': [
+            'Nach jeder Fahrt im Regen oder durch Matsch.',
+            'Wenn die Kette quietscht, rasselt oder sich trocken anfühlt.',
+            'Sonst etwa alle 200 bis 300 km.',
+        ],
+        'werkzeug': [('Kettenöl', 10), ('Kettenbürste oder Reinigungsgerät', 15)],
+        'schritte': [
+            ('Grob abwischen', 'Halt einen Lappen um die Kette und kurbel ein paar Runden rückwärts. Bei leichtem Schmutz reicht das schon.'),
+            ('Bei starkem Schmutz entfetten', 'Mit Kettenbürste oder Reinigungsgerät und etwas Entfetter die Kette säubern, mit Wasser nachspülen und gut trocknen lassen.'),
+            ('Sparsam ölen', 'Gib auf jede Rolle einen kleinen Tropfen, am besten von innen auf das untere Kettentrum, während du langsam rückwärts kurbelst. Danach ein paar Gänge durchschalten.'),
+            ('Einziehen lassen und abwischen', 'Lass das Öl ein paar Minuten einziehen und wisch dann außen alles ab, was übrig ist. Außen hilft Öl nicht, es sammelt nur Schmutz.'),
+        ],
+        'tipp': 'Kein Öl auf Bremsscheiben oder Felgenflanken. Am besten legst du beim Ölen einen Lappen unter die Kette.',
+        'fragen': [
+            ('Welches Öl ist das richtige?', 'Nassschmierstoff hält bei Regen und im Winter besser, zieht aber mehr Schmutz an. Trockenschmierstoff oder Wachs bleibt bei trockenem, staubigem Wetter sauberer, muss dafür öfter nachgelegt werden.'),
+            ('Reicht ein Kriechöl aus der Sprühdose?', 'Kriechöl löst Schmutz, schmiert aber nicht lange. Nimm danach ein richtiges Kettenöl.'),
+        ],
+        'app': 'Die Radgarage merkt sich, wann du die Kette zuletzt gepflegt hast, und zählt die Kilometer bis zum nächsten Messen.',
+        'suche': 'fahrradkette reinigen ölen',
+        'video': '',
+        'verwandt': ['kettenverschleiss-messen', 'kette-wechseln', 'fahrrad-einwintern'],
+    },
+    {
+        'slug': 'schaltung-einstellen', 'farbe': 'k3', 'teil': 'Schaltung', 'stand': '2026-10-28',
+        'h1': 'Kettenschaltung einstellen',
+        'titel': 'Fahrradschaltung einstellen: Schaltwerk Schritt für Schritt',
+        'beschreibung': 'Schaltung springt oder rattert? So stellst du Zugspannung und Anschläge am Schaltwerk ein. Mit Hinweisen zu Di2 und AXS.',
+        'lead': 'Rattert die Kette oder springt sie nicht sauber aufs nächste Ritzel, hilft meist eine Viertelumdrehung an der richtigen Schraube. Mit etwas Geduld klappt das ohne Werkstatt.',
+        'level': 'Mittel', 'zeit': 'ca. 20 Min.', 'minuten': 20, 'werkstatt': 'ca. 10–20 €',
+        'wann': [
+            'Die Kette zögert beim Hochschalten oder springt beim Runterschalten über zwei Ritzel.',
+            'Es rattert in einzelnen Gängen, obwohl Kette und Kassette in Ordnung sind.',
+            'Bei neuen Rädern nach den ersten 100 bis 200 km, weil sich neue Züge noch setzen.',
+        ],
+        'werkzeug': [('Kreuzschlitz-Schraubendreher', 5), ('Innensechskant-Set', 15)],
+        'schritte': [
+            ('Ausgangslage prüfen', 'Hänge das Rad so auf, dass du die Kurbel drehen kannst. Schalte aufs kleinste Ritzel. Prüfe, ob das Schaltauge gerade ist: Ist es verbogen, hilft kein Einstellen.'),
+            ('Zugspannung einstellen', 'Schalte einen Gang hoch. Zögert die Kette, dreh die Einstellschraube am Schaltwerk oder Hebel eine Viertelumdrehung gegen den Uhrzeigersinn. Springt sie zu weit oder rattert beim Runterschalten, im Uhrzeigersinn drehen. Alle Gänge prüfen.'),
+            ('Endanschläge prüfen', 'Die Schraube H begrenzt den Weg nach außen, L den Weg nach innen. Im größten Gang darf das Schaltwerk nicht in Richtung Speichen ausweichen. Nur nachstellen, wenn die Kette am Rand abspringt oder den äußersten Gang nicht erreicht.'),
+            ('Probefahrt', 'Fahr eine Runde und schalte unter leichter Last durch alle Gänge. Kleine Korrekturen an der Zugspannung sind normal.'),
+        ],
+        'tipp': 'Immer nur in Vierteldrehungen arbeiten und nach jeder Änderung testen. Wer viel auf einmal dreht, verliert schnell den Überblick.',
+        'fragen': [
+            ('Und bei elektronischen Schaltungen wie Di2 oder AXS?', 'Dort gibt es keinen Zug. Die Feinjustierung läuft über einen Einstellmodus am Schalter oder in der App des Herstellers. Endanschläge und ein gerades Schaltauge sind aber genauso wichtig.'),
+            ('Warum verstellt sich die Schaltung immer wieder?', 'Neue Züge längen sich in den ersten Wochen. Verstellt sie sich später ständig, sind oft Zug oder Hülle verschlissen oder das Schaltauge ist verbogen.'),
+        ],
+        'app': 'Die Radgarage kennt Schaltwerk und Schalthebel deines Rads und führt im Wartungsheft, wann du zuletzt Züge oder Kette getauscht hast.',
+        'suche': 'schaltung einstellen fahrrad schaltwerk',
+        'video': '',
+        'verwandt': ['kette-wechseln', 'kassette-wechseln', 'kettenverschleiss-messen'],
+    },
+    {
+        'slug': 'scheibenbremse-schleift', 'farbe': 'k1', 'teil': 'Bremse', 'stand': '2026-10-28',
+        'h1': 'Scheibenbremse schleift oder quietscht',
+        'titel': 'Scheibenbremse schleift oder quietscht: was wirklich hilft',
+        'beschreibung': 'Scheibenbremse schleift oder quietscht? Ursache finden, Bremssattel ausrichten, Scheibe und Beläge reinigen. Schritt für Schritt.',
+        'lead': 'Ein Schleifgeräusch an der Scheibenbremse hat meist eine einfache Ursache: ein schief sitzender Sattel, ein nicht sauber eingebautes Laufrad oder eine leicht verzogene Scheibe.',
+        'level': 'Leicht', 'zeit': 'ca. 15 Min.', 'minuten': 15, 'werkstatt': 'ca. 10–20 €',
+        'wann': [
+            'Die Bremse schleift dauerhaft oder in jeder Radumdrehung an einer Stelle.',
+            'Sie quietscht laut, auch bei trockenem Wetter.',
+            'Nach dem Ausbauen des Laufrads schleift es plötzlich.',
+        ],
+        'werkzeug': [('Innensechskant-Set', 15), ('Bremsenreiniger', 8)],
+        'schritte': [
+            ('Ursache eingrenzen', 'Dreh das Rad langsam. Schleift es nur an einer Stelle, ist die Scheibe leicht verzogen. Schleift es gleichmäßig, sitzt meist der Sattel schief oder das Laufrad nicht richtig.'),
+            ('Laufrad richtig einbauen', 'Steckachse oder Schnellspanner lösen, das Rad gerade in die Ausfallenden drücken und die Achse wieder festziehen. Oft ist das Schleifen damit schon weg.'),
+            ('Bremssattel ausrichten', 'Die beiden Schrauben, die den Sattel halten, leicht lösen. Bremshebel ziehen und halten, dann die Schrauben abwechselnd festziehen. Hebel loslassen und prüfen, ob die Scheibe frei läuft.'),
+            ('Gegen Quietschen: reinigen und einbremsen', 'Scheibe mit Bremsenreiniger und sauberem Tuch abwischen. Dann etwa 20 Mal aus mittlerem Tempo kräftig bremsen. Sind die Beläge verölt, helfen nur neue Beläge.'),
+        ],
+        'tipp': 'Fass die Bremsscheibe nie mit den Fingern an. Schon etwas Hautfett reicht, damit sie quietscht.',
+        'fragen': [
+            ('Kann ich eine verzogene Scheibe richten?', 'Leichte Schläge lassen sich mit einem Richtwerkzeug vorsichtig ausbiegen. Ist die Scheibe stark verbogen oder zu dünn, tausch sie aus.'),
+            ('Warum quietscht die Bremse nur bei Nässe?', 'Wasser und Schmutz auf der Scheibe sind die häufigste Ursache und meist harmlos. Hört es nach ein paar Bremsungen nicht auf, Scheibe reinigen.'),
+        ],
+        'app': 'Die Radgarage kennt Bremse, Scheiben und Beläge deines Rads und zeigt dir passenden Ersatz, wenn ein Tausch nötig ist.',
+        'suche': 'scheibenbremse schleift fahrrad',
+        'video': '',
+        'verwandt': ['bremsbelaege-wechseln', 'bremsscheibe-wechseln', 'fruehjahrscheck'],
+    },
+    {
+        'slug': 'fahrrad-einwintern', 'farbe': 'k2', 'teil': 'Pflege', 'stand': '2026-10-28',
+        'h1': 'Fahrrad einwintern',
+        'titel': 'Fahrrad einwintern und lagern: so übersteht es den Winter',
+        'beschreibung': 'Fahrrad und E-Bike richtig einwintern: reinigen, Kette pflegen, Reifen und Akku richtig lagern. Damit im Frühjahr alles startklar ist.',
+        'lead': 'Wer sein Rad über den Winter abstellt, sollte es nicht einfach dreckig in die Ecke stellen. Eine halbe Stunde Pflege schützt vor Rost und spart im Frühjahr Ärger.',
+        'level': 'Leicht', 'zeit': 'ca. 30 Min.', 'minuten': 30, 'werkstatt': 'ca. 50–100 €',
+        'wann': [
+            'Bevor das Rad für mehrere Wochen steht.',
+            'Nach Fahrten auf gesalzenen Straßen, damit das Salz nicht weiter frisst.',
+        ],
+        'werkzeug': [('Kettenöl', 10), ('Standpumpe mit Manometer', 30)],
+        'schritte': [
+            ('Gründlich reinigen', 'Rad mit Wasser, Bürste und mildem Reiniger waschen und trocknen. Keinen Hochdruckreiniger auf Lager, Naben und Steuersatz richten.'),
+            ('Kette und blanke Teile pflegen', 'Kette reinigen und ölen, Überschuss abwischen. Blanke Schrauben und Züge leicht mit etwas Öl gegen Rost schützen, aber nichts an Bremsscheiben oder Felgenflanken.'),
+            ('Reifen und Lagerplatz', 'Reifen auf Nenndruck pumpen, damit sie nicht platt auf einer Stelle stehen. Rad trocken und möglichst frostfrei lagern, am besten hängend.'),
+            ('E-Bike-Akku einlagern', 'Akku herausnehmen und bei Zimmertemperatur trocken lagern, mit etwa 30 bis 60 % Ladung. Alle paar Monate den Ladestand prüfen. Die Angaben deines Herstellers gehen vor.'),
+        ],
+        'tipp': 'Der Winter ist die beste Zeit für die Werkstatt: kurze Wartezeiten und im Frühjahr ein fertiges Rad.',
+        'fragen': [
+            ('Darf das Rad im Winter draußen stehen?', 'Mit einer Abdeckung geht das, aber Feuchtigkeit und Salz setzen Kette und Schrauben zu. Ein trockener Keller oder eine Garage ist besser.'),
+            ('Soll der Akku im E-Bike bleiben?', 'Besser nicht. Kälte schadet dem Akku, und ganz leer gelagert kann er Schaden nehmen. Drinnen bei mittlerer Ladung ist er am besten aufgehoben.'),
+        ],
+        'app': 'Die Radgarage führt dein Wartungsheft und erinnert dich im Frühjahr daran, Kette, Beläge und Reifen zu prüfen.',
+        'suche': 'fahrrad einwintern',
+        'video': '',
+        'verwandt': ['fruehjahrscheck', 'kette-reinigen-oelen', 'reifen-wechseln'],
+    },
+    {
+        'slug': 'fruehjahrscheck', 'farbe': 'k4', 'teil': 'Pflege', 'stand': '2026-10-28',
+        'h1': 'Frühjahrscheck am Fahrrad',
+        'titel': 'Frühjahrscheck am Fahrrad: in 4 Schritten startklar',
+        'beschreibung': 'Fahrrad nach dem Winter startklar machen: Reifen, Bremsen, Antrieb, Schrauben und Licht prüfen. Checkliste für den Frühjahrscheck.',
+        'lead': 'Bevor die Saison losgeht, lohnt sich eine halbe Stunde für dein Rad. Mit dieser Reihenfolge findest du fast alles, was eine Werkstatt beim Frühjahrscheck auch anschaut.',
+        'level': 'Leicht', 'zeit': 'ca. 30 Min.', 'minuten': 30, 'werkstatt': 'ca. 50–100 €',
+        'wann': [
+            'Vor der ersten Ausfahrt nach dem Winter.',
+            'Nach längerer Standzeit, auch im Sommer.',
+        ],
+        'werkzeug': [('Standpumpe mit Manometer', 30), ('Kettenverschleißlehre', 10), ('Innensechskant-Set', 15)],
+        'schritte': [
+            ('Reifen und Laufräder', 'Luftdruck nach Reifenflanke pumpen, Profil und Flanken auf Risse prüfen. Laufräder drehen: Laufen sie rund, sitzen Achsen und Schnellspanner fest, sind alle Speichen gespannt?'),
+            ('Bremsen', 'Belagstärke prüfen, Hebel ziehen: Der Druckpunkt muss fest sein und darf nicht bis zum Lenker gehen. Scheiben oder Felgenflanken sauber und frei von Öl?'),
+            ('Antrieb', 'Kette reinigen, ölen und den Verschleiß messen. Alle Gänge durchschalten und bei Bedarf die Zugspannung nachstellen.'),
+            ('Schrauben, Licht, Akku', 'Vorbau, Lenker und Sattelstütze auf festen Sitz prüfen, mit dem Drehmoment, das auf dem Bauteil steht. Licht und Klingel testen. Beim E-Bike den Akku voll laden und nach Software-Updates schauen.'),
+        ],
+        'tipp': 'Ruckelt der Lenker beim Bremsen oder hat die Kurbel Spiel, lass Steuersatz oder Innenlager in der Werkstatt prüfen. Das sind Lager, die man ungern im Fahren verliert.',
+        'fragen': [
+            ('Wann lohnt sich doch die Werkstatt?', 'Bei schwammigen Bremsen, Spiel in Lagern, einer Federgabel, die lange keinen Service hatte, oder wenn du dir bei Bremsen unsicher bist.'),
+            ('Wie oft im Jahr sollte ich so einen Check machen?', 'Einmal gründlich vor der Saison. Reifendruck, Bremsen und Kette sind bei Vielfahrern am besten jede Woche einen kurzen Blick wert.'),
+        ],
+        'app': 'Die Radgarage kennt alle Teile an deinem Rad und zeigt dir, welche nach Kilometern als Nächstes dran sind.',
+        'suche': 'fahrrad frühjahrscheck',
+        'video': '',
+        'verwandt': ['kettenverschleiss-messen', 'bremsbelaege-wechseln', 'schaltung-einstellen'],
+    },
 ]
 
 PLAY = '<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>'
@@ -323,7 +495,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 4  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 5  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
@@ -534,7 +706,7 @@ def uebersicht(alle):
         ],
     }
     titel = 'Fahrrad-Wartung selbst machen: Anleitungen | Radgarage'
-    beschr = 'Fahrrad selbst warten: Kette, Bremsbeläge, Kassette, Reifen und mehr wechseln. Kurze Anleitungen mit Werkzeug, Dauer und Werkstattpreis.'
+    beschr = 'Fahrrad selbst warten: Kette wechseln und ölen, Bremsbeläge, Schaltung einstellen, Reifen und mehr. Anleitungen mit Werkzeug, Dauer und Werkstattpreis.'
     out = [kopf(titel, beschr, pfad, [liste, brot]), nav]
     out.append(f'''  <main>
   <div class="bento uebersicht">
@@ -546,6 +718,14 @@ def uebersicht(alle):
   </div>
   <section aria-label="Alle Anleitungen" style="margin-top:14px">
     <div class="karten">{"".join(karte(a, 'h2') for a in alle)}</div>
+  </section>
+  <section aria-labelledby="wissen-titel" style="margin-top:14px">
+    <h2 id="wissen-titel" class="zwischen">Rechner und Wissen</h2>
+    <div class="karten">
+      <a class="t k1 karte" href="/verschleissrechner/"><span class="eyebrow">Rechner</span><h3>Verschleißrechner</h3><span class="meta">Wann Kette, Beläge und Reifen fällig sind</span></a>
+      <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Rechner</span><h3>Reifengrößen</h3><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
+      <a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Wissen</span><h3>Schaltgruppen</h3><span class="meta">Welche Kette und Kassette zu deiner Gruppe passen</span></a>
+    </div>
   </section>
   <div class="bento anl" style="margin-top:14px">
     <aside class="t k4 app">

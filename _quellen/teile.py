@@ -3,7 +3,7 @@
 Daten: _quellen/teile-auszug.json (alle geprüften Teile, Abfrage _quellen/teile-auszug.sql) und
 _quellen/katalog-auszug.json (Räder mit ihren Teilen). Gebaut wird über python3 _quellen/bauen.py.
 """
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 
 from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, suchfeld
 from raeder import (ANLEITUNG, FARBEN, NAMEN, RICHTWERT_KM, TEILE, alternativen, preis, shoplinks, slug,
@@ -107,9 +107,17 @@ def teil_seite(t, raeder, verbaut):
     <div class="daten">{daten}</div>
 ''')
     anleitung = ''
+    # Schaltteile verlinken ihre Schaltgruppe, Motor und Akku ihr E-Bike-System (die häufigste an diesen Rädern)
+    feld = 'gruppe' if kat in ('Schaltwerk', 'Schalthebel', 'Kassette', 'Kette', 'Umwerfer') else 'system' if kat in ('Motor', 'Akku') else None
+    if feld and raeder:
+        pfade = Counter(r[feld + '_pfad'] for r in raeder if r.get(feld + '_pfad'))
+        if pfade:
+            p_ = pfade.most_common(1)[0][0]
+            n_ = next(r[feld] for r in raeder if r.get(feld + '_pfad') == p_)
+            anleitung += f'<a class="pill ghost" href="{p_}">{"Schaltgruppe" if feld == "gruppe" else "E-Bike-System"}: {e(n_)}</a>'
     if kat in ANLEITUNG:
         a = next(x for x in ANLEITUNGEN if x['slug'] == ANLEITUNG[kat])
-        anleitung = f'<a class="pill ghost" href="/anleitungen/{a["slug"]}/">Anleitung: {e(a["h1"])}</a>'
+        anleitung += f'<a class="pill ghost" href="/anleitungen/{a["slug"]}/">Anleitung: {e(a["h1"])}</a>'
     out.append(f'''    <section class="t s2 voll teil-kauf" aria-labelledby="kauf-titel">
       <span class="eyebrow">Kaufen und einbauen</span>
       <h2 id="kauf-titel" style="font-size:26px;margin:6px 0 6px">{e(name)} finden</h2>
@@ -193,6 +201,13 @@ def uebersicht_seite(nach_kat):
       {suchfeld('teile')}
     </div>
   </div>
+  <section aria-label="Nach System" style="margin-top:14px">
+    <div class="karten">
+      <a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Nach Gruppe</span><h2>Schaltgruppen</h2><span class="meta">Shimano, SRAM und mehr: was zu deiner Gruppe passt</span></a>
+      <a class="t k4 karte" href="/e-bike-systeme/"><span class="eyebrow">E-Bike</span><h2>Motoren und Akkus</h2><span class="meta">Nach System: Bosch, Shimano, Yamaha und mehr</span></a>
+      <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Reifen</span><h2>Reifengrößen</h2><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
+    </div>
+  </section>
   <section aria-label="Kategorien" style="margin-top:14px">
     <div class="karten">{kacheln}</div>
   </section>
