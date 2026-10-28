@@ -552,6 +552,67 @@ function qaKnopf(text, fn) {
   return b;
 }
 
+// Mögliche Doppelte: beide Teile als gleich große Karten, Unterschiede im Namen markiert, Knöpfe als Leiste darunter
+function qaPaar(p, msg) {
+  const el = (tag, className, textContent = '') => Object.assign(document.createElement(tag), { className, textContent });
+  const li = Object.assign(document.createElement('li'), { className: 'qa-paar' });
+  // Bleiben soll das Teil mit mehr Rädern, bei Gleichstand das mit Preis und Barcodes
+  const wert = (t) => Number(t.raeder) * 100 + (t.preis != null ? 10 : 0) + (t.ean || []).length;
+  const [bleibt, weg] = wert(p.a) >= wert(p.b) ? [p.a, p.b] : [p.b, p.a];
+  const kopf = el('div', 'qa-kopf');
+  kopf.append(el('span', `chip ${p.grund === 'gleicher Barcode' ? 'warn' : ''}`, p.grund), el('span', 'neben', `${p.a.kategorie} · ${p.a.marke}`));
+  const woerter = (t) => new Set(t.name.toLowerCase().split(/\s+/));
+  const karte = (t, anderes) => {
+    const d = el('div', `qa-teil${t === bleibt ? ' bleibt' : ''}`);
+    d.append(el('span', `qa-rolle ${t === bleibt ? 'bleibt' : ''}`, t === bleibt ? 'Bleibt' : 'Geht darin auf'));
+    // Wörter, die im anderen Namen fehlen, hervorheben (aufeinanderfolgende in einer Markierung)
+    const name = el('div', 'name');
+    const andere = woerter(anderes);
+    let markiert = null;
+    for (const w of t.name.split(/(\s+)/)) {
+      if (!/\S/.test(w)) { if (markiert) markiert.zwischen = w; else name.append(w); continue; }
+      if (andere.has(w.toLowerCase())) {
+        if (markiert && markiert.zwischen) name.append(markiert.zwischen);
+        markiert = null;
+        name.append(w);
+      } else if (markiert) {
+        markiert.append((markiert.zwischen || '') + w);
+        markiert.zwischen = '';
+      } else {
+        markiert = el('mark', '', w);
+        name.append(markiert);
+      }
+    }
+    const raeder = Number(t.raeder);
+    const ean = (t.ean || []).length ? `Barcode ${t.ean.join(', ')}` : 'kein Barcode';
+    d.append(name, el('span', 'neben', `${zahlDe(raeder)} ${raeder === 1 ? 'Rad' : 'Räder'} · ${t.preis != null ? euro(t.preis) : 'kein Preis'} · ${ean}`),
+      qaKnopf('Ansehen', () => teilBearbeiten({ id: t.id }, ladeQualitaet)));
+    return d;
+  };
+  const teile = el('div', 'qa-teile');
+  teile.append(karte(p.a, p.b), karte(p.b, p.a));
+  const zusammen = Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'Zusammenführen' });
+  zusammen.addEventListener('click', async () => {
+    if (!window.confirm(`„${weg.marke} ${weg.name}“ in „${bleibt.marke} ${bleibt.name}“ aufgehen lassen?\n\nRäder und Barcodes wandern dorthin.`)) return;
+    try {
+      await rpc('katalog_teile_zusammenfuehren', { p_behalten: bleibt.id, p_weg: weg.id });
+      await ladeQualitaet();
+      meldung(msg, `Zusammengeführt in ${bleibt.marke} ${bleibt.name}.`);
+      ladeVerlauf();
+      ladePapierkorb();
+    } catch (e) { meldung(msg, fehlerText(e), true); }
+  });
+  const leiste = el('div', 'qa-leiste');
+  leiste.append(zusammen, qaKnopf('Kein Duplikat', async () => {
+    try {
+      await rpc('teile_kein_duplikat', { p_a: p.a.id, p_b: p.b.id });
+      li.remove();
+    } catch (e) { meldung(msg, fehlerText(e), true); }
+  }));
+  li.append(kopf, teile, leiste);
+  return li;
+}
+
 function zeichneQualitaet() {
   if (!qaDaten) return;
   for (const b of $$('#qa-ansicht button')) b.setAttribute('aria-checked', String(b.dataset.ansicht === qaAnsicht));
@@ -571,32 +632,7 @@ function zeichneQualitaet() {
     });
   } else if (qaAnsicht === 'doppelt') {
     $('#qa-info').textContent = 'Gleiche Marke und Kategorie mit gleichem oder fast gleichem Namen, oder derselbe Barcode an zwei Teilen. „Zusammenführen“ behält das Teil mit mehr Rädern, alles lässt sich im Verlauf rückgängig machen.';
-    zeilen = qaDaten.doppelt.map((p) => {
-      const li = document.createElement('li');
-      const d = document.createElement('div');
-      const teil = (t) => `${t.marke} ${t.name} (${zahlDe(t.raeder)} ${t.raeder === 1 ? 'Rad' : 'Räder'}${t.preis != null ? ', ' + euro(t.preis) : ''})`;
-      d.append(Object.assign(document.createElement('div'), { className: 'name', textContent: `${teil(p.a)} ↔ ${p.b.name}` }),
-        Object.assign(document.createElement('span'), { className: 'neben', textContent: `${p.a.kategorie} · ${p.grund} · ${teil(p.b)}` }));
-      const [bleibt, weg] = Number(p.a.raeder) >= Number(p.b.raeder) ? [p.a, p.b] : [p.b, p.a];
-      const knoepfe = Object.assign(document.createElement('div'), { className: 'nf-knoepfe' });
-      knoepfe.append(qaKnopf('Zusammenführen', async () => {
-        if (!window.confirm(`„${weg.marke} ${weg.name}“ in „${bleibt.marke} ${bleibt.name}“ aufgehen lassen?\n\nRäder und Barcodes wandern dorthin.`)) return;
-        try {
-          await rpc('katalog_teile_zusammenfuehren', { p_behalten: bleibt.id, p_weg: weg.id });
-          await ladeQualitaet();
-          meldung(msg, `Zusammengeführt in ${bleibt.marke} ${bleibt.name}.`);
-          ladeVerlauf();
-          ladePapierkorb();
-        } catch (e) { meldung(msg, fehlerText(e), true); }
-      }), qaKnopf('Kein Duplikat', async () => {
-        try {
-          await rpc('teile_kein_duplikat', { p_a: p.a.id, p_b: p.b.id });
-          li.remove();
-        } catch (e) { meldung(msg, fehlerText(e), true); }
-      }), qaKnopf('Ansehen', () => teilBearbeiten({ id: p.a.id }, ladeQualitaet)));
-      li.append(d, knoepfe);
-      return li;
-    });
+    zeilen = qaDaten.doppelt.map((p) => qaPaar(p, msg));
   } else {
     $('#qa-info').textContent = 'Ruft die Suche jedes Shops mit „kette“ auf. Manche Shops sperren automatische Abrufe (403), dann bitte im Browser testen.';
     zeilen = qaDaten.shops.map((x) => {
@@ -607,7 +643,7 @@ function zeichneQualitaet() {
         : x.fehler ? `Fehler: ${x.fehler}` : ok ? `funktioniert (${x.status})` : x.status === 403 || x.status === 429 ? `sperrt automatische Prüfung (${x.status}), im Browser testen` : `antwortet mit ${x.status}`;
       d.append(Object.assign(document.createElement('div'), { className: 'name', textContent: x.name }),
         Object.assign(document.createElement('span'), { className: `chip ${ok ? 'gut' : x.wann && !x.laeuft ? 'warn' : ''}`, style: 'padding-right:10px', textContent: text }),
-        ' ', Object.assign(document.createElement('span'), { className: 'neben', textContent: x.wann ? `geprüft ${vorZeit(x.wann)}` : '' }));
+        ' ', Object.assign(document.createElement('span'), { className: 'neben', textContent: x.wann && !x.laeuft ? `geprüft ${vorZeit(x.wann)}` : '' }));
       li.append(d, Object.assign(document.createElement('a'), { className: 'knopf-weich', href: x.url, target: '_blank', rel: 'noopener noreferrer', textContent: 'Im Browser testen' }));
       return li;
     });
