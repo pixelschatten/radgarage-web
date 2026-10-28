@@ -454,13 +454,14 @@ const sicherKnopf = (titel, fn, art = 'pill ghost mini') => {
 
 let crmAnsicht = 'postfach';
 function crmZeigen(ansicht) {
-  crmAnsicht = ['postfach', 'kontakte', 'bausteine', 'kennzahlen'].includes(ansicht) ? ansicht : 'postfach';
+  crmAnsicht = ['postfach', 'kontakte', 'warteliste', 'bausteine', 'kennzahlen'].includes(ansicht) ? ansicht : 'postfach';
   for (const b of $$('#crm-ansicht button')) b.setAttribute('aria-checked', String(b.dataset.ansicht === crmAnsicht));
   for (const d of $$('[data-crm]')) d.hidden = d.dataset.crm !== crmAnsicht;
   const soll = crmAnsicht === 'postfach' ? '#crm' : `#crm/${crmAnsicht}`;
   if (location.hash !== soll) history.replaceState(null, '', soll);
   if (crmAnsicht === 'postfach') ladePostfach();
   if (crmAnsicht === 'kontakte') { ladeSchlagworte(); ladeKontakte(); }
+  if (crmAnsicht === 'warteliste') ladeWarteliste();
   if (crmAnsicht === 'bausteine') ladeBausteine(true);
   if (crmAnsicht === 'kennzahlen') ladeKennzahlen();
 }
@@ -1149,3 +1150,144 @@ async function ladeKennzahlen() {
   c.det.remove();
 }
 for (const b of $$('#kz-zeitraum button')) b.addEventListener('click', () => { kzTage = Number(b.dataset.tage); ladeKennzahlen(); });
+
+// --- Warteliste: Tester und reine Warteliste ansehen und verwalten (crm_warteliste_*) ---
+
+let wlArt = 'alle';
+let wlSucheZeit = null;
+const WL_STATUS = [['tester:iPhone', 'Tester · iPhone'], ['tester:Android', 'Tester · Android'], ['tester:', 'Tester · Handy offen'], ['bescheid:', 'Nur Bescheid sagen']];
+const wlStatusWert = (x) => (x.testzugang ? `tester:${x.plattform || ''}` : 'bescheid:');
+
+// Antwort von Brevo abwarten (pg_net schickt erst nach dem Speichern)
+async function brevoAntwort(anfrage) {
+  for (let i = 0; i < 6; i += 1) {
+    await new Promise((ok) => setTimeout(ok, 900));
+    const r = await rpc('crm_brevo_antwort', { p_anfrage: anfrage }).catch(() => null);
+    if (r && r.status) return r;
+  }
+  return null;
+}
+const brevoText = (r, gut) => (!r ? `${gut} Brevo bestätigt es gleich.` : r.status < 300 ? gut : `Brevo hat abgelehnt (${r.status}). ${r.fehler || ''}`);
+
+async function ladeWarteliste() {
+  for (const b of $$('#wl-art button')) b.setAttribute('aria-checked', String(b.dataset.art === wlArt));
+  let d;
+  try { d = await rpc('crm_warteliste', { p_art: wlArt, p_suche: $('#wl-suche').value || null }); } catch (e) { meldung($('#msg-warteliste'), fehlerText(e), true); return; }
+  const z = d.zahlen;
+  $('#wl-zahl').textContent = `(${zahlDe(z.alle)})`;
+  $('#wl-stand').textContent = `Bestätigte Einträge von radgarage.app${d.stand ? `, mit Brevo abgeglichen ${zeitKurz(d.stand).replace(/\.$/, '')}` : ''}.`;
+  const voll = z.tester >= d.plaetze;
+  $('#wl-kacheln').replaceChildren(
+    kachelSt(voll ? 'k2' : 'k4', 'Testplätze', `${zahlDe(z.tester)} / ${zahlDe(d.plaetze)}`, voll ? 'Alle Plätze vergeben' : `${zahlDe(d.plaetze - z.tester)} frei`),
+    kachelSt('k5', 'iPhone', zahlDe(z.iphone), 'Tester über TestFlight'),
+    kachelSt('k2', 'Android', zahlDe(z.android), `Tester über die Testversion${z.ohne_plattform ? `, ${zahlDe(z.ohne_plattform)} ohne Angabe` : ''}`),
+    kachelSt('k1', 'Nur Bescheid', zahlDe(z.nur_bescheid), 'Mail, wenn die App im Store ist'));
+  const liste = $('#wl-liste');
+  liste.replaceChildren(...d.kontakte.map(wartelisteZeile));
+  if (!d.kontakte.length) liste.innerHTML = `<p class="fine">${$('#wl-suche').value ? 'Nichts gefunden.' : 'Niemand in dieser Gruppe.'}</p>`;
+  const aus = d.ausstehend || [];
+  $('#wl-ausstehend').hidden = !aus.length;
+  $('#wl-ausstehend-liste').replaceChildren(...aus.map((a) => mk('li', {},
+    mk('span', { textContent: a.email }),
+    mk('span', { className: 'fine', textContent: `eingeladen ${zeitKurz(a.erstellt)} · ${a.testzugang ? `Tester${a.plattform ? `, ${a.plattform}` : ''}` : 'Nur Bescheid'}` }))));
+  $('#wl-ausstehend-zahl').textContent = `(${aus.length})`;
+}
+
+function wartelisteZeile(x) {
+  const wahl = mk('select', { className: 'wl-status' }, ...WL_STATUS.map(([w, t]) => new Option(t, w)));
+  wahl.value = wlStatusWert(x);
+  wahl.setAttribute('aria-label', `Status von ${x.email}`);
+  wahl.addEventListener('change', async () => {
+    const [art, plattform] = wahl.value.split(':');
+    wahl.disabled = true;
+    try {
+      const anfrage = await rpc('crm_warteliste_setzen', { p_email: x.email, p_testzugang: art === 'tester', p_plattform: plattform });
+      const r = await brevoAntwort(anfrage);
+      meldung($('#msg-warteliste'), brevoText(r, `${x.email}: jetzt „${WL_STATUS.find(([w]) => w === wahl.value)[1]}“.`), r && r.status >= 300);
+      ladeWarteliste();
+    } catch (e) { meldung($('#msg-warteliste'), fehlerText(e), true); wahl.value = wlStatusWert(x); }
+    wahl.disabled = false;
+  });
+  const weg = sicherKnopf('Löschen', async () => {
+    const anfrage = await rpc('crm_warteliste_loeschen', { p_email: x.email });
+    const r = await brevoAntwort(anfrage);
+    meldung($('#msg-warteliste'), brevoText(r, `${x.email} ist von der Warteliste gelöscht, auch bei Brevo.`), r && r.status >= 300 && r.status !== 404);
+    ladeWarteliste();
+  });
+  weg.title = 'Löscht den Kontakt ganz aus Brevo, wie der Abmeldelink';
+  const person = mk('button', { type: 'button', className: 'wl-person' }, ava(x.email), mk('span', { className: 'pf-mitte' },
+    mk('span', { className: 'pf-wer', textContent: x.email }),
+    mk('span', { className: 'pf-vorschau', textContent: `Seit ${datum(x.eingetragen)}${x.radmarke ? ` · fährt ${x.radmarke}` : ''}` }),
+    mk('span', { className: 'pf-meta' },
+      x.konto ? mk('span', { className: 'zu', textContent: 'Konto' }) : null,
+      x.manuell ? mk('span', { className: 'wv', textContent: 'von Hand', title: `Zustimmung: ${x.manuell}` }) : null,
+      ...(x.schlagworte || []).map((w) => mk('span', { textContent: `#${w}` })))));
+  person.addEventListener('click', () => personDialog(x.email));
+  return mk('div', { className: 'wl-zeile' }, person, mk('div', { className: 'wl-aktionen' }, wahl, weg));
+}
+
+function wartelisteHinzufuegen() {
+  const msg = mk('div', { className: 'msg', role: 'status' });
+  const email = mk('input', { type: 'email', name: 'email', required: true, autocomplete: 'off', placeholder: 'name@beispiel.de' });
+  const art = mk('select', {}, new Option('Testzugang', 'tester'), new Option('Nur Bescheid sagen', 'bescheid'));
+  const plattform = mk('select', {}, new Option('iPhone', 'iPhone'), new Option('Android', 'Android'));
+  const plattformFeld = mk('label', {}, 'Handy', plattform);
+  art.addEventListener('change', () => { plattformFeld.hidden = art.value !== 'tester'; });
+  const marke = mk('input', { type: 'text', maxLength: 60, placeholder: 'freiwillig' });
+  const wegDoi = mk('input', { type: 'radio', name: 'weg', value: 'doi', checked: true });
+  const wegDirekt = mk('input', { type: 'radio', name: 'weg', value: 'direkt' });
+  const beleg = mk('textarea', { rows: 2, maxLength: 500, placeholder: 'z. B. „Hat mich am 28.10. beim Radtreff gebeten, ihn einzutragen.“' });
+  const belegFeld = feldMit('Wann und wie hat die Person zugestimmt?', beleg);
+  belegFeld.hidden = true;
+  for (const r of [wegDoi, wegDirekt]) r.addEventListener('change', () => { belegFeld.hidden = !wegDirekt.checked; beleg.required = wegDirekt.checked; });
+  const senden = mk('button', { type: 'submit', className: 'pill', textContent: 'Hinzufügen' });
+  const f = mk('form', { autocomplete: 'off', className: 'wl-neu' },
+    feldMit('E-Mail-Adresse', email),
+    mk('div', { className: 'zeile' }, mk('label', {}, 'Was möchte die Person?', art), plattformFeld, mk('label', {}, 'Radmarke', marke)),
+    mk('fieldset', { className: 'wl-weg' }, mk('legend', { textContent: 'Wie eintragen?' }),
+      mk('label', { className: 'wl-option' }, wegDoi, mk('span', {}, mk('strong', { textContent: 'Bestätigungsmail schicken (empfohlen)' }),
+        mk('small', { textContent: 'Dieselbe Mail wie bei der Anmeldung auf radgarage.app. Erst nach dem Klick auf den Link steht die Person auf der Liste.' }))),
+      mk('label', { className: 'wl-option' }, wegDirekt, mk('span', {}, mk('strong', { textContent: 'Direkt eintragen' }),
+        mk('small', { textContent: 'Nur, wenn die Person dich ausdrücklich darum gebeten hat. Die Zustimmung wird als Notiz gespeichert.' })))),
+    belegFeld,
+    mk('div', { className: 'aktionen' }, senden), msg);
+  f.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    senden.disabled = true;
+    try {
+      const r = await rpc('crm_warteliste_hinzufuegen', {
+        p_email: email.value, p_testzugang: art.value === 'tester', p_plattform: art.value === 'tester' ? plattform.value : null,
+        p_radmarke: marke.value || null, p_beleg: wegDirekt.checked ? beleg.value : null,
+      });
+      meldung(msg, 'Wird an Brevo geschickt …');
+      const b = await brevoAntwort(r.anfrage);
+      if (b && b.status >= 300) { meldung(msg, brevoText(b, ''), true); senden.disabled = false; return; }
+      dialogZu();
+      meldung($('#msg-warteliste'), r.art === 'eingeladen'
+        ? `Bestätigungsmail an ${email.value} ist raus. Nach dem Klick steht die Person auf der Liste (unten unter „Eingeladen“).`
+        : `${email.value} steht jetzt auf der Warteliste.`);
+      ladeWarteliste();
+    } catch (e) { meldung(msg, fehlerText(e), true); senden.disabled = false; }
+  });
+  dialog('Auf die Warteliste setzen', f);
+}
+
+for (const b of $$('#wl-art button')) b.addEventListener('click', () => { wlArt = b.dataset.art; ladeWarteliste(); });
+$('#wl-suche').addEventListener('input', () => { clearTimeout(wlSucheZeit); wlSucheZeit = setTimeout(ladeWarteliste, 300); });
+$('#wl-neu').addEventListener('click', wartelisteHinzufuegen);
+$('#wl-abgleich').addEventListener('click', async (ev) => {
+  const b = ev.currentTarget;
+  b.disabled = true;
+  meldung($('#msg-warteliste'), 'Frage die Warteliste bei Brevo ab …');
+  try {
+    await rpc('crm_abgleich', { p_einlesen: false });
+    let r = null;
+    for (let i = 0; i < 5 && !(r && r.eingelesen != null); i += 1) {
+      await new Promise((ok) => setTimeout(ok, 2000));
+      r = await rpc('crm_abgleich', { p_einlesen: true });
+    }
+    await ladeWarteliste();
+    meldung($('#msg-warteliste'), r && r.eingelesen != null ? `Abgeglichen: ${zahlDe(r.kontakte)} auf der Warteliste.` : 'Brevo antwortet gerade nicht, der stündliche Abgleich holt es nach.', !(r && r.eingelesen != null));
+  } catch (e) { meldung($('#msg-warteliste'), fehlerText(e), true); }
+  b.disabled = false;
+});
