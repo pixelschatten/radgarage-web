@@ -7,6 +7,7 @@
 let stTage = 90;
 let stDaten = null;
 let stKlicks = null;
+let stWeb = null;
 const SERIE = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)'];
 const zahlDe = (n) => Number(n || 0).toLocaleString('de-DE');
 const prozent = (teil, ganz) => (ganz ? Math.round((teil / ganz) * 100) : 0);
@@ -271,6 +272,7 @@ function kachelSt(farbe, titel, wert, unter) {
 async function ladeStatistik() {
   meldung($('#msg-statistik'), 'Lade …');
   const klicks = rpc('werkbank_klicks', { p_tage: stTage }).catch(() => null);
+  const web = rpc('werkbank_web', { p_tage: stTage }).catch(() => null);
   try {
     stDaten = await rpc('werkbank_statistik', { p_tage: stTage });
     meldung($('#msg-statistik'), '');
@@ -280,6 +282,8 @@ async function ladeStatistik() {
   }
   stKlicks = await klicks;
   zeichneKlicks();
+  stWeb = await web;
+  zeichneWeb();
   if (darf('system')) ladeSystem();
 }
 
@@ -448,6 +452,56 @@ function zeichneKlicks() {
   tabelle(c.det, ['Kategorie', 'Klicks'], ka.map((z) => [z.label, zahlDe(z.wert)]));
 
   if (k.einnahmen) zeichneEinnahmen(ziel, k.einnahmen);
+}
+
+// Aufrufe auf radgarage.app (werkbank_web): Tagessummen je Seite und Herkunftsart, ohne Cookies gezählt von js/zaehler.js
+const WEB_QUELLEN = { direkt: 'Direkt oder App', intern: 'Innerhalb der Website', google: 'Google', bing: 'Bing',
+  'andere-suche': 'Andere Suchmaschinen', ki: 'KI-Assistenten', sozial: 'Soziale Netzwerke', eingebettet: 'Eingebettete Rechner',
+  andere: 'Andere Websites' };
+const WEB_BEREICHE = { start: 'Startseite', raeder: 'Räder', teile: 'Ersatzteile', anleitungen: 'Anleitungen',
+  schaltgruppen: 'Schaltgruppen', 'e-bike-systeme': 'E-Bike-Systeme', reifengroessen: 'Reifengrößen',
+  verschleissrechner: 'Verschleißrechner', unterhaltskosten: 'Unterhaltskosten', einbetten: 'Einbetten' };
+function zeichneWeb() {
+  const ziel = $('#st-web');
+  ziel.replaceChildren();
+  const w = stWeb;
+  if (!w) return;
+  const pro = stTage > 120 ? 'pro Woche' : 'pro Tag';
+  const n = {};
+  for (const t of w.tage || []) n[t.tag] = t;
+  const tage = [];
+  for (let i = stTage - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const tag = d.toLocaleDateString('sv-SE');
+    tage.push({ tag, n: n[tag]?.n || 0, einstiege: n[tag]?.einstiege || 0 });
+  }
+  const erster = tage.findIndex((t) => t.n > 0);
+  const kv = buendeln(erster < 0 ? [] : tage.slice(Math.max(0, Math.min(erster - 1, tage.length - 7))), ['n', 'einstiege']);
+  let c = karte(ziel, `Seitenaufrufe: ${zahlDe(w.summe)}`, `${pro}, davon ${zahlDe(w.einstiege)} Einstiege (von außen kommend). Ohne Cookies, ohne Bots, ohne „Do Not Track“.`, true);
+  zeitDiagramm(c.plot, kv.punkte, [{ name: 'Aufrufe', feld: 'n', farbe: SERIE[0] }, { name: 'Einstiege', feld: 'einstiege', farbe: SERIE[1] }]);
+  tabelle(c.det, [kv.woche ? 'Woche ab' : 'Tag', 'Aufrufe', 'Einstiege'],
+    kv.punkte.filter((p) => p.n).reverse().map((p) => [tagText(p.tag, true), zahlDe(p.n), zahlDe(p.einstiege)]));
+
+  const qu = (w.quellen || []).map((x) => ({ label: WEB_QUELLEN[x.name] || x.name, wert: x.n, tippName: 'Aufrufe' }));
+  c = karte(ziel, 'Woher die Besucher kommen', 'Herkunftsart, vom Browser grob eingeordnet');
+  balken(c.plot, qu, SERIE[1]);
+  tabelle(c.det, ['Herkunft', 'Aufrufe', 'Anteil'], qu.map((z) => [z.label, zahlDe(z.wert), `${prozent(z.wert, w.summe)} %`]));
+
+  const be = (w.bereiche || []).map((x) => ({ label: WEB_BEREICHE[x.name] || x.name, wert: x.n, tippName: 'Aufrufe' }));
+  c = karte(ziel, 'Nach Bereich', 'Erster Teil der Adresse');
+  balken(c.plot, be, SERIE[2]);
+  tabelle(c.det, ['Bereich', 'Aufrufe'], be.map((z) => [z.label, zahlDe(z.wert)]));
+
+  const ei = (w.einstiegsseiten || []).map((x) => ({ label: x.pfad, wert: x.n, tippName: 'Einstiege' }));
+  c = karte(ziel, 'Wo Besucher einsteigen', 'Die 20 Seiten, auf denen Besucher von außen am häufigsten landen');
+  balken(c.plot, ei, SERIE[3]);
+  tabelle(c.det, ['Seite', 'Einstiege'], ei.map((z) => [z.label, zahlDe(z.wert)]));
+
+  const se = (w.seiten || []).map((x) => ({ label: x.pfad, wert: x.n, tippName: 'Aufrufe' }));
+  c = karte(ziel, 'Meistgelesene Seiten', 'Die 20 Seiten mit den meisten Aufrufen', true);
+  balken(c.plot, se, SERIE[0]);
+  tabelle(c.det, ['Seite', 'Aufrufe'], se.map((z) => [z.label, zahlDe(z.wert)]));
 }
 
 const monatText = (iso) => new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' });

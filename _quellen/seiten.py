@@ -114,3 +114,54 @@ def methodik(anzahl_raeder, anzahl_teile, stand):
 ''')
     out.append(FUSS)
     return ''.join(out)
+
+
+def fuer_vereine(anzahl_raeder, anzahl_anleitungen):
+    pfad = '/fuer-vereine/'
+    nav, brot = krumen([('Radgarage', '/'), ('Für Vereine und Werkstätten', pfad)])
+    schema = {'@context': 'https://schema.org', '@type': 'WebPage', 'url': SEITE + pfad, 'inLanguage': 'de',
+              'name': 'Radgarage für Vereine, Werkstätten und Blogs', 'publisher': ORGANISATION}
+    titel = 'Für Vereine, Werkstätten und Blogs | Radgarage'
+    beschr = ('Kostenloser Teilekatalog, Anleitungen und Rechner zum Einbetten: was die Radgarage Radvereinen, '
+              'Werkstätten und Blogs bietet und wie ihr uns erreicht.')
+    out = [kopf(titel, beschr, pfad, [schema, brot]), nav, '  <main>\n  <article class="bento anl">\n']
+    out.append(f'''    <div class="t k4 kopf">
+      <span class="eyebrow">Zusammenarbeit</span>
+      <h1>Für Vereine, Werkstätten und Blogs</h1>
+      <p class="lead">Die Radgarage ist ein offener Teilekatalog mit Anleitungen und Rechnern. Alles hier dürft ihr kostenlos nutzen, verlinken und einbinden, ohne Anmeldung.</p>
+    </div>
+    <div class="daten">
+      <div class="t s2"><span class="eyebrow">Räder im Katalog</span><div class="wert">{tsd(anzahl_raeder)}</div></div>
+      <div class="t s2"><span class="eyebrow">Anleitungen</span><div class="wert">{anzahl_anleitungen}</div></div>
+      <div class="t s2"><span class="eyebrow">Rechner zum Einbetten</span><div class="wert">2</div></div>
+    </div>
+''')
+    out.append(_abschnitt('s1', 'Radvereine und Radtreffs', 'Für Schrauberabend und Saisonstart', '''<ul class="punkte">
+        <li><b>Anleitungen zum Mitmachen:</b> <a href="/anleitungen/kette-wechseln/">Kette wechseln</a>, <a href="/anleitungen/bremsbelaege-wechseln/">Bremsbeläge wechseln</a>, <a href="/anleitungen/fruehjahrscheck/">Frühjahrscheck</a> oder <a href="/anleitungen/fahrrad-einwintern/">Einwintern</a>, Schritt für Schritt mit Werkzeugliste. Gut für den Technikabend oder die Vereinsseite.</li>
+        <li><b>Welches Teil passt?</b> Mitglieder finden ihr Rad nach Marke, Modell und Jahr und sehen, welche Kette, Beläge und Reifen verbaut sind und was als Ersatz passt.</li>
+        <li><b>Rechner auf eurer Website:</b> Den Verschleißrechner oder den Reifengrößen-Rechner bindet ihr mit ein paar Zeilen Code ein. <a href="/einbetten/">Zum Code</a></li>
+      </ul>''', 'verein-titel'))
+    out.append(_abschnitt('k5', 'Werkstätten und Händler', 'Für eure Werkstatt', '''<ul class="punkte">
+        <li><b>Teileliste zum Rad:</b> Kommt jemand mit Modell und Jahr, zeigt die Radseite die ab Werk verbauten Teile mit genauer Bezeichnung, die Schaltgruppe und passende Alternativen.</li>
+        <li><b>Ihr seht Räder jeden Tag:</b> Stimmt eine Angabe nicht, hilft ein kurzer Hinweis über „Stimmt etwas nicht?“ auf der Radseite. Wir prüfen jeden Hinweis.</li>
+        <li><b>Rechner für eure Kunden:</b> Der <a href="/verschleissrechner/">Verschleißrechner</a> zeigt, warum Kette und Beläge regelmäßig fällig sind. Ihr könnt ihn auf eurer Website einbinden.</li>
+      </ul>''', 'werkstatt-titel'))
+    out.append(_abschnitt('k3', 'Blogs und Medien', 'Für Artikel und Ratgeber', '''<ul class="punkte">
+        <li><b>Zahlen zum Zitieren:</b> Unsere <a href="/unterhaltskosten/">Auswertung der Unterhaltskosten</a> rechnet aus über 1.000 Rädern, was Kette, Kassette, Beläge und Reifen je 1.000 km kosten. Verwenden gern mit Quelle „Radgarage (radgarage.app)“.</li>
+        <li><b>Rechner einbetten:</b> passt in jeden Ratgeber zu Verschleiß oder Reifengrößen. <a href="/einbetten/">Zum Code</a></li>
+        <li><b>Fragen zur App oder zum Katalog:</b> Wir antworten gern, auch für Presseanfragen.</li>
+      </ul>''', 'blog-titel'))
+    out.append(f'''    <aside class="t k1 app">
+      <div>
+        <span class="eyebrow">Kontakt</span>
+        <h2 style="margin:6px 0 8px">Schreibt uns</h2>
+        <p>Ihr habt eine Idee, wie die Radgarage eurem Verein oder eurer Werkstatt helfen kann, oder möchtet mehr wissen? Eine kurze Mail reicht.</p>
+      </div>
+      <div class="actions"><a class="pill" href="mailto:kontakt@radgarage.app">kontakt@radgarage.app</a><a class="pill ghost" href="/ueber-uns/">Über uns</a></div>
+    </aside>
+  </article>
+  <p class="hinweis">Kostenlos heißt kostenlos: Für Einträge im Katalog, Links oder das Einbetten zahlt niemand etwas, weder ihr noch Hersteller oder Shops.</p>
+  </main>
+''')
+    out.append(FUSS)
+    return ''.join(out)

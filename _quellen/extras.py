@@ -7,7 +7,7 @@ import json
 import os
 import re
 
-from anleitungen import FUSS, FUSS_INHALT, ICONS, WURZEL, e, kopf, suchfeld
+from anleitungen import FUSS, FUSS_INHALT, ICONS, WURZEL, app_schema, e, kopf, kopf_knopf, store_meta, suchfeld
 from raeder import FARBEN, teilname, tsd, wartungskosten, euro_genau
 from teile import KATEGORIEN
 
@@ -59,6 +59,15 @@ def fuss_angleichen(html):
     return neu
 
 
+def store_angleichen(html):
+    """Store-Start (STORE_LIVE in anleitungen.py): Smart App Banner, App-Markup und Kopf-Knopf in den Handseiten."""
+    neu = re.sub(r'<meta name="apple-itunes-app"[^>]*>\n?', '', html)
+    neu = re.sub(r'(<meta name="theme-color"[^>]*>\n)', lambda m: m.group(1) + store_meta(), neu, count=1)
+    neu = re.sub(r'<!--app-schema-->.*?<!--/app-schema-->', lambda m: f'<!--app-schema-->{app_schema()}<!--/app-schema-->', neu, flags=re.S)
+    neu = re.sub(r'<!--kopf-knopf-->.*?<!--/kopf-knopf-->', lambda m: f'<!--kopf-knopf-->{kopf_knopf()}<!--/kopf-knopf-->', neu, flags=re.S)
+    return neu
+
+
 def beliebt(alle, anzahl=8):
     """Die Reihen mit den meisten Ausstattungen im Katalog als Schnelleinstieg auf der Startseite."""
     reihen = {}
@@ -81,7 +90,7 @@ def beliebt(alle, anzahl=8):
 def handseiten(werte, alle, lesen, schreiben):
     for pfad in HANDSEITEN:
         alt = lesen(pfad)
-        neu = zahlen_einsetzen(fuss_angleichen(alt), werte)
+        neu = zahlen_einsetzen(store_angleichen(fuss_angleichen(alt)), werte)
         neu = re.sub(r'<!--beliebt-->.*?<!--/beliebt-->', lambda m: beliebt(alle), neu, flags=re.S)
         if neu != alt:
             schreiben(pfad, neu)
@@ -91,6 +100,7 @@ def fehlerseite():
     titel = 'Seite nicht gefunden | Radgarage'
     beschr = 'Diese Seite gibt es bei der Radgarage nicht (mehr). Such dein Rad oder dein Teil direkt.'
     k = kopf(titel, beschr, '/404.html', [], robots=True)
+    k = k.replace('<html lang="de">', '<html lang="de" data-zaehlpfad="/404">', 1)  # für js/zaehler.js
     return k + f'''  <main>
   <div class="bento uebersicht">
     <div class="t k1 kopf">
