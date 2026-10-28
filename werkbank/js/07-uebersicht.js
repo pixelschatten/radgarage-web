@@ -132,7 +132,7 @@ function markenZeigen() {
 }
 $('#mk-auf').addEventListener('click', () => { mkOffen = !mkOffen; markenZeigen(); });
 
-// Pflichtteile in der Reihenfolge der Vorlage, mit den Namen, die Marino benutzt (rad_pflichtluecken in katalog-baustellen.sql)
+// Pflichtteile in der Reihenfolge der Vorlage, mit den Namen aus der Vorlage (rad_pflichtluecken in katalog-baustellen.sql)
 const PFLICHT_NAMEN = {
   Innenlager: 'Innenlager', Steckachse: 'Steckachsen', Schaltwerk: 'Schaltwerk', Umwerfer: 'Umwerfer', Schalthebel: 'Hebel',
   Kurbel: 'Kurbel', Kassette: 'Kassette', Kette: 'Kette', Akku: 'Akku', Motor: 'Motor', Bremssattel: 'Bremssättel',

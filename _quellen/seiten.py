@@ -5,8 +5,7 @@ Gebaut wird über python3 _quellen/bauen.py. Zahlen kommen aus dem Katalog, der 
 from anleitungen import FUSS, SEITE, e, kopf, krumen
 from raeder import RICHTWERT_KM, tsd
 
-# Nur der Vorname: der volle Name steht auf Marinos Wunsch nur im Impressum (und in der Datenschutzerklärung, Art. 13 DSGVO)
-GRUENDER = 'Marino'
+# Name und Ort des Anbieters stehen bewusst nur dort, wo das Gesetz sie verlangt: Impressum und Datenschutzerklärung.
 ORGANISATION = {'@type': 'Organization', '@id': f'{SEITE}/#org', 'name': 'Radgarage', 'url': SEITE + '/'}
 
 
@@ -32,7 +31,7 @@ def ueber_uns(anzahl_raeder, anzahl_teile, anzahl_marken):
     out.append(f'''    <div class="t k5 kopf">
       <span class="eyebrow">Über uns</span>
       <h1>Über Radgarage</h1>
-      <p class="lead">Radgarage ist eine App für iPhone und Android und ein offener Teilekatalog für alle, die ihr Rad selbst pflegen oder einfach wissen wollen, was daran verbaut ist. Dahinter steht {GRUENDER} aus Mindelheim.</p>
+      <p class="lead">Radgarage ist eine App für iPhone und Android und ein offener Teilekatalog für alle, die ihr Rad selbst pflegen oder einfach wissen wollen, was daran verbaut ist. Dahinter steht kein Konzern, sondern ein kleines, unabhängiges Projekt.</p>
     </div>
     <div class="daten">
       <div class="t s2"><span class="eyebrow">Räder im Katalog</span><div class="wert">{tsd(anzahl_raeder)}</div></div>
@@ -42,7 +41,7 @@ def ueber_uns(anzahl_raeder, anzahl_teile, anzahl_marken):
 ''')
     out.append(_abschnitt('s1', 'Warum', 'Warum es Radgarage gibt', '''<p>Welche Kette passt an mein Rad? Sind die Bremsbeläge schon fällig? Was kostet mich das Rad im Jahr? Die Antworten stehen verstreut in Datenblättern, Foren und Shops, und jedes Rad ist ein bisschen anders ausgestattet. Radgarage bringt sie an einen Ort: welche Teile an deinem Rad verbaut sind, was als Ersatz passt, wann ein Wechsel fällig ist und ob du ihn selbst schaffst.</p>
       <p>Die Website zeigt den Katalog für jeden, ohne Anmeldung. In der App kommen deine eigenen Kilometer, dein Wartungsheft und die Erinnerungen dazu.</p>''', 'warum-titel'))
-    out.append(_abschnitt('k4', 'Wer', 'Wer dahintersteht', f'''<p>Radgarage ist ein kleines Projekt von {GRUENDER}. Er ist Webdesigner und fährt selbst Rennrad und Gravelbike. Die ersten Räder im Katalog waren seine eigenen, danach kamen Rad für Rad die Modelle der großen Marken dazu.</p>
+    out.append(_abschnitt('k4', 'Wer', 'Wer dahintersteht', '''<p>Hinter App und Katalog steht eine einzelne Person, im Beruf Webdesign, in der Freizeit Rennrad und Gravelbike. Die ersten Räder im Katalog waren die eigenen, danach kamen Rad für Rad die Modelle der großen Marken dazu.</p>
       <p>Mitmachen kann jeder: Auf jeder Radseite gibt es das Formular „Stimmt etwas nicht?“, in der App den Knopf „Verbesserung vorschlagen“. Jeder Hinweis wird geprüft, bevor er im Katalog landet.</p>''', 'wer-titel'))
     out.append(_abschnitt('s2', 'Geld', 'Wie sich Radgarage finanziert', '''<p>Die App ist im Alltag kostenlos. Wer mehr will, kauft einmalig Premium, ohne Abo. Hersteller und Shops bezahlen nicht dafür, im Katalog zu stehen oder als Ersatz genannt zu werden.</p>
       <p>Die Shop-Links auf dieser Website sind einfache Suchlinks. Sollten wir später an einzelnen Links eine kleine Provision verdienen, kennzeichnen wir das direkt am Link.</p>''', 'geld-titel'))
