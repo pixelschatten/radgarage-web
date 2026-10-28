@@ -354,12 +354,19 @@ async function unterhaltung(id) {
   vorschau.setAttribute('sandbox', '');
   const senden = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill klein', textContent: 'Antworten' });
   const vorschauKnopf = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Vorschau' });
+  // Vorschau ersetzt das Antwortfeld an gleicher Stelle, damit Fenster und Knöpfe bleiben, wo sie sind
   vorschauKnopf.addEventListener('click', async () => {
-    if (!vorschau.hidden) { vorschau.hidden = true; vorschauKnopf.textContent = 'Vorschau'; return; }
+    if (!vorschau.hidden) {
+      vorschau.hidden = true; text.hidden = false; vorschauKnopf.textContent = 'Vorschau';
+      text.focus();
+      return;
+    }
     try {
       vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff, p_text: text.value });
+      vorschau.style.height = `${Math.max(220, text.offsetHeight)}px`;
+      text.hidden = true;
       vorschau.hidden = false;
-      vorschauKnopf.textContent = 'Vorschau schließen';
+      vorschauKnopf.textContent = 'Bearbeiten';
     } catch (e) { meldung(msg, fehlerText(e), true); }
   });
   text.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); f.requestSubmit(); } });
@@ -401,7 +408,9 @@ async function unterhaltung(id) {
   const pos = text.value.indexOf('\n\n') + 2;
   text.focus({ preventScroll: true });
   text.setSelectionRange(pos, pos);
+  // Der Browser rollt nach dem Setzen der Schreibmarke noch nach; danach wieder ganz nach oben
   text.scrollTop = 0;
+  requestAnimationFrame(() => { text.scrollTop = 0; });
 }
 
 for (const b of $$('#pf-status button')) b.addEventListener('click', () => { pfStatus = b.dataset.status; ladePostfach(); });
