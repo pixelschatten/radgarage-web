@@ -1960,7 +1960,8 @@
 
   // ----- Teile und Barcodes -----
 
-  const SEITE = 50;
+  // Liste nur nach Suche oder Filter, der ganze Teilekatalog steht im Reiter Katalog
+  const SEITE = 12;
   let tlSeite = 0;
   let tlZaehler = 0;
   let tlTimer = null;
@@ -1968,11 +1969,23 @@
   $('#tl-kategorie').addEventListener('change', () => ladeTeileliste(true));
   $('#tl-ohne').addEventListener('change', () => ladeTeileliste(true));
   $('#tl-mehr').addEventListener('click', () => ladeTeileliste(false));
+  $('#tl-zum-katalog').addEventListener('click', () => { tab('katalog'); katAnsichtSetzen('teile'); });
 
   async function ladeTeileliste(neu) {
     const nr = ++tlZaehler;
     if (neu) tlSeite = 0;
     const woerter = $('#tl-suche').value.toLowerCase().split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}.\-/+]/gu, '')).filter((w) => w.length >= 2);
+    if (neu) {
+      sb.from('teile').select('id', { count: 'exact', head: true }).eq('ean', '{}').then(({ count }) => {
+        $('#tl-ohne-zahl').textContent = count != null ? `(${count.toLocaleString('de-DE')})` : '';
+      });
+    }
+    if (!woerter.length && !$('#tl-kategorie').value && !$('#tl-ohne').checked) {
+      $('#tl-liste').replaceChildren();
+      $('#tl-mehr').hidden = true;
+      $('#tl-hinweis').textContent = '';
+      return;
+    }
     let q = sb.from('teile').select('id, marke, name, kategorie, ean', { count: 'exact' })
       .order('marke').order('name').range(tlSeite * SEITE, tlSeite * SEITE + SEITE - 1);
     for (const w of woerter) q = q.or(`marke.ilike.*${w}*,name.ilike.*${w}*`);
@@ -1981,8 +1994,7 @@
     const { data, error, count } = await q;
     if (nr !== tlZaehler) return;
     if (error) { $('#tl-hinweis').textContent = fehlerText(error); return; }
-    $('#tl-hinweis').textContent = '';
-    $('#tl-zahl').textContent = count != null ? `(${count.toLocaleString('de-DE')})` : '';
+    $('#tl-hinweis').textContent = count != null ? `${count.toLocaleString('de-DE')} Treffer` : '';
     const zeilen = data.map(teilZeile);
     if (neu) $('#tl-liste').replaceChildren(...zeilen); else $('#tl-liste').append(...zeilen);
     if (neu && !data.length) $('#tl-liste').innerHTML = '<li class="leer">Keine Teile gefunden.</li>';

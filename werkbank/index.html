@@ -112,6 +112,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 .raster { display: grid; grid-template-columns: 1.15fr 1fr; gap: 14px; align-items: start; }
 .raster > * { min-width: 0; }
 .konto-raster { align-items: stretch; }
+.teil-raster:has(> [hidden]) { grid-template-columns: minmax(0, 760px); }
 .konto-raster > .ganz { grid-column: 1 / -1; }
 .konto-raster .ganz .rechte-liste { grid-template-columns: 1fr 1fr; column-gap: 36px; }
 .passwort-kachel form { display: grid; grid-template-columns: 1fr 1fr; column-gap: 18px; align-items: start; }
@@ -271,6 +272,7 @@ textarea { resize: vertical; font-size: 15px; }
 .kat-pfad { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; font-size: 15px; }
 .kat-pfad .pfad-link { border: 0; background: transparent; color: var(--muted); font: 700 15px var(--font); cursor: pointer; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
 .kat-pfad .pfad-link:hover { color: var(--ink); }
+.link-knopf { border: 0; background: transparent; padding: 0; color: inherit; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .kat-pfad .pfad-hier { font-weight: 800; color: var(--ink); }
 .kat-pfad .pfad-trenner { color: var(--muted); }
 .kat-gitter { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
@@ -708,18 +710,7 @@ table.rechte td.nein { color: var(--muted); }
     </section>
 
     <section data-panel="teile" hidden>
-      <div class="raster">
-        <div class="t">
-          <h3>Teile im Katalog <span class="opt" id="tl-zahl"></span></h3>
-          <div class="zeile">
-            <label>Suchen<input type="search" id="tl-suche" placeholder="z. B. Shimano Kette" autocomplete="off"></label>
-            <label>Kategorie<select id="tl-kategorie"><option value="">Alle</option></select></label>
-          </div>
-          <label class="haken"><input type="checkbox" id="tl-ohne"> Nur Teile ohne Barcode</label>
-          <p class="fine" id="tl-hinweis"></p>
-          <ul class="liste" id="tl-liste"></ul>
-          <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="tl-mehr" hidden>Weitere laden</button></div>
-        </div>
+      <div class="raster teil-raster">
         <div class="t k4" data-recht="katalog_pflegen">
           <h3>Neues Teil anlegen</h3>
           <p class="fine">Für Teile, die noch an keinem Rad hängen. Sie sind sofort im Katalog.</p>
@@ -740,6 +731,18 @@ table.rechte td.nein { color: var(--muted); }
             <div class="aktionen"><button class="pill" type="submit">Teil anlegen</button></div>
             <div class="msg" role="status"></div>
           </form>
+        </div>
+        <div class="t">
+          <h3>Barcode ergänzen</h3>
+          <p class="fine">Such das Teil, dem ein Barcode fehlt, oder lass dir alle Teile ohne Barcode zeigen. Den ganzen Teilekatalog siehst du im Reiter <button class="link-knopf" type="button" id="tl-zum-katalog">Katalog</button>.</p>
+          <div class="zeile">
+            <label>Suchen<input type="search" id="tl-suche" placeholder="z. B. Shimano Kette" autocomplete="off"></label>
+            <label>Kategorie<select id="tl-kategorie"><option value="">Alle</option></select></label>
+          </div>
+          <label class="haken"><input type="checkbox" id="tl-ohne"> Nur Teile ohne Barcode <span class="opt" id="tl-ohne-zahl"></span></label>
+          <p class="fine" id="tl-hinweis"></p>
+          <ul class="liste" id="tl-liste"></ul>
+          <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="tl-mehr" hidden>Weitere laden</button></div>
         </div>
       </div>
     </section>
@@ -1049,6 +1052,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-1"></script>
+<script src="werkbank.js?v=2026-10-28-2"></script>
 </body>
 </html>
