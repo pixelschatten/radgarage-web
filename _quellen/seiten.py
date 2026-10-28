@@ -5,7 +5,8 @@ Gebaut wird über python3 _quellen/bauen.py. Zahlen kommen aus dem Katalog, der 
 from anleitungen import FUSS, SEITE, e, kopf, krumen
 from raeder import RICHTWERT_KM, tsd
 
-GRUENDER = 'Marino Scholz'
+# Nur der Vorname: der volle Name steht auf Marinos Wunsch nur im Impressum (und in der Datenschutzerklärung, Art. 13 DSGVO)
+GRUENDER = 'Marino'
 ORGANISATION = {'@type': 'Organization', '@id': f'{SEITE}/#org', 'name': 'Radgarage', 'url': SEITE + '/'}
 
 
@@ -23,8 +24,7 @@ def ueber_uns(anzahl_raeder, anzahl_teile, anzahl_marken):
     nav, brot = krumen([('Radgarage', '/'), ('Über uns', pfad)])
     schema = {'@context': 'https://schema.org', '@type': 'AboutPage', 'url': SEITE + pfad, 'name': 'Über Radgarage',
               'inLanguage': 'de',
-              'about': dict(ORGANISATION, founder={'@type': 'Person', 'name': GRUENDER},
-                            email='kontakt@radgarage.app')}
+              'about': dict(ORGANISATION, email='kontakt@radgarage.app')}
     titel = 'Über Radgarage: wer hinter der App steht'
     beschr = ('Radgarage ist eine App und ein offener Teilekatalog für Radfahrer. Wer dahintersteht, warum es sie gibt '
               'und wie sie sich finanziert.')
@@ -55,7 +55,7 @@ def ueber_uns(anzahl_raeder, anzahl_teile, anzahl_marken):
       <div class="actions"><a class="pill" href="/so-pruefen-wir/">Zur Erklärung</a><a class="pill ghost" href="mailto:kontakt@radgarage.app">kontakt@radgarage.app</a></div>
     </aside>
   </article>
-  <p class="hinweis">Anbieter dieser Website: {GRUENDER}, Anschrift im <a href="/impressum.html">Impressum</a>.</p>
+  <p class="hinweis">Wer diese Website anbietet, steht mit Anschrift im <a href="/impressum.html">Impressum</a>.</p>
   </main>
 ''')
     out.append(FUSS)
