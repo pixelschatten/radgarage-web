@@ -340,11 +340,13 @@ async function ladeEigenesBild() {
 }
 
 function tab(name) {
-  const knopf = $(`nav.tabs button[data-tab="${name}"]`);
+  // Konto steckt im Zahnrad oben rechts, alle anderen Bereiche sind Reiter
+  const knopf = name === 'konto' ? $('#konto-auf') : $(`nav.tabs button[data-tab="${name}"]`);
   if (!knopf || knopf.hidden) name = ['uebersicht', 'erfassen', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || (darf('feedback') ? 'feedback' : 'konto');
   // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
   if (location.hash.slice(1).split('/')[0] !== name) history.pushState(null, '', `#${name}`);
   for (const b of $$('nav.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
+  $('#konto-auf').setAttribute('aria-pressed', String(name === 'konto'));
   for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
   if (name === 'freigaben') ladeOffen();
   if (name === 'eigene') ladeEigene();
@@ -359,6 +361,7 @@ function tab(name) {
   if (name === 'konto') ladeSicherheit();
 }
 for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
+$('#konto-auf').addEventListener('click', () => tab('konto'));
 function tabAusAdresse() {
   const [name, unter] = location.hash.slice(1).split('/');
   if (name === 'postfach') { zumPostfach(); return; }
