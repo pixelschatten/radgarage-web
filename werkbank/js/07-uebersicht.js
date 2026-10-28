@@ -737,7 +737,7 @@ async function ladeFuellrunde() {
 let qaDaten = null;
 let qaAnsicht = 'preis';
 let qaAlle = false;
-const KURZ_QA = 15;
+const KURZ_QA = 5;
 
 async function ladeQualitaet() {
   try {
@@ -836,7 +836,9 @@ function zeichneQualitaet() {
       const d = document.createElement('div');
       d.append(Object.assign(document.createElement('div'), { className: 'name', textContent: `${t.marke} ${t.name}` }),
         Object.assign(document.createElement('span'), { className: 'neben', textContent: `${t.kategorie} · an ${zahlDe(t.raeder)} ${t.raeder === 1 ? 'Rad' : 'Rädern'}` }));
-      li.append(d, qaKnopf('Preis eintragen', () => teilBearbeiten({ id: t.id }, ladeQualitaet)));
+      const k = qaKnopf('Preis', () => teilBearbeiten({ id: t.id }, ladeQualitaet));
+      k.append(Object.assign(document.createElement('span'), { className: 'nur-breit', textContent: 'eintragen' }));
+      li.append(d, k);
       return li;
     });
   } else if (qaAnsicht === 'doppelt') {
@@ -862,7 +864,9 @@ function zeichneQualitaet() {
   if (!zeilen.length) ul.innerHTML = '<li class="leer">Nichts gefunden. Sehr gut.</li>';
   const extra = zeilen.length - KURZ_QA;
   $('#qa-auf').hidden = extra <= 0;
-  $('#qa-auf').textContent = qaAlle ? 'Weniger zeigen' : `Alle ${zahlDe(zeilen.length)} zeigen`;
+  // Ohne Preis liefert die Datenbank nur die 100 meistverbauten Teile
+  const nurTop = qaAnsicht === 'preis' && qaDaten.ohne_preis.anzahl > zeilen.length;
+  $('#qa-auf').textContent = qaAlle ? 'Weniger zeigen' : nurTop ? `Die ${zahlDe(zeilen.length)} wichtigsten zeigen` : `Alle ${zahlDe(zeilen.length)} zeigen`;
   $('#qa-auf').setAttribute('aria-expanded', String(qaAlle));
 }
 
