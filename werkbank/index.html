@@ -375,6 +375,15 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .st-streifen svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .st-streifen .st-text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .st-streifen .st-text b { display: block; margin-top: 6px; font-weight: 800; }
+.st-breit { grid-column: 1 / -1; }
+.st-partner { display: grid; grid-template-columns: 52px 1fr auto; gap: 6px 12px; align-items: center; max-width: 420px; padding: 18px; border-radius: 24px; background: var(--surface); color: var(--ink); }
+.st-partner .st-logo { width: 52px; height: 52px; border-radius: 16px; background: #fff; display: grid; place-items: center; overflow: hidden; }
+.st-partner .st-logo img { width: 44px; height: 44px; object-fit: contain; }
+.st-partner small { display: block; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.st-partner b { font-size: 17px; font-weight: 800; }
+.st-partner p { grid-column: 1 / -1; margin: 4px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
+.st-partner.leer { display: block; background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-size: 14px; }
+.st-vorschau.aus .st-partner { opacity: .55; }
 label.schalter { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 label.schalter input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 label.schalter .schiene { flex: none; position: relative; width: 46px; height: 28px; border-radius: 999px; background: var(--line); transition: background .15s; }
@@ -1253,6 +1262,23 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
                 <label><input type="radio" name="premium_aktiv" value="an"><b>Nur nach Kauf</b><span>Premium-Funktionen erst nach dem Kauf für 4,99 € (einmalig).</span></label>
               </div>
               <div class="st-fuss"><button class="pill klein" type="submit">Premium speichern</button></div>
+              <div class="msg" role="status"></div>
+            </form>
+            <form class="st-kachel st-breit" id="f-st-partner" autocomplete="off">
+              <div class="st-titel"><h4>Partner-Kachel</h4><span class="st-status" id="st-s-partner"></span></div>
+              <p class="fine">Ein Sponsor unten in der Garage, gekennzeichnet als „Partner“. Kein Werbenetzwerk: Logo und Text liegen bei uns, gezählt werden nur Tipps auf die Kachel. <span id="st-partner-klicks"></span></p>
+              <label class="schalter"><input type="checkbox" name="partner_aktiv" role="switch"><span class="schiene" aria-hidden="true"></span>Partner-Kachel zeigen</label>
+              <div class="st-paar">
+                <label>Name<input name="partner_name" maxlength="60" placeholder="z. B. Radladen Müller"></label>
+                <label>Link<input type="url" name="partner_link" maxlength="300" placeholder="https://…"></label>
+              </div>
+              <label><span>Text <span class="opt">optional, bis 160 Zeichen</span></span><textarea name="partner_text" rows="2" maxlength="160" placeholder="z. B. Dein Fachhändler in Freiburg: Inspektion in 48 Stunden."></textarea></label>
+              <div class="st-paar">
+                <label><span>Logo <span class="opt">PNG, JPG oder WebP, quadratisch, bis 500 KB</span></span><input type="file" name="partner_logo" accept="image/png,image/jpeg,image/webp"></label>
+                <label><span>Sichtbar bis <span class="opt">optional, z. B. Vertragsende</span></span><input type="date" name="partner_bis"></label>
+              </div>
+              <div class="st-vorschau"><span class="eyebrow" id="st-ve-partner">So sieht es in der App aus</span><div class="st-partner" id="st-v-partner"></div></div>
+              <div class="st-fuss"><button class="pill klein" type="submit">Partner speichern</button><button class="knopf-weich" type="button" id="st-partner-weg" hidden>Partner entfernen</button></div>
               <div class="msg" role="status"></div>
             </form>
           </div>

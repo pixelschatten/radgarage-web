@@ -453,7 +453,7 @@ async function ladeBetrieb() {
 $('#be-neu').addEventListener('click', ladeBetrieb);
 
 // ----- App steuern (app_steuerung_lesen / _setzen, nur Super-Admin) -----
-// Vier Unterkacheln: Mitteilung, Wartung, Pflicht-Update, Premium. Jede speichert nur ihre eigenen Felder.
+// Fünf Unterkacheln: Mitteilung, Wartung, Pflicht-Update, Premium, Partner-Kachel. Jede speichert nur ihre eigenen Felder.
 
 const WARTUNG_STANDARD = 'Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen.';
 const ST_ICONS = {
@@ -503,6 +503,40 @@ function steuerungZeigen() {
   $('#st-update-weg').hidden = !st.mindest_version;
 
   stStatus('#st-s-premium', st.premium_aktiv ? 'Nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
+
+  const fp = $('#f-st-partner').elements;
+  const pBis = st.partner_bis ? new Date(st.partner_bis) : null;
+  if (!st.partner_name) stStatus('#st-s-partner', 'Kein Partner');
+  else if (!st.partner_aktiv) stStatus('#st-s-partner', 'Aus');
+  else if (pBis && pBis < new Date()) stStatus('#st-s-partner', 'Abgelaufen', 'warn');
+  else stStatus('#st-s-partner', pBis ? `Sichtbar bis ${pBis.toLocaleDateString('de-DE')}` : 'Sichtbar', 'an');
+  $('#st-partner-weg').hidden = !st.partner_name;
+  $('#st-partner-klicks').textContent = st.partner_name
+    ? `${zahlDe(st.partner_klicks || 0)} ${st.partner_klicks === 1 ? 'Tipp' : 'Tipps'} seit ${new Date(st.partner_seit || st.geaendert).toLocaleDateString('de-DE')}.` : '';
+  partnerVorschau(fp);
+}
+
+// Vorschau der Partner-Kachel; ein neu gewähltes Logo zeigt sie schon vor dem Speichern
+const PARTNER_LOGOS = 'https://axiirnfgtbmmjlfwlyfe.supabase.co/storage/v1/object/public/partner/';
+let partnerLogoNeu = '';
+function partnerVorschau(fp) {
+  const el = $('#st-v-partner');
+  const name = fp.partner_name.value.trim();
+  $('#st-v-partner').parentElement.classList.toggle('aus', !fp.partner_aktiv.checked);
+  $('#st-ve-partner').textContent = fp.partner_aktiv.checked ? 'So sieht es in der App aus' : 'Vorschau, erscheint erst eingeschaltet';
+  if (!name) { el.className = 'st-partner leer'; el.textContent = 'Noch kein Partner eingetragen.'; return; }
+  el.className = 'st-partner';
+  el.textContent = '';
+  const logo = Object.assign(document.createElement('div'), { className: 'st-logo' });
+  const src = partnerLogoNeu || (steuerung.partner_logo ? PARTNER_LOGOS + steuerung.partner_logo : '');
+  if (src) logo.append(Object.assign(document.createElement('img'), { src, alt: '' }));
+  else logo.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">${ST_ICONS.neu}</svg>`;
+  const kopf = document.createElement('div');
+  kopf.append(Object.assign(document.createElement('small'), { textContent: 'Partner' }), Object.assign(document.createElement('b'), { textContent: name }));
+  const pfeil = Object.assign(document.createElement('span'), { textContent: '›', ariaHidden: 'true' });
+  el.append(logo, kopf, pfeil);
+  const text = fp.partner_text.value.trim();
+  if (text) el.append(Object.assign(document.createElement('p'), { textContent: text }));
 }
 
 function steuerungFuellen(st) {
@@ -519,6 +553,14 @@ function steuerungFuellen(st) {
   fu.mindest_version.value = st.mindest_version || '';
   fu.update_text.value = st.update_text || '';
   $('#f-st-premium').elements.premium_aktiv.value = st.premium_aktiv ? 'an' : 'aus';
+  const fp = $('#f-st-partner').elements;
+  fp.partner_aktiv.checked = !!st.partner_aktiv;
+  fp.partner_name.value = st.partner_name || '';
+  fp.partner_link.value = st.partner_link || '';
+  fp.partner_text.value = st.partner_text || '';
+  fp.partner_bis.value = st.partner_bis ? new Date(st.partner_bis).toLocaleDateString('sv-SE') : '';
+  fp.partner_logo.value = '';
+  partnerLogoNeu = '';
   $('#st-geaendert').textContent = st.von
     ? `Zuletzt geändert ${new Date(st.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} von ${st.von}.` : '';
   steuerungZeigen();
@@ -575,6 +617,42 @@ $('#f-st-premium').addEventListener('submit', (ev) => {
   if (an && !steuerung.premium_aktiv
       && !window.confirm('Premium-Funktionen sind dann nur noch nach Kauf nutzbar (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
   mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Premium gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
+});
+
+$('#f-st-partner').elements.partner_logo.addEventListener('change', (ev) => {
+  const datei = ev.target.files[0];
+  if (partnerLogoNeu) URL.revokeObjectURL(partnerLogoNeu);
+  partnerLogoNeu = datei ? URL.createObjectURL(datei) : '';
+  steuerungZeigen();
+});
+$('#f-st-partner').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const f = ev.target.elements;
+  const an = f.partner_aktiv.checked;
+  const name = f.partner_name.value.trim();
+  if (name && steuerung.partner_name && name !== steuerung.partner_name
+      && !window.confirm(`Neuer Partner „${name}“: Der Zähler für Tipps beginnt wieder bei null. Weiter?`)) return;
+  mitKnopf(ev.target, async (msg) => {
+    const p = {
+      partner_aktiv: an, partner_name: name, partner_link: f.partner_link.value.trim(), partner_text: f.partner_text.value.trim(),
+      partner_bis: f.partner_bis.value ? bisDatum(f.partner_bis.value).toISOString() : '',
+    };
+    const datei = f.partner_logo.files[0];
+    if (datei) {
+      if (datei.size > 524288) throw new Error('Das Logo ist größer als 500 KB.');
+      // Neuer Dateiname bei jedem Hochladen, damit die App kein altes Bild aus dem Zwischenspeicher zeigt
+      const pfad = `${Date.now().toString(36)}.${(datei.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
+      const { error } = await sb.storage.from('partner').upload(pfad, datei, { contentType: datei.type, cacheControl: '86400' });
+      if (error) throw error;
+      p.partner_logo = pfad;
+    }
+    await steuerungSetzen(msg, p, an ? 'Gespeichert. Die Partner-Kachel erscheint beim nächsten Öffnen der App.' : 'Gespeichert. Die Partner-Kachel ist aus.');
+  });
+});
+$('#st-partner-weg').addEventListener('click', () => {
+  if (!window.confirm('Partner entfernen? Die Kachel verschwindet aus der App und der Zähler beginnt beim nächsten Partner neu.')) return;
+  mitKnopf($('#f-st-partner'), (msg) => steuerungSetzen(msg,
+    { partner_aktiv: false, partner_name: '', partner_link: '', partner_text: '', partner_logo: '', partner_bis: '' }, 'Partner entfernt.'));
 });
 
 // ----- Gesucht, aber nicht im Katalog (katalog_nachfrage_liste) -----
