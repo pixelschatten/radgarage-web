@@ -328,7 +328,11 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .steuer-block { border: 1px solid var(--line); border-radius: 16px; padding: 12px 14px; margin: 0; min-width: 0; background: var(--bg); }
 .steuer-block legend { font-weight: 700; padding: 0 6px; }
 .steuer-block textarea { width: 100%; }
+.ablehnen-grund { display: grid; gap: 8px; margin-top: 10px; }
+.ablehnen-grund textarea { width: 100%; }
+.rueckmeldung { border-left: 4px solid var(--warn); }
 .liste li .nf-knoepfe { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 560px) { .liste li:has(> .nf-knoepfe) { grid-template-columns: 1fr; } .liste li .nf-knoepfe { justify-content: flex-start; } }
 .status { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .status li { display: flex; gap: 10px; align-items: baseline; }
 .status li b { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; background: var(--ink); color: var(--bg); }
@@ -926,12 +930,45 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         <div class="aktionen" style="margin-top:12px"><button class="pill" type="submit">Speichern</button><button class="knopf-weich" type="button" id="steuer-neu">Neu laden</button></div>
         <div class="msg" role="status"></div>
       </form>
+      <!-- Store-Start und Testphase (nur Super-Admin, store-start.sql) -->
+      <div class="t k5" id="tester" data-recht="system" style="margin-bottom:14px">
+        <h3>Store-Start und Tester</h3>
+        <p class="fine">Testplätze aus der Warteliste, wer davon die App nutzt, Googles Pflicht für den geschlossenen Test und TestFlight. Was nur in der Play Console und in App Store Connect steht, trägst du unten ein.</p>
+        <div class="be-gitter" id="ts-gitter"></div>
+        <div class="aktionen" style="margin-top:12px"><button class="pill klein" type="button" id="ts-schenken">Premium an alle Tester verschenken</button></div>
+        <details class="be-details">
+          <summary>Zahlen aus den Stores eintragen</summary>
+          <form id="f-tester" autocomplete="off">
+            <div class="zeile">
+              <label>Geschlossener Test bei Google seit<input type="date" name="google_start"></label>
+              <label>Tester bei Google (Play Console)<input type="number" name="google_tester" min="0" max="10000" inputmode="numeric"></label>
+              <label>Tester in TestFlight<input type="number" name="testflight_tester" min="0" max="10000" inputmode="numeric"></label>
+              <label>TestFlight-Plätze<input type="number" name="testflight_grenze" min="1" max="10000" inputmode="numeric"></label>
+              <label>Testplätze aus der Warteliste<input type="number" name="testplaetze" min="1" max="10000" inputmode="numeric"></label>
+            </div>
+            <label>Notiz<textarea name="notiz" rows="2" maxlength="1000"></textarea></label>
+            <div class="aktionen" style="margin-top:10px"><button class="pill klein" type="submit">Speichern</button></div>
+            <div class="msg" role="status"></div>
+          </form>
+        </details>
+        <div class="msg" role="status" id="msg-tester"></div>
+      </div>
       <div class="t k3" style="margin-bottom:14px">
         <h3>Heute zu tun</h3>
         <div class="aufgaben" id="ue-aufgaben"><p class="fine">Lade …</p></div>
       </div>
       <div class="kacheln" id="ue-kacheln"></div>
       <div class="msg" role="status" id="msg-uebersicht"></div>
+      <div class="t k4" style="margin-top:14px" id="fuellrunde">
+        <h3>Tägliche Füllrunde</h3>
+        <p class="fine" id="fr-heute">Lade …</p>
+        <div id="fr-bericht"></div>
+        <div class="raster" style="margin-top:10px">
+          <div><p class="eyebrow">Neue Räder je Tag</p><div class="plot" id="fr-tage"></div></div>
+          <div><p class="eyebrow">Diese Woche je Marke</p><div class="plot" id="fr-marken"></div></div>
+        </div>
+        <div class="msg" role="status" id="msg-fuellrunde"></div>
+      </div>
       <div class="raster" style="margin-top:14px">
         <div class="t">
           <h3>Baustellen <span class="opt" id="bs-zahl"></span></h3>
@@ -961,6 +998,19 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <ul class="liste" id="nf-vorschlaege" style="margin-top:10px"></ul>
         </details>
         <div class="msg" role="status" id="msg-nachfrage"></div>
+      </div>
+      <div class="t k2" style="margin-top:14px" id="qualitaet">
+        <h3>Katalog-Qualität</h3>
+        <p class="fine">Was die App besser macht: Richtpreise an häufig verbauten Teilen, keine doppelten Teile, funktionierende Shop-Links.</p>
+        <div class="segment" role="radiogroup" aria-label="Prüfung" id="qa-ansicht" style="margin:6px 0 12px; flex-wrap: wrap">
+          <button type="button" role="radio" data-ansicht="preis" aria-checked="true">Ohne Preis <span class="opt" id="qa-zahl-preis"></span></button>
+          <button type="button" role="radio" data-ansicht="doppelt" aria-checked="false">Mögliche Doppelte <span class="opt" id="qa-zahl-doppelt"></span></button>
+          <button type="button" role="radio" data-ansicht="shops" aria-checked="false">Shop-Links</button>
+        </div>
+        <p class="fine" id="qa-info"></p>
+        <ul class="liste" id="qa-liste"></ul>
+        <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="qa-auf" hidden aria-expanded="false" aria-controls="qa-liste"></button><button class="knopf-weich" type="button" id="qa-pruefen" hidden>Shop-Links jetzt prüfen</button></div>
+        <div class="msg" role="status" id="msg-qualitaet"></div>
       </div>
       <div class="t k5" style="margin-top:14px">
         <h3>Shops</h3>
@@ -1285,6 +1335,11 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       </div>
       <div class="msg" role="status" id="msg-freigaben"></div>
       <div class="karten" id="offen"></div>
+      <details class="t" id="helfer-team" data-recht="katalog_pflegen" style="margin-top:14px">
+        <summary><strong>Helfer-Team</strong> <span class="fine" id="ht-zahl"></span></summary>
+        <p class="fine" style="margin-top:8px">Je Person: freigegebene, offene und abgelehnte Räder, Ergänzungen und wann sie zuletzt etwas gemacht hat. Quote = freigegeben von allen entschiedenen Rädern.</p>
+        <div class="tabelle-scroll"><table><thead><tr><th>Wer</th><th>Räder live</th><th>Offen</th><th>Abgelehnt</th><th>Quote</th><th>Ergänzungen</th><th>Zuletzt</th></tr></thead><tbody id="ht-liste"></tbody></table></div>
+      </details>
       <div id="app-box" hidden>
         <p class="fine" id="app-info">Was Nutzer in der App melden. Gleiche Meldungen von mehreren Geräten stehen zusammen, die Zahl zeigt, wie viele Geräte es gemeldet haben.</p>
         <div class="segment" role="radiogroup" aria-label="Art" id="app-filter" style="margin:4px 0 14px; flex-wrap: wrap">
@@ -1323,6 +1378,11 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
     <section data-panel="eigene" hidden>
       <p class="fine">Diese Räder und Ergänzungen warten noch auf die Freigabe. Bis dahin sieht sie niemand in der App.</p>
       <div class="karten" id="eigene"></div>
+      <div class="t" style="margin-top:14px" id="rueckmeldungen-box" hidden>
+        <h3>Abgelehnt, mit Rückmeldung</h3>
+        <p class="fine">Was in den letzten 90 Tagen nicht übernommen wurde, und warum.</p>
+        <ul class="liste" id="rueckmeldungen"></ul>
+      </div>
     </section>
 
   </main>
@@ -1345,6 +1405,17 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-9"></script>
+<!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
+<script src="js/01-kern.js?v=2026-10-28-10"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-10"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-10"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-10"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-10"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-10"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-10"></script>
+<script src="js/08-konten.js?v=2026-10-28-10"></script>
+<script src="js/09-katalog.js?v=2026-10-28-10"></script>
+<script src="js/10-statistik.js?v=2026-10-28-10"></script>
+<script src="js/11-start.js?v=2026-10-28-10"></script>
 </body>
 </html>

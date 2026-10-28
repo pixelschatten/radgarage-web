@@ -1,0 +1,29 @@
+# Prüft die Werkbank-Teile bei jeder Änderung (Revision Werkbank Nr. 14): Syntax jeder Datei und ob ein Teil beim Laden
+# etwas aus einem späteren Teil braucht. Siehe _werkzeuge/werkbank-pruefen.js.
+name: Werkbank prüfen
+
+on:
+  pull_request:
+    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js']
+  push:
+    branches: [main]
+    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js']
+
+permissions:
+  contents: read
+
+jobs:
+  pruefen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax
+        run: for f in werkbank/js/*.js; do node --check "$f"; done
+      - name: Reihenfolge und Namen
+        run: |
+          npm i --no-save --silent acorn@8 acorn-walk@8
+          node _werkzeuge/werkbank-pruefen.js
