@@ -351,7 +351,8 @@
     if (name === 'uebersicht') ladeUebersicht();
     if (name === 'statistik') ladeStatistik();
     if (name === 'feedback') ladeFeedback();
-    if (name === 'konten') { ladeKonten(); if (darf('konten_betreuen')) ladePostfach(); }
+    if (name === 'konten') ladeKonten();
+    if (name === 'crm') ladePostfach();
     if (name === 'konto') ladeSicherheit();
   }
   for (const b of $$('nav.tabs button')) b.addEventListener('click', () => tab(b.dataset.tab));
@@ -1607,10 +1608,9 @@
   }
 
   for (const b of $$('#pf-status button')) b.addEventListener('click', () => { pfStatus = b.dataset.status; ladePostfach(); });
-  // Links aus der Morgenmail (#postfach) führen in den Reiter Konten zur Kachel
+  // Links aus der Morgenmail (#postfach) führen in den Reiter CRM
   function zumPostfach() {
-    tab('konten');
-    $('#postfach').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    tab('crm');
   }
   $('#pf-neu-laden').addEventListener('click', ladePostfach);
   $('#f-signatur').addEventListener('submit', (ev) => {
@@ -2745,7 +2745,7 @@
         verlauf.replaceChildren(...(liste || []).slice(0, 8).map((m) => {
           const li = document.createElement('li');
           li.append(Object.assign(document.createElement('a'), {
-            href: '#postfach', className: 'fine', textContent: `${datum(m.letzte)}: „${m.betreff || '(ohne Betreff)'}“${m.ungelesen ? ' · neu' : ''}`,
+            href: '#crm', className: 'fine', textContent: `${datum(m.letzte)}: „${m.betreff || '(ohne Betreff)'}“${m.ungelesen ? ' · neu' : ''}`,
             onclick: (ev) => { ev.preventDefault(); dialogZu(); unterhaltung(m.id); },
           }));
           return li;

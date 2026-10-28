@@ -569,8 +569,9 @@ table.rechte td.nein { color: var(--muted); }
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teile</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
+      <button type="button" role="tab" data-tab="crm" aria-selected="false" data-recht="konten_betreuen">CRM<span class="zahl" id="zahl-postfach" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
-      <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten<span class="zahl" id="zahl-postfach" hidden></span></button>
+      <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
       <button type="button" role="tab" data-tab="konto" aria-selected="false">Konto</button>
     </nav>
 
@@ -818,28 +819,6 @@ table.rechte td.nein { color: var(--muted); }
     <!-- Registrierte Konten (Admin) -->
     <section data-panel="konten" hidden>
       <div class="kacheln" id="kt-kacheln" data-recht="konten_sehen"></div>
-      <!-- E-Mail-CRM: Mails an Konten, Antworten darauf und Mails an kontakt@ (postfach.sql) -->
-      <div class="t k5 crm-kachel" id="postfach" data-recht="konten_betreuen" style="margin-top:14px">
-        <div class="mail-kachel">
-          <div><h3>E-Mail-CRM <span class="zahl-klein" id="pf-zahl-neu" hidden></span></h3><p class="fine">Persönliche Mails im Radgarage-Design und die Antworten darauf, je Person als Unterhaltung.</p></div>
-          <div class="aktionen" style="margin:0">
-            <button class="pill" type="button" id="mail-neu">E-Mail schreiben</button>
-            <button class="pill ghost klein" type="button" id="pf-neu-laden">Neu laden</button>
-          </div>
-        </div>
-        <div class="st-kopf" style="margin-top:12px">
-          <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
-            <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
-            <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
-            <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
-            <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
-          </div>
-          <input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off" aria-label="Unterhaltungen suchen">
-        </div>
-        <div class="msg" role="status" id="msg-postfach"></div>
-        <div class="karten" id="pf-liste"></div>
-        <p class="fine" style="margin-top:10px">Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
-      </div>
       <details class="t k4 helfer-box" id="helfer-box" style="margin-top:14px" data-recht="rollen">
         <summary><h3 id="helfer-titel">Katalog-Helfer freischalten</h3><span class="fine" id="helfer-zusammenfassung"></span></summary>
         <div class="raster" style="margin-top:12px">
@@ -873,6 +852,32 @@ table.rechte td.nein { color: var(--muted); }
         <div class="msg" role="status" id="msg-konten"></div>
         <ul class="liste" id="kt-liste" style="margin-top:12px"></ul>
         <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="kt-mehr" hidden>Weitere zeigen</button><button class="knopf-weich" type="button" id="csv-konten">Liste als CSV</button></div>
+      </div>
+    </section>
+
+    <!-- CRM: vorerst der Mail-Client, später weitere Werkzeuge rund um Nutzerkontakt -->
+    <section data-panel="crm" hidden>
+      <!-- E-Mail-CRM: Mails an Konten, Antworten darauf und Mails an kontakt@ (postfach.sql) -->
+      <div class="t k5 crm-kachel" id="postfach" data-recht="konten_betreuen">
+        <div class="mail-kachel">
+          <div><h3>E-Mail-CRM <span class="zahl-klein" id="pf-zahl-neu" hidden></span></h3><p class="fine">Persönliche Mails im Radgarage-Design und die Antworten darauf, je Person als Unterhaltung.</p></div>
+          <div class="aktionen" style="margin:0">
+            <button class="pill" type="button" id="mail-neu">E-Mail schreiben</button>
+            <button class="pill ghost klein" type="button" id="pf-neu-laden">Neu laden</button>
+          </div>
+        </div>
+        <div class="st-kopf" style="margin-top:12px">
+          <div class="segment" role="radiogroup" aria-label="Status" id="pf-status">
+            <button type="button" role="radio" data-status="offen" aria-checked="true">Offen <span class="opt" id="pf-zahl-offen"></span></button>
+            <button type="button" role="radio" data-status="erledigt" aria-checked="false">Erledigt</button>
+            <button type="button" role="radio" data-status="spam" aria-checked="false">Spam</button>
+            <button type="button" role="radio" data-status="" aria-checked="false">Alle</button>
+          </div>
+          <input type="search" id="pf-suche" placeholder="Adresse, Name oder Betreff" autocomplete="off" aria-label="Unterhaltungen suchen">
+        </div>
+        <div class="msg" role="status" id="msg-postfach"></div>
+        <div class="karten" id="pf-liste"></div>
+        <p class="fine" style="margin-top:10px">Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
       </div>
     </section>
 
@@ -1044,6 +1049,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-27-18"></script>
+<script src="werkbank.js?v=2026-10-28-1"></script>
 </body>
 </html>
