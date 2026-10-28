@@ -31,7 +31,10 @@ async function ladePostfach() {
       $('#pf-zahl-offen').textContent = pfListe.length ? `(${pfListe.length})` : '';
       postfachZahlSetzen(pfListe.filter((u) => u.ungelesen > 0).length);
     }
+    // Auswahl auf das Sichtbare beschränken
+    for (const id of [...pfGewaehlt]) if (!pfListe.some((u) => u.id === id)) pfGewaehlt.delete(id);
     $('#pf-liste').replaceChildren(...pfListe.map(postfachKarte));
+    pfLeiste();
     if (!pfListe.length) {
       $('#pf-liste').innerHTML = `<p class="fine">${{ offen: 'Nichts offen.', erledigt: 'Noch nichts erledigt.', spam: 'Kein Spam.' }[pfStatus] || 'Noch keine Unterhaltungen.'}</p>`;
     }
@@ -66,7 +69,12 @@ function postfachKarte(u) {
   const meta = [];
   if (u.zugewiesen_email) meta.push(Object.assign(document.createElement('span'), { className: 'zu', textContent: `→ ${u.zugewiesen_email.split('@')[0]}` }));
   if (u.wiedervorlage) meta.push(Object.assign(document.createElement('span'), { className: 'wv', textContent: `⏰ ${new Date(u.wiedervorlage).toLocaleString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`, title: `Wiedervorlage ${zeitDe(u.wiedervorlage)}` }));
-  if (u.ordner_name && pfOrdner !== u.ordner) meta.push(Object.assign(document.createElement('span'), { className: 'or', textContent: `📁 ${u.ordner_name}` }));
+  if (u.ordner_name && pfOrdner !== u.ordner) {
+    const or = mk('span', { className: 'or', textContent: u.ordner_name });
+    or.style.setProperty('--of', ordnerFarbe(u.ordner));
+    or.insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 24 24" aria-hidden="true">${ORDNER_SVG.ordner}</svg>`);
+    meta.push(or);
+  }
   for (const w of u.schlagworte || []) meta.push(Object.assign(document.createElement('span'), { textContent: `#${w}` }));
   if (u.zuletzt) {
     mitte.append(Object.assign(document.createElement('span'), {
@@ -96,8 +104,96 @@ function postfachKarte(u) {
     } catch (e) { meldung($('#msg-postfach'), fehlerText(e), true); schalter.disabled = false; }
   });
   const eintrag = Object.assign(document.createElement('div'), { className: 'pf-eintrag' });
-  eintrag.append(zeile, schalter);
+  eintrag.append(pfHaken(u), zeile, schalter);
   return eintrag;
+}
+
+// ----- Mehrere Unterhaltungen ankreuzen und gemeinsam bearbeiten (gelesen, Status, Ordner, löschen) -----
+
+const pfGewaehlt = new Set();
+let pfLetzterHaken = null;
+function pfHaken(u) {
+  const h = Object.assign(document.createElement('input'), { type: 'checkbox', className: 'wahl', checked: pfGewaehlt.has(u.id), value: String(u.id) });
+  h.setAttribute('aria-label', `${u.name || u.email} auswählen`);
+  h.title = 'Auswählen (mit Umschalttaste alle bis hierher)';
+  h.addEventListener('click', (ev) => {
+    // Mit Umschalt alles zwischen dem letzten Haken und diesem
+    const ids = pfListe.map((x) => x.id);
+    const von = ids.indexOf(pfLetzterHaken);
+    const bis = ids.indexOf(u.id);
+    for (const id of ev.shiftKey && von >= 0 ? ids.slice(Math.min(von, bis), Math.max(von, bis) + 1) : [u.id]) {
+      if (h.checked) pfGewaehlt.add(id); else pfGewaehlt.delete(id);
+    }
+    pfLetzterHaken = u.id;
+    pfLeiste();
+  });
+  return h;
+}
+
+// Für alle gewählten nacheinander ausführen, höchstens vier Anfragen gleichzeitig
+async function pfSammel(fn, text) {
+  const ids = [...pfGewaehlt];
+  if (!ids.length) return;
+  const warte = [...ids];
+  let fehler = 0;
+  let letzter = null;
+  const arbeiter = async () => {
+    while (warte.length) {
+      const id = warte.shift();
+      try { await fn(id); } catch (e) { fehler++; letzter = e; }
+    }
+  };
+  await Promise.all([arbeiter(), arbeiter(), arbeiter(), arbeiter()]);
+  pfGewaehlt.clear();
+  await ladePostfach();
+  postfachZahl();
+  const n = ids.length - fehler;
+  meldung($('#msg-postfach'), `${n === 1 ? 'Eine Unterhaltung' : `${zahlDe(n)} Unterhaltungen`} ${text}.${fehler ? ` ${zahlDe(fehler)} hat nicht geklappt: ${fehlerText(letzter)}` : ''}`, !!fehler);
+}
+
+function pfLeiste() {
+  let leiste = $('#pf-auswahl');
+  if (!leiste) {
+    leiste = mk('div', { id: 'pf-auswahl', className: 'wort-leiste pf-auswahl', hidden: true });
+    leiste.setAttribute('role', 'toolbar');
+    leiste.setAttribute('aria-label', 'Ausgewählte Unterhaltungen');
+    $('#pf-liste').before(leiste);
+  }
+  for (const h of $$('#pf-liste input.wahl')) h.checked = pfGewaehlt.has(Number(h.value));
+  leiste.hidden = !pfGewaehlt.size;
+  if (!pfGewaehlt.size) { leiste.replaceChildren(); return; }
+  const knopf = (titel, fn, art = 'pill ghost mini') => mk('button', { type: 'button', className: art, textContent: titel, onclick: fn });
+  const setzen = (status, text) => () => pfSammel((id) => rpc('postfach_setzen', { p_id: id, p_status: status }), text);
+  const gelesen = (ja) => () => pfSammel((id) => rpc('postfach_gelesen', { p_id: id, p_gelesen: ja }), ja ? 'als gelesen markiert' : 'als ungelesen markiert');
+  const teile = [mk('strong', { textContent: `${zahlDe(pfGewaehlt.size)} ausgewählt` })];
+  if (pfListe.some((u) => !pfGewaehlt.has(u.id))) {
+    teile.push(mk('button', { type: 'button', className: 'link-knopf', textContent: `Alle ${zahlDe(pfListe.length)} wählen`,
+      onclick: () => { for (const u of pfListe) pfGewaehlt.add(u.id); pfLeiste(); } }));
+  }
+  const gewaehlt = pfListe.filter((u) => pfGewaehlt.has(u.id));
+  if (gewaehlt.some((u) => u.ungelesen > 0)) teile.push(knopf('Gelesen', gelesen(true), 'pill mini'));
+  if (gewaehlt.some((u) => !(u.ungelesen > 0))) teile.push(knopf('Ungelesen', gelesen(false)));
+  if (pfStatus !== 'erledigt') teile.push(knopf('✓ Erledigt', setzen('erledigt', 'erledigt')));
+  if (['erledigt', 'spam', ''].includes(pfStatus)) teile.push(knopf(pfStatus === 'spam' ? 'Kein Spam' : 'Wieder öffnen', setzen('offen', 'wieder geöffnet')));
+  if (pfStatus !== 'spam') teile.push(knopf('Spam', setzen('spam', 'als Spam abgelegt')));
+  // Verschieben in einen Ordner oder aus dem Ordner heraus
+  const ziel = mk('select', { className: 'pf-verschieben' });
+  ziel.setAttribute('aria-label', 'In Ordner verschieben');
+  ziel.append(new Option('In Ordner …', ''), ...ordnerListe.map((o) => new Option(o.name, String(o.id))), new Option('Aus dem Ordner nehmen', 'kein'));
+  ziel.addEventListener('change', () => {
+    if (!ziel.value) return;
+    const id = ziel.value === 'kein' ? null : Number(ziel.value);
+    const o = ordnerListe.find((x) => x.id === id);
+    pfSammel((pid) => rpc('postfach_ablegen', { p_id: pid, p_ordner: id }), id ? `in „${o ? o.name : 'Ordner'}“ abgelegt` : 'aus dem Ordner genommen');
+  });
+  if (ordnerListe.length) teile.push(ziel);
+  // Löschen erst beim zweiten Klick
+  const weg = knopf('Löschen', () => {
+    if (!weg.dataset.sicher) { weg.dataset.sicher = '1'; weg.textContent = `Wirklich ${zahlDe(pfGewaehlt.size)} löschen?`; weg.classList.add('gefahr'); return; }
+    pfSammel((id) => rpc('postfach_loeschen', { p_id: id }), 'gelöscht');
+  });
+  teile.push(weg, knopf('Auswahl aufheben', () => { pfGewaehlt.clear(); pfLeiste(); }, 'link-knopf'));
+  leiste.replaceChildren(...teile);
 }
 
 // ----- Mailtext lesbar aufbereiten: Absätze, Listen, Links, eingeklappter Verlauf, leise Signatur -----
@@ -802,6 +898,18 @@ function werkzeugLeiste(u, neuLaden) {
 
 let pfOrdner = null;
 let ordnerListe = [];
+// Jeder Ordner bekommt eine der fünf Kachelfarben, das Symbol ist ein Ordner als Linie wie die übrigen Werkbank-Symbole
+const ordnerFarbe = (id) => (id ? `var(--k${((id - 1) % 5) + 1})` : 'var(--surface2)');
+const ORDNER_SVG = {
+  ordner: '<path d="M3.5 7.5a2 2 0 0 1 2-2h3.6a1.5 1.5 0 0 1 1.1.45L11.8 7.5h6.7a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 10h17"/>',
+  alle: '<path d="M3.5 13.5l2.4-6.6a2 2 0 0 1 1.9-1.4h8.4a2 2 0 0 1 1.9 1.4l2.4 6.6v3.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/><path d="M3.5 13.5h4.8l1.4 2.2h4.6l1.4-2.2h4.8"/>',
+};
+function ordnerSymbol(id, art = id ? 'ordner' : 'alle') {
+  const s = mk('span', { className: 'ordner-symbol' });
+  s.style.setProperty('--of', ordnerFarbe(id));
+  s.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ORDNER_SVG[art]}</svg>`;
+  return s;
+}
 async function ladeOrdner() {
   try { ordnerListe = (await rpc('crm_ordner_liste')) || []; } catch { return; }
   if (pfOrdner && !ordnerListe.some((o) => o.id === pfOrdner)) { pfOrdner = null; ladePostfach(); }
@@ -832,7 +940,7 @@ function ordnerEingabe(ersetzt, start, speichern) {
 function ordnerLeiste() {
   const ort = $('#pf-ordner');
   const chip = (titel, id, o) => {
-    const b = mk('button', { type: 'button', className: `ordner-chip${o && o.ungelesen ? ' neu' : ''}`, textContent: titel });
+    const b = mk('button', { type: 'button', className: `ordner-chip${o && o.ungelesen ? ' neu' : ''}` }, ordnerSymbol(id), titel);
     b.setAttribute('aria-pressed', String(pfOrdner === id));
     if (o) b.append(mk('span', { className: 'opt', textContent: String(o.anzahl) }));
     b.addEventListener('click', () => {
@@ -851,7 +959,7 @@ function ordnerLeiste() {
     pfStatus = '';
     ladePostfach();
   }));
-  const teile = [chip('Alle Mails', null), ...ordnerListe.map((o) => chip(`📁 ${o.name}`, o.id, o)), neu];
+  const teile = [chip('Alle Mails', null), ...ordnerListe.map((o) => chip(o.name, o.id, o)), neu];
   const akt = ordnerListe.find((o) => o.id === pfOrdner);
   if (akt) {
     const um = mk('button', { type: 'button', className: 'link-knopf', textContent: 'Umbenennen' });
@@ -875,10 +983,12 @@ function ordnerWahl(u, msg) {
   const wahl = mk('select');
   wahl.setAttribute('aria-label', 'Ordner');
   const fuellen = () => {
-    wahl.replaceChildren(new Option('Kein Ordner', ''), ...ordnerListe.map((o) => new Option(`📁 ${o.name}`, String(o.id))),
+    wahl.replaceChildren(new Option('Kein Ordner', ''), ...ordnerListe.map((o) => new Option(o.name, String(o.id))),
       new Option('Neuer Ordner …', 'neu'));
     wahl.value = u.ordner ? String(u.ordner) : '';
+    symbol.style.setProperty('--of', ordnerFarbe(u.ordner));
   };
+  const symbol = ordnerSymbol(1);
   fuellen();
   const ablegen = async (id) => {
     await rpc('postfach_ablegen', { p_id: u.id, p_ordner: id });
@@ -899,8 +1009,9 @@ function ordnerWahl(u, msg) {
       return;
     }
     try { await ablegen(wahl.value ? Number(wahl.value) : null); } catch (e) { meldung(msg, fehlerText(e), true); }
+    symbol.style.setProperty('--of', ordnerFarbe(u.ordner));
   });
-  return wahl;
+  return mk('span', { className: 'ordner-wahl' }, symbol, wahl);
 }
 
 // --- Kontakte und Sammelmail ---

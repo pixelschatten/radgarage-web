@@ -10,9 +10,100 @@ const SERVER = {
   url: 'https://axiirnfgtbmmjlfwlyfe.supabase.co',
   key: 'sb_publishable_dBz5uK-7wYwKKL3O8Qd0MA_pYzxTP_2',
 };
+// ---------- Lade-Anzeige ----------
+// Jede Anfrage an Supabase läuft über ladeFetch. Beginnt sie kurz nach einem Klick (oder während der Knopf noch lädt),
+// dreht sich im Knopf ein Kreis, er nimmt so lange keine Klicks an und zeigt danach kurz einen Haken. Was der Nutzer
+// ausgelöst hat (Klick, Tippen), zeigt zusätzlich der dünne Balken oben. Abfragen im Hintergrund bleiben still.
+const LADE = { knopf: null, bis: 0, eingabe: 0, offen: 0, balkenZeit: null };
+const ladeKnoepfe = new Map(); // Knopf -> { n, ab, fehler, aus }
+document.addEventListener('click', (ev) => {
+  const k = ev.target.closest && ev.target.closest('button, a.pill');
+  if (!k) return;
+  // Läuft schon: zweiten Klick schlucken, damit nichts doppelt abgeschickt wird
+  if (ladeKnoepfe.has(k) && k.classList.contains('laedt')) { ev.preventDefault(); ev.stopImmediatePropagation(); return; }
+  LADE.knopf = k;
+  LADE.bis = performance.now() + 700;
+  LADE.eingabe = performance.now();
+}, true);
+document.addEventListener('change', (ev) => {
+  if (ev.target.matches('select')) { LADE.knopf = ev.target; LADE.bis = performance.now() + 700; }
+  LADE.eingabe = performance.now();
+}, true);
+document.addEventListener('input', () => { LADE.eingabe = performance.now(); }, true);
+document.addEventListener('keydown', () => { LADE.eingabe = performance.now(); }, true);
+
+function ladeBalken(an) {
+  let b = document.getElementById('ladebalken');
+  if (!b) {
+    b = Object.assign(document.createElement('div'), { id: 'ladebalken' });
+    b.setAttribute('aria-hidden', 'true');
+    document.body.append(b);
+  }
+  clearTimeout(LADE.balkenZeit);
+  // Erst nach 150 ms zeigen, schnelle Antworten sollen nicht flackern
+  if (an) LADE.balkenZeit = setTimeout(() => b.classList.add('an'), 150);
+  else b.classList.remove('an');
+}
+
+function knopfLaedt(k) {
+  let z = ladeKnoepfe.get(k);
+  if (z) { clearTimeout(z.aus); z.n++; return; }
+  z = { n: 1, ab: performance.now(), fehler: false, aus: null };
+  ladeKnoepfe.set(k, z);
+  k.classList.remove('lade-fertig');
+  // Kleine Knöpfe zeigen nur den Kreis, große Zeilen behalten ihren Text und bekommen den Kreis rechts.
+  // Reiter, Umschalter und Auswahlfelder werden nur blasser, oben läuft ja der Balken.
+  const leise = k.tagName === 'SELECT' || k.matches('[role=radio], [role=tab], .ordner-chip');
+  const klein = !leise && k.offsetWidth < 260 && k.offsetHeight < 60;
+  const st = getComputedStyle(k);
+  k.style.setProperty('--lade-farbe', st.color);
+  k.classList.add('laedt', leise ? 'laedt-leise' : klein ? 'laedt-klein' : 'laedt-gross', ...(st.position === 'static' ? ['laedt-rel'] : []));
+  k.setAttribute('aria-busy', 'true');
+}
+
+function knopfFertig(k, ok) {
+  const z = ladeKnoepfe.get(k);
+  if (!z) return;
+  if (!ok) z.fehler = true;
+  if (--z.n > 0) return;
+  // Kurz warten: Oft folgt gleich die nächste Abfrage (erst speichern, dann neu laden), dann läuft der Kreis weiter.
+  // Mindestens 400 ms sichtbar, damit man den Klick bemerkt.
+  const rest = Math.max(120, 400 - (performance.now() - z.ab));
+  z.aus = setTimeout(() => {
+    ladeKnoepfe.delete(k);
+    const haken = !z.fehler && k.isConnected && k.classList.contains('laedt-klein') && k.classList.contains('pill');
+    k.classList.remove('laedt', 'laedt-klein', 'laedt-gross', 'laedt-leise');
+    k.removeAttribute('aria-busy');
+    if (haken) {
+      k.classList.add('lade-fertig');
+      setTimeout(() => k.classList.remove('lade-fertig', 'laedt-rel'), 900);
+    } else k.classList.remove('laedt-rel');
+  }, rest);
+}
+
+async function ladeFetch(...args) {
+  const jetzt = performance.now();
+  // Zuständiger Knopf: gerade geklickt oder lädt noch
+  let k = null;
+  if (LADE.knopf && LADE.knopf.isConnected && (jetzt < LADE.bis || ladeKnoepfe.has(LADE.knopf))) k = LADE.knopf;
+  const sichtbar = !!k || jetzt - LADE.eingabe < 1500;
+  if (k) knopfLaedt(k);
+  if (sichtbar && LADE.offen++ === 0) ladeBalken(true);
+  let ok = false;
+  try {
+    const r = await fetch(...args);
+    ok = r.ok;
+    return r;
+  } finally {
+    if (k) knopfFertig(k, ok);
+    if (sichtbar && --LADE.offen === 0) ladeBalken(false);
+  }
+}
+
 // Sitzung nur im Tab: Tab zu heißt abgemeldet.
 const sb = supabase.createClient(SERVER.url, SERVER.key, {
   auth: { storage: window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+  global: { fetch: ladeFetch },
 });
 
 // Wie supabase/schema.sql (teile_kategorie_check)
