@@ -128,6 +128,18 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 .liste li .ean { grid-column: 1 / -1; display: flex; gap: 8px; align-items: center; }
 .liste li .ean input { padding: 6px 10px; font-size: 14px; border-radius: 10px; max-width: 220px; }
 .liste li .ean span { font-size: 13px; color: var(--muted); }
+.liste li.gruppe-kopf { display: block; padding: 8px 2px 0; border: 0; background: none; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.liste li.platz { display: block; border-style: dashed; background: transparent; margin-top: 4px; }
+.liste li.platz .name { font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+.platz-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.platz-chip { border: 1px solid var(--line); background: var(--bg); color: var(--text); font: 600 13px var(--font); padding: 5px 10px; border-radius: 999px; cursor: pointer; }
+.platz-chip:hover { border-color: var(--accent); }
+.platz-chip.vielleicht { opacity: .6; border-style: dashed; }
+#serie-feld { display: block; }
+#serie-feld input { padding-right: 46px; }
+.serie-log { margin-top: 10px; }
+.serie-log li { font-size: 14px; padding: 8px 12px; display: block; }
+.serie-log li.fehler { color: var(--warn); }
 .liste .leer { color: var(--muted); font-size: 14px; background: transparent; border-style: dashed; display: block; }
 .marke { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--k2); color: var(--ink); }
 .marke.neu { background: var(--k1); }
@@ -584,6 +596,10 @@ table.rechte td.nein { color: var(--muted); }
           <h3 id="rad-titel">Rad</h3>
           <p class="fine" id="hinweis-rolle"></p>
           <form id="f-rad" autocomplete="off">
+            <div class="ergaenzen-kopf k3" id="entwurf-box" hidden>
+              <div><div class="eyebrow">Angefangenes Rad</div><strong id="entwurf-text"></strong></div>
+              <div class="aktionen"><button class="pill klein" type="button" id="entwurf-weiter">Weitermachen</button><button class="pill ghost klein" type="button" id="entwurf-weg">Verwerfen</button></div>
+            </div>
             <div class="ergaenzen-kopf k3" id="ergaenzen-kopf" hidden>
               <div><div class="eyebrow">Ergänzung zu</div><strong id="ergaenzen-name"></strong></div>
               <div class="aktionen"><button class="pill ghost klein" type="button" id="rad-bearbeiten" data-recht="katalog_pflegen">Rad-Daten ändern</button><button class="pill ghost klein" type="button" id="ergaenzen-ende">Doch neues Rad</button></div>
@@ -645,6 +661,10 @@ table.rechte td.nein { color: var(--muted); }
             </label>
             <div class="aktionen"><button class="pill" type="submit" id="rad-speichern">Rad speichern</button><button class="pill ghost" type="button" id="leeren">Leeren</button></div>
             <div class="msg" role="status"></div>
+            <div class="ergaenzen-kopf k4" id="naechste" hidden>
+              <div><div class="eyebrow">Gleiche Reihe weiter erfassen?</div><strong id="naechste-text"></strong></div>
+              <div class="aktionen"><button class="pill klein" type="button" id="naechste-los">Nächste Ausstattung</button><button class="pill ghost klein" type="button" id="naechste-nein">Nein danke</button></div>
+            </div>
           </form>
         </div>
 
@@ -743,6 +763,20 @@ table.rechte td.nein { color: var(--muted); }
           <p class="fine" id="tl-hinweis"></p>
           <ul class="liste" id="tl-liste"></ul>
           <div class="aktionen" style="margin-top:12px"><button class="pill ghost klein" type="button" id="tl-mehr" hidden>Weitere laden</button></div>
+          <details class="neu-teil" id="serie">
+            <summary>Mehrere Barcodes nacheinander scannen</summary>
+            <p class="fine">Barcode scannen oder eintippen. Kennt der Katalog ihn schon, geht es gleich weiter. Sonst wählst du das passende Teil aus.</p>
+            <form id="f-serie" autocomplete="off">
+              <span class="feld-mit-icon" id="serie-feld"><input id="serie-ean" inputmode="numeric" maxlength="14" pattern="[0-9]{8,14}" placeholder="Barcode" aria-label="Barcode" required></span>
+            </form>
+            <p class="fine" id="serie-info"></p>
+            <div id="serie-wahl" hidden>
+              <label>Zu welchem Teil gehört er?<input type="search" id="serie-suche" placeholder="z. B. Continental GP5000 28" autocomplete="off"></label>
+              <ul class="treffer" id="serie-treffer"></ul>
+              <div class="aktionen" style="margin-top:8px"><button class="pill ghost klein" type="button" id="serie-ueberspringen">Überspringen</button></div>
+            </div>
+            <ul class="liste serie-log" id="serie-log"></ul>
+          </details>
         </div>
       </div>
     </section>
@@ -1052,6 +1086,6 @@ table.rechte td.nein { color: var(--muted); }
 <script src="supabase.js?v=2.118.0"></script>
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
-<script src="werkbank.js?v=2026-10-28-2"></script>
+<script src="werkbank.js?v=2026-10-28-3"></script>
 </body>
 </html>
