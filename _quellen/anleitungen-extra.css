@@ -21,6 +21,8 @@
 .anl .schritte { grid-column: span 7; grid-row: span 2; padding: 30px 32px; }
 .anl .video { grid-column: span 5; }
 .anl .tipp { grid-column: span 5; }
+.anl .schritte.ohne-video { grid-row: auto; }
+.anl .schritte.ohne-video + .tipp { align-self: start; }
 .anl .fragen { grid-column: span 12; }
 .anl .app { grid-column: span 12; padding: 36px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: center; }
 .anl .app .actions { justify-content: flex-end; }

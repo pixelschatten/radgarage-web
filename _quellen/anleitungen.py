@@ -273,7 +273,7 @@ def kopfnav(pfad):
     return f'<nav class="kopfnav" aria-label="Hauptmenü">{links}</nav>'
 
 
-def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werkstatt.jpg'):
+def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werkstatt.jpg', robots=False):
     url = SEITE + pfad
     daten = '\n'.join(
         f'<script type="application/ld+json">{json.dumps(s, ensure_ascii=False)}</script>' for s in schema
@@ -285,7 +285,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>{e(titel)}</title>
 <meta name="description" content="{e(beschreibung)}">
-<link rel="canonical" href="{url}">
+{'<meta name="robots" content="noindex, follow">' + chr(10) if robots else ''}<link rel="canonical" href="{url}">
 <meta property="og:type" content="article">
 <meta property="og:locale" content="de_DE">
 <meta property="og:site_name" content="Radgarage">
@@ -293,9 +293,11 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 <meta property="og:description" content="{e(beschreibung)}">
 <meta property="og:image" content="{bild}">
 <meta property="og:url" content="{url}">
+<meta name="twitter:card" content="summary_large_image">
+{ICONS}
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=2">
+<link rel="stylesheet" href="/css/seiten.css?v={CSS_VERSION}">
 <meta name="theme-color" content="#F2EDE2">
 {daten}
 </head>
@@ -309,22 +311,56 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 '''
 
 
-FUSS = '''  <footer>
-    <span>Gerade in Entwicklung. Ein Privatprojekt aus Leidenschaft fürs Rad.</span>
-    <nav>
-      <a href="/anleitungen/">Anleitungen</a>
+# Symbol für Browser-Tab, Lesezeichen und Handy-Startbildschirm (aus dem App-Icon, erzeugt von bauen.py)
+ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
+         '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
+         '<link rel="manifest" href="/site.webmanifest">')
+CSS_VERSION = 3  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+
+UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
+
+# Eine Fußzeile für alle öffentlichen Seiten. bauen.py setzt sie auch in die von Hand gepflegten Seiten
+# (Startseite, Danke, Impressum, Datenschutz, Konto löschen, Abmelden) ein.
+FUSS_INHALT = f'''  <footer>
+    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
+    <nav aria-label="Fußzeile">
       <a href="/raeder/">Räder</a>
       <a href="/teile/">Ersatzteile</a>
+      <a href="/anleitungen/">Anleitungen</a>
       <a href="/feedback/">Feedback</a>
+      <a href="{UMFRAGE}" target="_blank" rel="noopener">Zur Umfrage</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="/impressum.html">Impressum</a>
       <a href="/datenschutz.html">Datenschutz</a>
+      <a href="/konto-loeschen.html">Konto löschen</a>
     </nav>
   </footer>
-</div>
+'''
+
+FUSS = FUSS_INHALT + '''</div>
 </body>
 </html>
 '''
+
+
+SUCHE_TEXT = {
+    'raeder': ('Rad suchen', 'z. B. Topstone 2025'),
+    'teile': ('Teil suchen', 'z. B. CN-M8100'),
+    'alles': ('Rad oder Teil suchen', 'z. B. Topstone oder CN-M8100'),
+}
+
+
+def suchfeld(art, kennung=None):
+    """Suchfeld mit Vorschlägen. Die Daten (suche.json) lädt /js/suche.js erst, wenn jemand ins Feld tippt."""
+    kennung = kennung or f'suche-{art}'
+    label, platzhalter = SUCHE_TEXT[art]
+    return (f'<form class="suche" role="search" data-art="{art}" action="#">'
+            f'<label class="sr" for="{kennung}">{e(label)}</label>'
+            f'<input type="search" id="{kennung}" placeholder="{e(platzhalter)}" autocomplete="off" spellcheck="false" '
+            f'role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="{kennung}-liste">'
+            f'<ul class="treffer" id="{kennung}-liste" role="listbox" aria-label="Vorschläge" hidden></ul>'
+            f'<p class="suche-info" role="status" aria-live="polite"></p>'
+            f'</form><script src="/js/suche.js?v=1" defer></script>')
 
 
 def krumen(teile):
@@ -349,6 +385,10 @@ def karte(a, ebene='h3'):
             f'<span class="meta">{e(a["level"])} · {e(a["zeit"])}</span></a>')
 
 
+def youtube_suche(a):
+    return 'https://www.youtube.com/results?search_query=' + a['suche'].replace(' ', '+')
+
+
 def video_kachel(a):
     titel = f'Video: {a["h1"]}'
     if a['video']:
@@ -358,10 +398,8 @@ def video_kachel(a):
                   'Mehr dazu in der <a href="/datenschutz.html#videos">Datenschutzerklärung</a>.</p></div></div>'
                   f'<p class="klein"><a href="https://www.youtube.com/watch?v={e(a["video"])}" target="_blank" rel="noopener">Auf YouTube ansehen</a></p>')
     else:
-        such = 'https://www.youtube.com/results?search_query=' + a['suche'].replace(' ', '+')
-        player = ('<div class="player"><div class="zustimmen"><span class="play">' + PLAY + '</span>'
-                  '<p>Das passende Video suchen wir gerade aus.</p></div></div>'
-                  f'<p class="klein"><a href="{e(such)}" target="_blank" rel="noopener">Videos auf YouTube suchen</a></p>')
+        # Ohne Video-ID keine Kachel, die Seite verlinkt dann nur die YouTube-Suche unter den Schritten.
+        return ''
     return f'''    <div class="t s1 video">
       <span class="eyebrow">Video</span>
       <h2 style="font-size:26px;margin:6px 0 0">Lieber zuschauen?</h2>
@@ -429,10 +467,11 @@ def anleitung_seite(a, alle):
     schritte = ''.join(
         f'<li id="schritt-{i + 1}"><span><h3>{e(t)}</h3><p>{e(x)}</p></span></li>' for i, (t, x) in enumerate(a['schritte'])
     )
-    out.append(f'''    <section class="t s1 schritte" aria-labelledby="schritte-titel">
+    out.append(f'''    <section class="t s1 schritte{"" if a["video"] else " ohne-video"}" aria-labelledby="schritte-titel">
       <span class="eyebrow">Schritt für Schritt</span>
       <h2 id="schritte-titel" style="font-size:30px;margin:6px 0 0">So geht's</h2>
       <ol class="steps">{schritte}</ol>
+      {"" if a["video"] else f'<p class="klein"><a href="{e(youtube_suche(a))}" target="_blank" rel="noopener">Lieber zuschauen? Videos auf YouTube suchen</a></p>'}
     </section>
 ''')
     out.append(video_kachel(a))

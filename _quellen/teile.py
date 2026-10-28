@@ -5,7 +5,7 @@ _quellen/katalog-auszug.json (Räder mit ihren Teilen). Gebaut wird über python
 """
 from collections import OrderedDict
 
-from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen
+from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, suchfeld
 from raeder import (ANLEITUNG, FARBEN, NAMEN, RICHTWERT_KM, TEILE, alternativen, preis, shoplinks, slug,
                     teilname, tsd)
 
@@ -19,7 +19,7 @@ KATEGORIEN = OrderedDict([
     ('Motor', 'Motoren'), ('Akku', 'Akkus'), ('Sonstiges', 'Sonstige Teile'),
 ])
 
-NOINDEX = '<meta name="robots" content="noindex, follow">\n'
+MIN_KATEGORIE = 5  # Kategorien mit weniger Teilen sind für Google zu dünn und bleiben vorerst aus dem Index
 
 
 def kat_pfad(kat):
@@ -77,13 +77,14 @@ def teil_seite(t, raeder, verbaut):
         f'Verbaut an {len(raeder)} Rädern, z. B. {beispiele}.' if raeder else '',
         f'{len(alt)} Teile passen als Ersatz.' if alt else '',
     ] if x)
-    produkt = {'@context': 'https://schema.org', '@type': 'Product', 'name': name,
-               'brand': {'@type': 'Brand', 'name': t['marke']}, 'category': NAMEN.get(kat, kat), 'url': SEITE + pfad}
-    if t['merkmale']:
-        produkt['description'] = t['merkmale']
-    k = kopf(titel, beschr, pfad, [produkt, brot])
-    if not indexieren(t, raeder):
-        k = k.replace('<link rel="canonical"', NOINDEX + '<link rel="canonical"', 1)
+    # Liste der Räder statt „Product“: ohne festen Preis und Bewertungen wertet Google Produktdaten als ungültig.
+    schema = [brot]
+    if raeder:
+        schema.insert(0, {'@context': 'https://schema.org', '@type': 'ItemList', 'name': f'Räder mit {name}',
+                          'numberOfItems': len(raeder),
+                          'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + r['pfad'],
+                                               'name': f'{r["name"]} ({r["baujahr"]})'} for i, r in enumerate(raeder[:50])]})
+    k = kopf(titel, beschr, pfad, schema, robots=not indexieren(t, raeder))
     out = [k, nav, '  <main>\n  <article class="bento anl rad">\n']
     lead = (f'{e(name)} ist an {len(raeder)} {"Rad" if len(raeder) == 1 else "Rädern"} aus unserem Katalog verbaut. '
             if raeder else f'{e(name)} passt als Ersatz an Räder aus unserem Katalog. ')
@@ -159,7 +160,7 @@ def kategorie_seite(kat, teile, verbaut):
         f'{"<span>" + e(t["merkmale"]) + "</span>" if t["merkmale"] else ""}</th>'
         f'<td>{len(verbaut.get(t["id"], []))} Räder</td><td class="preis">{preis(t["preis"])}</td></tr>'
         for t in teile)
-    return ''.join([kopf(titel, beschr, pfad, [brot]), nav, f'''  <main>
+    return ''.join([kopf(titel, beschr, pfad, [brot], robots=len(teile) < MIN_KATEGORIE), nav, f'''  <main>
   <div class="bento uebersicht">
     <div class="t k2 kopf">
       <span class="eyebrow">Teile</span>
@@ -188,7 +189,8 @@ def uebersicht_seite(nach_kat):
     <div class="t k1 kopf">
       <span class="eyebrow">Teile und Ersatz</span>
       <h1>Welches Teil passt an dein Rad?</h1>
-      <p class="lead">Der Katalog der Radgarage kennt {tsd(gesamt)} Teile und weiß, an welchen Rädern sie verbaut sind. Wähle eine Kategorie und finde passenden Ersatz.</p>
+      <p class="lead">Der Katalog der Radgarage kennt {tsd(gesamt)} Teile und weiß, an welchen Rädern sie verbaut sind. Such ein Teil oder wähle eine Kategorie und finde passenden Ersatz.</p>
+      {suchfeld('teile')}
     </div>
   </div>
   <section aria-label="Kategorien" style="margin-top:14px">
@@ -210,7 +212,8 @@ def bauen(alle, schreiben):
     schreiben('teile/index.html', uebersicht_seite(nach_kat))
     for k, ts in nach_kat.items():
         schreiben(kat_pfad(k).strip('/') + '/index.html', kategorie_seite(k, ts, verbaut))
-        seiten.append(kat_pfad(k))
+        if len(ts) >= MIN_KATEGORIE:
+            seiten.append(kat_pfad(k))
     for t in TEILE.values():
         raeder = verbaut.get(t['id'], [])
         schreiben(f'teile/{t["id"]}/index.html', teil_seite(t, raeder, verbaut))

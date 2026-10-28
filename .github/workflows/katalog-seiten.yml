@@ -1,0 +1,57 @@
+# Baut jede Nacht die öffentlichen Rad-, Reihen- und Teileseiten, Suche, Sitemap und Vorschaubilder
+# aus dem aktuellen Katalog in Supabase neu. Liest nur geprüfte Räder und Teile mit dem öffentlichen
+# Schlüssel der App. Hat sich nichts geändert, wird nichts gespeichert.
+name: Seiten aus dem Katalog bauen
+
+on:
+  schedule:
+    - cron: '15 22 * * *'  # 22:15 UTC, nach der täglichen Füllrunde
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: katalog-seiten
+  cancel-in-progress: false
+
+jobs:
+  bauen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Pillow für die Vorschaubilder
+        run: pip install --quiet pillow
+      - name: Katalog holen
+        run: python3 _quellen/holen.py
+      - name: Seiten bauen
+        run: python3 _quellen/bauen.py
+      - name: Speichern, wenn sich etwas geändert hat
+        id: speichern
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen am Katalog."
+            echo "neu=nein" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "radgarage-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "Katalog: Seiten neu gebaut ($(date -u +%Y-%m-%d))"
+          git push
+          echo "neu=ja" >> "$GITHUB_OUTPUT"
+      - name: Veröffentlichung anstoßen
+        if: steps.speichern.outputs.neu == 'ja'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Pushes mit dem Action-Schlüssel lösen GitHub Pages nicht immer selbst aus
+          curl -sS --fail-with-body -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages/builds" \
+            || echo "Pages-Build konnte nicht angestoßen werden, er startet dann mit dem nächsten Push."
