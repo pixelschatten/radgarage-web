@@ -332,8 +332,8 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .dlg-box .aktion { padding: 12px 0; border-top: 1.5px solid var(--line); }
 .dlg-box .aktion:first-of-type { border-top: 0; }
 .chip.gut { background: var(--k4); }
-.st-kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.st-kopf p { margin: 0; }
+.as-kopf { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.as-kopf p { margin: 0; }
 .fr-zahlen { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
 .fr-zahl { padding: 14px 16px; border-radius: 18px; background: var(--surface2); min-width: 0; }
 .fr-zahl b { display: block; font-family: var(--display); font-size: 30px; line-height: 1.1; letter-spacing: -0.02em; margin-top: 4px; overflow-wrap: anywhere; }
@@ -348,7 +348,7 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .fr-grafik { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 28px; margin-top: 18px; }
 .fr-grafik .eyebrow { margin: 0 0 6px; }
 .fr-grafik .plot { position: relative; }
-.st-gitter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; align-items: stretch; }
+.as-gitter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 16px; align-items: stretch; }
 .st-kachel { display: flex; flex-direction: column; gap: 12px; padding: 20px; border-radius: 20px; background: var(--surface2); min-width: 0; }
 .st-kachel p.fine { margin: -4px 0 0; }
 .st-titel { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
@@ -463,6 +463,8 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
   body.druck-statistik > *:not(.wrap), body.druck-statistik .wrap > *:not(main), body.druck-statistik main > *:not([data-panel="statistik"]), body.druck-statistik .st-kopf-rechts, body.druck-statistik .tipp, body.druck-statistik .toast { display: none !important; }
   body.druck-statistik .wrap, body.druck-statistik main { padding: 0; max-width: none; margin: 0; }
   body.druck-statistik [data-panel="statistik"] { display: block !important; }
+  body.druck-statistik .st-teil { display: block !important; }
+  body.druck-statistik .st-reiter { display: none !important; }
   body.druck-statistik .druck-kopf { display: block; margin: 0 0 6px; color: #555; font-size: 12px; }
   body.druck-statistik .t, body.druck-statistik .kachel { break-inside: avoid; -webkit-print-color-adjust: exact; print-color-adjust: exact; box-shadow: none; }
   body.druck-statistik .st-abschnitt { break-after: avoid; }
@@ -477,6 +479,9 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 .segment button[aria-checked="true"] { background: var(--accent); color: var(--on-accent); }
 .st-gitter { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
 .st-gitter .breit { grid-column: 1 / -1; }
+.st-reiter { margin-top: 22px; flex-wrap: wrap; border-radius: 22px; }
+.st-reiter button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+.st-teil > .st-abschnitt:first-child { margin-top: 18px; }
 .st-abschnitt { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 26px 0 0; }
 .diagramm h3 { margin-bottom: 2px; }
 .diagramm .plot { position: relative; margin-top: 10px; }
@@ -720,7 +725,7 @@ table.rechte td.nein { color: var(--muted); }
   .passwort-kachel form { grid-template-columns: 1fr; }
   .passwort-kachel form > label:nth-of-type(n), .passwort-kachel form > .staerke-zeile { grid-column: 1; grid-row: auto; }
   .qr { grid-template-columns: 1fr; }
-  .st-gitter, .st-paar, .fr-grafik { grid-template-columns: 1fr; }
+  .st-gitter, .as-gitter, .st-paar, .fr-grafik { grid-template-columns: 1fr; }
   .fr-zahlen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .st-kachel { padding: 16px; }
   .t { padding: 22px 18px; border-radius: 22px; }
@@ -1108,7 +1113,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         <div class="kacheln ganz" id="ue-kacheln"></div>
         <div class="msg ganz" role="status" id="msg-uebersicht"></div>
         <div class="t k4 ganz" id="fuellrunde">
-          <div class="st-kopf">
+          <div class="as-kopf">
             <h3>Tägliche Füllrunde</h3>
             <span class="st-status" id="fr-wann"></span>
           </div>
@@ -1202,14 +1207,14 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         </div>
         <!-- App steuern (nur Super-Admin, app-steuerung.sql): vier Unterkacheln, jede speichert nur ihre eigenen Felder -->
         <div class="t k2 ganz" id="steuer" data-recht="system">
-          <div class="st-kopf">
+          <div class="as-kopf">
             <div>
               <h3>App steuern</h3>
               <p class="fine">Kommt beim nächsten Öffnen der App an, ganz ohne Update. <span id="st-geaendert"></span></p>
             </div>
             <button class="knopf-weich" type="button" id="steuer-neu">Neu laden</button>
           </div>
-          <div class="st-gitter">
+          <div class="as-gitter">
             <form class="st-kachel" id="f-st-banner" autocomplete="off">
               <div class="st-titel"><h4>Mitteilung</h4><span class="st-status" id="st-s-banner"></span></div>
               <p class="fine">Streifen oben in der Garage. Wer ihn wegtippt, sieht ihn erst bei einem neuen Text wieder.</p>
@@ -1280,14 +1285,28 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       </div>
       <div class="msg" role="status" id="msg-statistik"></div>
       <div class="kacheln" id="st-kacheln"></div>
+      <div class="segment st-reiter" role="tablist" aria-label="Bereich" id="st-reiter">
+        <button type="button" role="tab" data-st="app" aria-selected="true">App</button>
+        <button type="button" role="tab" data-st="katalog" aria-selected="false">Katalog</button>
+        <button type="button" role="tab" data-st="web" aria-selected="false">Website</button>
+        <button type="button" role="tab" data-st="geld" aria-selected="false">Shops<span class="nur-breit"> und Einnahmen</span></button>
+        <button type="button" role="tab" data-st="system" aria-selected="false" data-recht="system">System</button>
+      </div>
+      <div class="st-teil" data-st="app">
       <p class="st-abschnitt">Nutzer</p>
       <div class="st-gitter" id="st-nutzer"></div>
       <p class="st-abschnitt">Garagen</p>
       <div class="st-gitter" id="st-garagen"></div>
+      </div>
+      <div class="st-teil" data-st="katalog" hidden>
       <p class="st-abschnitt">Katalog und Mithilfe</p>
       <div class="st-gitter" id="st-katalog"></div>
+      </div>
+      <div class="st-teil" data-st="web" hidden>
       <p class="st-abschnitt">Website</p>
       <div class="st-gitter" id="st-web"></div>
+      </div>
+      <div class="st-teil" data-st="geld" hidden>
       <p class="st-abschnitt">Shops und Einnahmen</p>
       <div class="st-gitter" id="st-shops"></div>
       <form class="t" id="f-einnahme" data-recht="system" style="margin-top:14px" autocomplete="off">
@@ -1304,8 +1323,11 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         <div class="msg" role="status"></div>
         <div class="tabelle-scroll" style="margin-top:12px"><table><thead><tr><th>Monat</th><th>Quelle</th><th>Betrag</th><th>Notiz</th><th><span class="sr">Löschen</span></th></tr></thead><tbody id="ein-liste"></tbody></table></div>
       </form>
+      </div>
+      <div class="st-teil" data-st="system" hidden>
       <p class="st-abschnitt" data-recht="system">System</p>
       <div class="st-gitter" id="st-system" data-recht="system"></div>
+      </div>
       <p class="fine" style="margin-top:14px" id="st-stand"></p>
     </section>
 
@@ -1677,16 +1699,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-laden"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-17"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-17"></script>
+<script src="js/01-kern.js?v=2026-10-28-21"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-21"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-21"></script>
 <script src="js/04-postfach-crm.js?v=2026-10-28-auswahl"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-17"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-17"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-17"></script>
-<script src="js/08-konten.js?v=2026-10-28-17"></script>
-<script src="js/09-katalog.js?v=2026-10-28-17"></script>
-<script src="js/10-statistik.js?v=2026-10-28-20"></script>
-<script src="js/11-start.js?v=2026-10-28-17"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-21"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-21"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-21"></script>
+<script src="js/08-konten.js?v=2026-10-28-21"></script>
+<script src="js/09-katalog.js?v=2026-10-28-21"></script>
+<script src="js/10-statistik.js?v=2026-10-28-21"></script>
+<script src="js/11-start.js?v=2026-10-28-21"></script>
 </body>
 </html>
