@@ -561,6 +561,32 @@ input.ordner-feld { width: 190px; height: 32px; padding: 0 12px; font-size: 14px
 .pf-werkzeuge input.ordner-feld { width: 190px; }
 .ordner-aktionen { display: inline-flex; gap: 14px; margin-left: 6px; font-size: 14px; }
 .pf-meta .or { background: var(--k2); color: var(--ink); }
+/* Warteliste */
+.wl-kacheln { margin-top: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+#wl-suche { flex: 1 1 200px; min-width: 0; }
+#wl-liste { display: grid; background: var(--surface2); border-radius: 20px; overflow: hidden auto; max-height: 620px; margin-top: 4px; }
+#wl-liste:empty { display: none; }
+#wl-liste > p { padding: 14px 16px; margin: 0; }
+.wl-zeile { display: flex; align-items: center; gap: 10px; padding-right: 14px; border-top: 1.5px solid var(--line); }
+.wl-zeile:first-child { border-top: 0; }
+.wl-person { flex: 1; min-width: 0; display: flex; gap: 12px; align-items: flex-start; text-align: left; border: 0; background: transparent; color: var(--text); font: inherit; padding: 12px 16px; cursor: pointer; }
+.wl-person:hover, .wl-person:focus-visible { background: var(--surface); }
+.wl-aktionen { display: flex; align-items: center; gap: 6px; flex: none; }
+.wl-status { width: auto; height: 34px; padding: 0 10px; font-size: 14px; border-radius: 999px; }
+#wl-art { flex-wrap: wrap; border-radius: 22px; }
+@media (max-width: 640px) { .wl-zeile { flex-wrap: wrap; padding: 0 0 12px; } .wl-aktionen { padding-left: 60px; } .wl-kacheln { grid-template-columns: 1fr 1fr; gap: 10px; } .wl-kacheln .kachel { padding: 14px 16px; } }
+.wl-ausstehend { margin-top: 12px; }
+.wl-ausstehend summary { cursor: pointer; font-weight: 700; }
+.wl-ausstehend ul { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.wl-ausstehend li { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 12px; border-radius: 12px; background: var(--surface2); }
+.wl-neu { display: grid; gap: 12px; }
+.wl-weg { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; }
+.wl-weg legend { font-weight: 700; margin-bottom: 6px; }
+.wl-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border-radius: 14px; border: 1.5px solid var(--line); cursor: pointer; }
+.wl-option:has(input:checked) { border-color: var(--accent); }
+.wl-option input { width: 18px; height: 18px; margin-top: 3px; accent-color: var(--accent); flex: none; }
+.wl-option span { display: grid; gap: 2px; }
+.wl-option small { color: var(--muted); font-size: 13px; }
 .crm-reiter { flex-wrap: wrap; border-radius: 22px; margin-bottom: 14px; }
 .pf-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
 .pf-meta span { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface); color: var(--ink2); }
@@ -1298,6 +1324,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       <div class="segment crm-reiter" role="radiogroup" aria-label="Bereich im CRM" id="crm-ansicht">
         <button type="button" role="radio" data-ansicht="postfach" aria-checked="true">Postfach</button>
         <button type="button" role="radio" data-ansicht="kontakte" aria-checked="false">Kontakte</button>
+        <button type="button" role="radio" data-ansicht="warteliste" aria-checked="false">Warteliste</button>
         <button type="button" role="radio" data-ansicht="bausteine" aria-checked="false">Textbausteine</button>
         <button type="button" role="radio" data-ansicht="kennzahlen" aria-checked="false">Kennzahlen</button>
       </div>
@@ -1331,6 +1358,35 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       </div>
 
       <!-- Kontakte: Konten und Warteliste (aus Brevo abgeglichen), Sammelmail an eine Gruppe -->
+      <div data-crm="warteliste" hidden>
+        <div class="t k3">
+          <div class="mail-kachel">
+            <div><h3>Warteliste <span class="opt" id="wl-zahl"></span></h3><p class="fine" id="wl-stand">Bestätigte Einträge von radgarage.app.</p></div>
+            <div class="aktionen" style="margin:0">
+              <button class="pill" type="button" id="wl-neu">+ Hinzufügen</button>
+              <button class="pill ghost klein" type="button" id="wl-abgleich">Jetzt abgleichen</button>
+            </div>
+          </div>
+          <div class="kacheln wl-kacheln" id="wl-kacheln"></div>
+          <div class="st-kopf" style="margin-top:12px">
+            <div class="segment" role="radiogroup" aria-label="Gruppe" id="wl-art">
+              <button type="button" role="radio" data-art="alle" aria-checked="true">Alle</button>
+              <button type="button" role="radio" data-art="tester" aria-checked="false">Tester</button>
+              <button type="button" role="radio" data-art="iphone" aria-checked="false">iPhone</button>
+              <button type="button" role="radio" data-art="android" aria-checked="false">Android</button>
+              <button type="button" role="radio" data-art="nur_bescheid" aria-checked="false">Nur Bescheid</button>
+            </div>
+            <input type="search" id="wl-suche" placeholder="Adresse oder Radmarke" autocomplete="off" aria-label="Warteliste durchsuchen">
+          </div>
+          <div class="msg" role="status" id="msg-warteliste"></div>
+          <div class="karten" id="wl-liste"></div>
+          <details id="wl-ausstehend" class="wl-ausstehend" hidden>
+            <summary>Eingeladen, noch nicht bestätigt <span class="opt" id="wl-ausstehend-zahl"></span></summary>
+            <ul id="wl-ausstehend-liste"></ul>
+          </details>
+          <p class="fine" style="margin-top:10px">Status und Löschen gehen sofort an Brevo. Löschen entfernt den Kontakt ganz, wie der Abmeldelink. Neue Einträge am besten per Bestätigungsmail, direkt nur mit ausdrücklicher Zustimmung der Person.</p>
+        </div>
+      </div>
       <div data-crm="kontakte" hidden>
         <div class="t k1">
           <div class="mail-kachel">
@@ -1593,7 +1649,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="js/01-kern.js?v=2026-10-28-16"></script>
 <script src="js/02-erfassen.js?v=2026-10-28-16"></script>
 <script src="js/03-freigaben.js?v=2026-10-28-16"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-vorschau"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-warteliste"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-28-16"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-28-16"></script>
 <script src="js/07-uebersicht.js?v=2026-10-28-16"></script>
