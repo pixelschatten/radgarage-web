@@ -123,10 +123,51 @@ $('#pw-umschalten').addEventListener('click', () => {
   if (mitPasswort) $('#f-mail').passwort.focus();
 });
 
+// Anmelden mit Benutzername: Die Edge Function werkbank-anmelden sucht die Adresse auf dem Server heraus und gibt sie nie
+// heraus. Sie liefert nach Code oder Passwort eine Sitzung (noch ohne zweiten Faktor), weiter geht es wie mit E-Mail.
+let anmeldeName = null;
+async function nameAnmeldung(daten) {
+  let r;
+  try {
+    r = await fetch(`${SERVER.url}/functions/v1/werkbank-anmelden`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: SERVER.key },
+      body: JSON.stringify(daten),
+    });
+  } catch {
+    throw new Error('Anmeldung gerade nicht erreichbar, bitte gleich noch einmal oder mit E-Mail-Adresse.');
+  }
+  const antwort = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(antwort.fehler || 'Anmeldung gerade nicht möglich.');
+  if (antwort.access_token) {
+    const { error } = await sb.auth.setSession({ access_token: antwort.access_token, refresh_token: antwort.refresh_token });
+    if (error) throw error;
+  }
+  return antwort;
+}
+
 $('#f-mail').addEventListener('submit', (ev) => {
   ev.preventDefault();
   mitKnopf(ev.target, async () => {
-    email = ev.target.email.value.trim().toLowerCase();
+    const eingabe = ev.target.email.value.trim();
+    anmeldeName = eingabe.includes('@') ? null : eingabe;
+    if (anmeldeName) {
+      if (!/^[A-Za-z0-9][A-Za-z0-9._-]{2,23}$/.test(anmeldeName)) throw new Error('Bitte deine E-Mail-Adresse oder deinen Benutzernamen eintragen.');
+      if (mitPasswort) {
+        const passwort = ev.target.passwort.value;
+        ev.target.passwort.value = '';
+        await nameAnmeldung({ aktion: 'passwort', name: anmeldeName, passwort });
+        await weiter();
+        return;
+      }
+      await nameAnmeldung({ aktion: 'code', name: anmeldeName });
+      // Gleiche Meldung, ob es den Namen gibt oder nicht
+      $('#code-text').textContent = `Gibt es den Namen ${anmeldeName}, kommt jetzt ein 6-stelliger Code an die E-Mail-Adresse des Kontos. Nach mehreren Fehlversuchen ist der Name 15 Minuten gesperrt, die Adresse geht dann weiter.`;
+      $('#f-code').reset();
+      zeige('s-code');
+      return;
+    }
+    email = eingabe.toLowerCase();
     if (mitPasswort) {
       const { error } = await sb.auth.signInWithPassword({ email, password: ev.target.passwort.value });
       ev.target.passwort.value = '';
@@ -137,7 +178,7 @@ $('#f-mail').addEventListener('submit', (ev) => {
     // Keine neuen Konten über die Werkbank: nur wer schon ein App-Konto hat
     const { error } = await sb.auth.signInWithOtp({ email, options: { shouldCreateUser: false } });
     if (error) throw error;
-    $('#code-mail').textContent = email;
+    $('#code-text').replaceChildren('Wir haben einen 6-stelligen Code an ', Object.assign(document.createElement('strong'), { id: 'code-mail', textContent: email }), ' geschickt.');
     $('#f-code').reset();
     zeige('s-code');
   });
@@ -149,6 +190,11 @@ $('#nochmal').addEventListener('click', () => zeige('s-mail'));
 $('#f-code').addEventListener('submit', (ev) => {
   ev.preventDefault();
   mitKnopf(ev.target, async () => {
+    if (anmeldeName) {
+      await nameAnmeldung({ aktion: 'pruefen', name: anmeldeName, code: ev.target.code.value.trim() });
+      await weiter();
+      return;
+    }
     const { error } = await sb.auth.verifyOtp({ email, token: ev.target.code.value.trim(), type: 'email' });
     if (error) throw error;
     await weiter();
@@ -161,6 +207,7 @@ async function weiter() {
   if (!session) return zeige('s-mail');
   email = session.user.email || email;
   $('#wer-mail').textContent = email;
+  $('#wer-mail').title = '';
 
   await rolleLaden();
   if (!rechte.size) {
@@ -265,7 +312,30 @@ async function rolleLaden() {
   rolle = info && RECHTE_JE_ROLLE[info.rolle] ? info.rolle : null;
   rechte = new Set(rolle ? info.rechte || RECHTE_JE_ROLLE[rolle] : []);
   $('#erinnerung-an').checked = info?.erinnerung !== false;
+  if (rolle) await nameLaden();
 }
+
+// ----- Benutzername (supabase/werkbank-name.sql) -----
+
+let meinName = null;
+function nameZeigen() {
+  $('#wer-mail').textContent = meinName || email;
+  $('#wer-mail').title = meinName ? email : '';
+  $('#f-name').name.value = meinName || '';
+}
+async function nameLaden() {
+  try { meinName = await rpc('werkbank_name'); } catch { meinName = null; /* Server noch ohne Namen */ }
+  nameZeigen();
+}
+$('#f-name').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  mitKnopf(ev.target, async (msg) => {
+    const neu = ev.target.name.value.trim();
+    meinName = await rpc('werkbank_name_setzen', { p_name: neu });
+    nameZeigen();
+    meldung(msg, meinName ? `Gespeichert. Ab jetzt kannst du dich auch mit „${meinName}“ anmelden.` : 'Name entfernt, angemeldet wird wieder mit der E-Mail-Adresse.');
+  });
+});
 
 // Tägliche Mail „neu zur Freigabe“ für sich selbst an- und ausschalten
 $('#erinnerung-an').addEventListener('change', async (ev) => {
