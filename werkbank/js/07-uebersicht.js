@@ -83,7 +83,7 @@ async function ladeAufgaben() {
   ]);
   if (offen) helferOffen = offen.raeder.length + offen.ergaenzungen.length;
   zahlenSetzen();
-  const wenig = baustellen.filter((r) => r.teile < 8).length;
+  const luecken = baustellen.filter((r) => (r.fehlt || []).length).length;
   const k = (stat && stat.konten) || {};
   const appArten = (art) => appGruppen.filter((g) => !g.web && g.art === art).length;
   const webAnzahl = appGruppen.filter((g) => g.web).length;
@@ -92,7 +92,7 @@ async function ladeAufgaben() {
     [appArten('korrektur'), 'Korrekturen aus der App', 'Nutzer melden Fehler', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
     [webAnzahl, 'Hinweise von der Website', 'Besucher der Radseiten', () => { tab('freigaben'); fgAnsichtSetzen('web'); }],
     [appGruppen.length - webAnzahl - appArten('korrektur'), 'Weitere App-Vorschläge', 'Räder, Teile, Barcodes', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
-    [wenig, 'Räder mit wenig Teilen', 'weniger als 8 Teile', () => { $('#bs-filter').value = 'wenig'; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
+    [luecken, 'Baustellen im Katalog', 'Räder, an denen ein Pflichtteil fehlt', () => { $('#bs-filter').value = ''; bsOffen = true; zeichneBaustellen(); $('#bs-liste').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
     [darf('konten_sehen') && k.neu_7, 'Neue Konten', 'in den letzten 7 Tagen', () => tab('konten')],
     [darf('feedback') && fbNeu, 'Neues Feedback', 'von radgarage.app/feedback', () => tab('feedback')],
     [darf('konten_betreuen') && pfUngelesen, 'Neue Mails', 'im E-Mail-CRM', () => zumPostfach()],
@@ -117,6 +117,7 @@ async function ladeBaustellen() {
     meldung($('#msg-uebersicht'), fehlerText(e), true);
   }
   bsZeige = 30;
+  baustellenFilterFuellen();
   zeichneBaustellen();
 }
 
@@ -131,20 +132,78 @@ function markenZeigen() {
 }
 $('#mk-auf').addEventListener('click', () => { mkOffen = !mkOffen; markenZeigen(); });
 
+// Pflichtteile in der Reihenfolge der Vorlage, mit den Namen, die Marino benutzt (rad_pflichtluecken in katalog-baustellen.sql)
+const PFLICHT_NAMEN = {
+  Innenlager: 'Innenlager', Steckachse: 'Steckachsen', Schaltwerk: 'Schaltwerk', Umwerfer: 'Umwerfer', Schalthebel: 'Hebel',
+  Kurbel: 'Kurbel', Kassette: 'Kassette', Kette: 'Kette', Akku: 'Akku', Motor: 'Motor', Bremssattel: 'Bremssättel',
+  Bremsbelag: 'Beläge', Bremsscheibe: 'Scheiben', Laufradsatz: 'Laufradsatz', Reifen: 'Reifen', Schlauch: 'Schlauch/Tubeless',
+};
+const BS_INFO = {
+  '': 'Räder, an denen ein Pflichtteil fehlt, meiste Lücken zuerst. Abgeleitete Teile zählen mit. Gibt es ein Teil an einem Rad nicht (z. B. Steckachse bei Schnellspanner), nimm es mit × raus.',
+  klein: 'Vollständige Räder, bei denen nur UVP, Quelle oder Barcodes an Verschleißteilen fehlen. Keine Baustelle, aber gut für ruhige Minuten.',
+};
+
+// Auswahl „Nur wo fehlt“ mit Zahlen je Pflichtteil, gewählter Wert bleibt erhalten
+function baustellenFilterFuellen() {
+  const sel = $('#bs-filter');
+  const vorher = sel.value;
+  const zahl = {};
+  for (const r of baustellen) for (const t of r.fehlt || []) zahl[t] = (zahl[t] || 0) + 1;
+  $('#bs-teile').replaceChildren(...Object.keys(PFLICHT_NAMEN).filter((t) => zahl[t])
+    .map((t) => new Option(`${PFLICHT_NAMEN[t]} (${zahlDe(zahl[t])})`, `teil:${t}`)));
+  sel.value = [...sel.options].some((o) => o.value === vorher) ? vorher : '';
+}
+
+async function pflichtEntfaellt(r, teil) {
+  if (!window.confirm(`${PFLICHT_NAMEN[teil] || teil} gibt es am ${r.hersteller} ${r.modell} (${r.baujahr}) nicht?\n\nDann zählt das Rad dafür nicht mehr als Baustelle. Lässt sich im Verlauf rückgängig machen.`)) return;
+  try {
+    const x = await rpc('rad_pflicht_entfaellt', { p_rad: r.id, p_teil: teil, p_entfaellt: true });
+    r.fehlt = x.fehlt || [];
+    baustellenFilterFuellen();
+    zeichneBaustellen();
+    ladeVerlauf();
+  } catch (e) {
+    meldung($('#msg-uebersicht'), fehlerText(e), true);
+  }
+}
+
 function zeichneBaustellen() {
   const filter = $('#bs-filter').value;
-  const liste = baustellen.filter((r) => (filter === 'wenig' ? r.teile < 8 : filter === 'quelle' ? !r.quelle : filter === 'uvp' ? !r.uvp : true));
-  $('#bs-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
+  const lueckig = (r) => (r.fehlt || []).length > 0;
+  const liste = baustellen.filter((r) => (filter === 'klein' ? !lueckig(r)
+    : filter.startsWith('teil:') ? (r.fehlt || []).includes(filter.slice(5)) : lueckig(r)));
+  $('#bs-info').textContent = BS_INFO[filter === 'klein' ? 'klein' : ''];
+  $('#bs-zahl').textContent = `(${zahlDe(baustellen.filter(lueckig).length)})`;
   const ul = $('#bs-liste');
   ul.replaceChildren(...liste.slice(0, bsOffen ? bsZeige : KURZ_BS).map((r) => {
     const li = document.createElement('li');
     const links = document.createElement('div');
     const neben = Object.assign(document.createElement('div'), { className: 'name' });
     neben.append(Object.assign(document.createElement('span'), { textContent: `${r.hersteller} ${r.modell} (${r.baujahr})` }));
-    neben.append(Object.assign(document.createElement('span'), { className: 'chip' + (r.teile < 8 ? ' warn' : ''), textContent: `${r.teile} Teile` }));
-    if (!r.quelle) neben.append(Object.assign(document.createElement('span'), { className: 'chip warn', textContent: 'ohne Quelle' }));
-    if (!r.uvp) neben.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'ohne UVP' }));
-    links.append(neben);
+    const chips = Object.assign(document.createElement('div'), { className: 'bs-chips' });
+    if (lueckig(r)) {
+      // Fast leere Räder: nicht 10 Chips, sondern die Zahl, Einzelteile auf Antippen
+      const viele = r.fehlt.length > 6 && !r.chipsOffen;
+      if (viele) {
+        const c = Object.assign(document.createElement('button'), { type: 'button', className: 'chip fehlt', textContent: `${r.fehlt.length} Pflichtteile fehlen ▾` });
+        c.style.paddingRight = '10px';
+        c.addEventListener('click', () => { r.chipsOffen = true; zeichneBaustellen(); });
+        chips.append(c);
+      }
+      for (const t of viele ? [] : r.fehlt) {
+        const c = Object.assign(document.createElement('span'), { className: 'chip fehlt', textContent: PFLICHT_NAMEN[t] || t });
+        const x = Object.assign(document.createElement('button'), { type: 'button', textContent: '×', title: 'Gibt es an diesem Rad nicht' });
+        x.setAttribute('aria-label', `${PFLICHT_NAMEN[t] || t} gibt es an diesem Rad nicht`);
+        x.addEventListener('click', () => pflichtEntfaellt(r, t));
+        c.append(x);
+        chips.append(c);
+      }
+    } else {
+      if (!r.uvp) chips.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'ohne UVP', style: 'padding-right:10px' }));
+      if (!r.quelle) chips.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'ohne Quelle', style: 'padding-right:10px' }));
+      if (r.ohne_ean) chips.append(Object.assign(document.createElement('span'), { className: 'chip', style: 'padding-right:10px', textContent: `${zahlDe(r.ohne_ean)} ${r.ohne_ean === 1 ? 'Verschleißteil' : 'Verschleißteile'} ohne Barcode` }));
+    }
+    links.append(neben, chips);
     const akt = document.createElement('div');
     akt.className = 'aktionen';
     const erg = Object.assign(document.createElement('button'), { type: 'button', className: 'pill klein', textContent: 'Ergänzen' });
@@ -159,12 +218,12 @@ function zeichneBaustellen() {
     li.append(links, akt);
     return li;
   }));
-  if (!liste.length) ul.innerHTML = '<li class="leer">Keine Baustellen. Sehr gut.</li>';
+  if (!liste.length) ul.innerHTML = `<li class="leer">${filter === 'klein' ? 'Keine Kleinigkeiten offen.' : 'Keine Baustellen. Sehr gut.'}</li>`;
   ul.classList.toggle('offen', bsOffen);
   $('#bs-mehr').hidden = !bsOffen || liste.length <= bsZeige;
   const auf = $('#bs-auf');
   auf.hidden = liste.length <= KURZ_BS;
-  auf.textContent = bsOffen ? 'Einklappen' : `Alle ${liste.length.toLocaleString('de-DE')} zeigen`;
+  auf.textContent = bsOffen ? 'Einklappen' : `Alle ${zahlDe(liste.length)} zeigen`;
   auf.setAttribute('aria-expanded', String(bsOffen));
 }
 $('#bs-auf').addEventListener('click', () => {
@@ -190,7 +249,6 @@ const verlaufGefiltert = () => {
 async function ladeVerlauf() {
   try {
     verlauf = (await rpc('katalog_verlauf', { p_limit: vlLimit })) || [];
-    $('#vl-mehr').hidden = verlauf.length < vlLimit || vlLimit >= 500;
     zeichneVerlauf();
   } catch (e) {
     $('#ue-verlauf').innerHTML = '';
@@ -198,25 +256,38 @@ async function ladeVerlauf() {
   }
 }
 
+// Eingeklappt nur die neuesten Einträge, damit die Kachel kurz bleibt; Suche und Art-Filter zeigen alle Treffer
+const KURZ_VL = 6;
+let vlOffen = false;
 function zeichneVerlauf() {
   const tb = $('#ue-verlauf');
-  {
-    const liste = verlaufGefiltert();
-    tb.replaceChildren(...liste.map((v) => {
-      const tr = document.createElement('tr');
-      const wann = new Date(v.wann);
-      const ende = document.createElement('td');
-      if (v.rueckgaengig) ende.append(rueckgaengigKnopf(v, 'Rückgängig'));
-      else if (v.rueckgaengig_am) ende.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'zurückgedreht' }));
-      tr.classList.toggle('zurueck', !!v.rueckgaengig_am);
-      tr.append(Object.assign(document.createElement('td'), { className: 'wann', textContent: `${wann.toLocaleDateString('de-DE')} ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` }),
-        Object.assign(document.createElement('td'), { textContent: v.von || '–' }),
-        Object.assign(document.createElement('td'), { textContent: verlaufText(v) }), ende);
-      return tr;
-    }));
-    if (!liste.length) tb.innerHTML = `<tr><td colspan="4" class="fine">${verlauf.length ? 'Keine passenden Einträge, „Mehr zeigen“ lädt ältere.' : 'Noch keine Einträge.'}</td></tr>`;
-  }
+  const liste = verlaufGefiltert();
+  const gefiltert = !!($('#vl-art').value || $('#vl-suche').value.trim());
+  const sichtbar = vlOffen || gefiltert ? liste : liste.slice(0, KURZ_VL);
+  tb.replaceChildren(...sichtbar.map((v) => {
+    const tr = document.createElement('tr');
+    const wann = new Date(v.wann);
+    const ende = document.createElement('td');
+    if (v.rueckgaengig) ende.append(rueckgaengigKnopf(v, 'Rückgängig'));
+    else if (v.rueckgaengig_am) ende.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'zurückgedreht' }));
+    tr.classList.toggle('zurueck', !!v.rueckgaengig_am);
+    tr.append(Object.assign(document.createElement('td'), { className: 'wann', textContent: `${wann.toLocaleDateString('de-DE')} ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` }),
+      Object.assign(document.createElement('td'), { textContent: v.von || '–' }),
+      Object.assign(document.createElement('td'), { textContent: verlaufText(v) }), ende);
+    return tr;
+  }));
+  if (!liste.length) tb.innerHTML = `<tr><td colspan="4" class="fine">${verlauf.length ? 'Keine passenden Einträge, „Ältere laden“ holt weitere.' : 'Noch keine Einträge.'}</td></tr>`;
+  const auf = $('#vl-auf');
+  auf.hidden = gefiltert || liste.length <= KURZ_VL;
+  auf.textContent = vlOffen ? 'Einklappen' : `Alle ${zahlDe(liste.length)} zeigen`;
+  auf.setAttribute('aria-expanded', String(vlOffen));
+  $('#vl-mehr').hidden = !(vlOffen || gefiltert) || verlauf.length < vlLimit || vlLimit >= 500;
 }
+$('#vl-auf').addEventListener('click', () => {
+  vlOffen = !vlOffen;
+  zeichneVerlauf();
+  if (!vlOffen) $('#verlauf').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+});
 $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
 
 // „rueckgaengig“ trägt die ursprüngliche Art vorn im Text (rad_geloescht: Cube …)
@@ -257,12 +328,24 @@ const PK_TEXTE = {
   rad_geloescht: 'Rad gelöscht', rad_abgelehnt: 'Rad abgelehnt', teil_geloescht: 'Teil gelöscht',
   teile_zusammengefuehrt: 'Teile zusammengeführt', shop_geloescht: 'Shop gelöscht',
 };
+const KURZ_PK = 4;
+let pkOffen = false;
+function papierkorbZeigen() {
+  const zeilen = $$('#pk-liste li');
+  const extra = zeilen.filter((li) => li.dataset.extra === '1');
+  for (const li of extra) li.hidden = !pkOffen;
+  const b = $('#pk-auf');
+  b.hidden = !extra.length;
+  b.textContent = pkOffen ? 'Einklappen' : `Alle ${zahlDe(zeilen.length)} zeigen`;
+  b.setAttribute('aria-expanded', String(pkOffen));
+}
+$('#pk-auf').addEventListener('click', () => { pkOffen = !pkOffen; papierkorbZeigen(); });
 async function ladePapierkorb() {
   const ul = $('#pk-liste');
   try {
     const liste = (await rpc('katalog_papierkorb')) || [];
     $('#pk-zahl').textContent = liste.length ? `(${zahlDe(liste.length)})` : '';
-    ul.replaceChildren(...liste.map((v) => {
+    ul.replaceChildren(...liste.map((v, i) => {
       const li = document.createElement('li');
       const links = document.createElement('div');
       const wann = new Date(v.wann);
@@ -271,9 +354,11 @@ async function ladePapierkorb() {
           textContent: `${PK_TEXTE[v.art] || v.art} am ${wann.toLocaleDateString('de-DE')} um ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
             + `${v.von ? ' von ' + v.von : ''}${v.teile ? `, mit ${zahlDe(v.teile)} ${v.art === 'teile_zusammengefuehrt' ? 'Zuordnungen' : 'Teilen'}` : ''}` }));
       li.append(links, rueckgaengigKnopf({ ...v, art: v.art }, v.art === 'teile_zusammengefuehrt' ? 'Trennen' : 'Wiederherstellen', $('#msg-papierkorb')));
+      li.dataset.extra = i >= KURZ_PK ? '1' : '';
       return li;
     }));
     if (!liste.length) ul.innerHTML = '<li class="leer">Leer. Was du löschst, liegt hier 30 Tage.</li>';
+    papierkorbZeigen();
   } catch (e) {
     ul.replaceChildren();
     meldung($('#msg-papierkorb'), fehlerText(e), true);
@@ -368,41 +453,128 @@ async function ladeBetrieb() {
 $('#be-neu').addEventListener('click', ladeBetrieb);
 
 // ----- App steuern (app_steuerung_lesen / _setzen, nur Super-Admin) -----
+// Vier Unterkacheln: Mitteilung, Wartung, Pflicht-Update, Premium. Jede speichert nur ihre eigenen Felder.
 
-const STEUER_TEXTE = ['banner_text', 'banner_link', 'wartung_text', 'mindest_version', 'update_text'];
+const WARTUNG_STANDARD = 'Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen.';
+const ST_ICONS = {
+  info: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/>',
+  neu: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/>',
+  warnung: '<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4M12 17.5v.01"/>',
+  wartung: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z"/>',
+};
+let steuerung = {};
+
+function stStatus(id, text, art = '') {
+  const el = $(id);
+  el.textContent = text;
+  el.className = `st-status${art ? ' ' + art : ''}`;
+}
+function stStreifen(el, art, text, link) {
+  el.className = `st-streifen ${text ? art : 'leer'}`;
+  if (!text) { el.textContent = 'Gerade nichts sichtbar.'; return; }
+  el.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true">${ST_ICONS[art] || ST_ICONS.info}</svg>`;
+  const t = Object.assign(document.createElement('div'), { className: 'st-text', textContent: text });
+  if (link) t.append(Object.assign(document.createElement('b'), { textContent: 'Mehr dazu' }));
+  el.append(t);
+}
+const bisDatum = (v) => (v ? new Date(`${v}T23:59:59`) : null);
+
+// Status-Pillen und Vorschau aus dem gespeicherten Stand und dem, was gerade in den Feldern steht
+function steuerungZeigen() {
+  const st = steuerung;
+  const fb = $('#f-st-banner').elements;
+  const bis = st.banner_bis ? new Date(st.banner_bis) : null;
+  if (!st.banner_text) stStatus('#st-s-banner', 'Aus');
+  else if (bis && bis < new Date()) stStatus('#st-s-banner', 'Abgelaufen', 'warn');
+  else stStatus('#st-s-banner', bis ? `Sichtbar bis ${bis.toLocaleDateString('de-DE')}` : 'Sichtbar', 'an');
+  $('#st-banner-weg').hidden = !st.banner_text;
+  const vText = fb.banner_text.value.trim();
+  const vBis = bisDatum(fb.banner_bis.value);
+  stStreifen($('#st-v-banner'), fb.banner_art.value, vBis && vBis < new Date() ? '' : vText, fb.banner_link.value.trim());
+
+  const fw = $('#f-st-wartung').elements;
+  stStatus('#st-s-wartung', st.wartung ? 'An' : 'Aus', st.wartung ? 'warn' : '');
+  // Wartung: Vorschau immer zeigen, blass solange der Schalter aus ist
+  stStreifen($('#st-v-wartung'), 'wartung', fw.wartung_text.value.trim() || WARTUNG_STANDARD);
+  $('#st-v-wartung').parentElement.classList.toggle('aus', !fw.wartung.checked);
+  $('#st-ve-wartung').textContent = fw.wartung.checked ? 'So sieht es in der App aus' : 'Vorschau, erscheint erst eingeschaltet';
+
+  stStatus('#st-s-update', st.mindest_version ? `Ab ${st.mindest_version}` : 'Aus', st.mindest_version ? 'warn' : '');
+  $('#st-update-weg').hidden = !st.mindest_version;
+
+  stStatus('#st-s-premium', st.premium_aktiv ? 'Nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
+}
+
 function steuerungFuellen(st) {
-  const f = $('#f-steuer');
-  for (const k of STEUER_TEXTE) f.elements[k].value = st[k] || '';
-  f.elements.banner_art.value = st.banner_art || 'info';
-  f.elements.banner_bis.value = st.banner_bis ? new Date(st.banner_bis).toLocaleDateString('sv-SE') : '';
-  f.elements.wartung.checked = !!st.wartung;
-  f.elements.premium_aktiv.checked = !!st.premium_aktiv;
+  steuerung = st || {};
+  const fb = $('#f-st-banner').elements;
+  fb.banner_text.value = st.banner_text || '';
+  fb.banner_link.value = st.banner_link || '';
+  fb.banner_art.value = st.banner_art || 'info';
+  fb.banner_bis.value = st.banner_bis ? new Date(st.banner_bis).toLocaleDateString('sv-SE') : '';
+  const fw = $('#f-st-wartung').elements;
+  fw.wartung.checked = !!st.wartung;
+  fw.wartung_text.value = st.wartung_text || '';
+  const fu = $('#f-st-update').elements;
+  fu.mindest_version.value = st.mindest_version || '';
+  fu.update_text.value = st.update_text || '';
+  $('#f-st-premium').elements.premium_aktiv.value = st.premium_aktiv ? 'an' : 'aus';
   $('#st-geaendert').textContent = st.von
     ? `Zuletzt geändert ${new Date(st.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} von ${st.von}.` : '';
+  steuerungZeigen();
 }
 async function ladeSteuerung() {
-  const msg = $('#f-steuer .msg');
+  for (const m of $$('#steuer .msg')) meldung(m, '');
   try {
     steuerungFuellen(await rpc('app_steuerung_lesen'));
-    meldung(msg, '');
   } catch (e) {
-    meldung(msg, fehlerText(e), true);
+    meldung($('#f-st-banner .msg'), fehlerText(e), true);
   }
 }
+async function steuerungSetzen(msg, p, text) {
+  steuerungFuellen(await rpc('app_steuerung_setzen', { p }));
+  meldung(msg, text);
+}
 $('#steuer-neu').addEventListener('click', ladeSteuerung);
-$('#f-steuer').addEventListener('submit', (ev) => {
+for (const f of $$('#steuer form')) f.addEventListener('input', steuerungZeigen);
+
+$('#f-st-banner').addEventListener('submit', (ev) => {
   ev.preventDefault();
-  const f = ev.target;
-  mitKnopf(f, async (msg) => {
-    const p = { banner_art: f.elements.banner_art.value, wartung: f.elements.wartung.checked, premium_aktiv: f.elements.premium_aktiv.checked };
-    for (const k of STEUER_TEXTE) p[k] = f.elements[k].value.trim();
+  const f = ev.target.elements;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, {
+    banner_text: f.banner_text.value.trim(), banner_art: f.banner_art.value, banner_link: f.banner_link.value.trim(),
     // „Bis“ gilt bis zum Ende des Tages
-    p.banner_bis = f.elements.banner_bis.value ? new Date(`${f.elements.banner_bis.value}T23:59:59`).toISOString() : '';
-    if (p.premium_aktiv && !window.confirm('Premium-Funktionen sind dann nur noch nach Kauf nutzbar (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
-    if (p.mindest_version && !window.confirm(`Alle App-Versionen unter ${p.mindest_version} zeigen dann nur noch „Bitte aktualisieren“. Ist die neue Version in beiden Stores freigegeben?`)) return;
-    steuerungFuellen(await rpc('app_steuerung_setzen', { p }));
-    meldung(msg, 'Gespeichert. Die App holt es beim nächsten Öffnen.');
-  });
+    banner_bis: f.banner_bis.value ? bisDatum(f.banner_bis.value).toISOString() : '',
+  }, f.banner_text.value.trim() ? 'Gespeichert. Die App zeigt die Mitteilung beim nächsten Öffnen.' : 'Gespeichert. Es ist keine Mitteilung mehr sichtbar.'));
+});
+$('#st-banner-weg').addEventListener('click', () => {
+  if (!window.confirm('Mitteilung aus der App entfernen?')) return;
+  mitKnopf($('#f-st-banner'), (msg) => steuerungSetzen(msg, { banner_text: '', banner_link: '', banner_bis: '' }, 'Mitteilung entfernt.'));
+});
+$('#f-st-wartung').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const f = ev.target.elements;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { wartung: f.wartung.checked, wartung_text: f.wartung_text.value.trim() },
+    f.wartung.checked ? 'Gespeichert. Der Wartungshinweis ist an.' : 'Gespeichert. Der Wartungshinweis ist aus.'));
+});
+$('#f-st-update').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const f = ev.target.elements;
+  const v = f.mindest_version.value.trim();
+  if (v && v !== steuerung.mindest_version
+      && !window.confirm(`Alle App-Versionen unter ${v} zeigen dann nur noch „Bitte aktualisieren“. Ist die neue Version in beiden Stores freigegeben?`)) return;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { mindest_version: v, update_text: f.update_text.value.trim() },
+    v ? `Gespeichert. Versionen unter ${v} müssen aktualisieren.` : 'Gespeichert. Es gibt keine Update-Pflicht.'));
+});
+$('#st-update-weg').addEventListener('click', () => {
+  mitKnopf($('#f-st-update'), (msg) => steuerungSetzen(msg, { mindest_version: '' }, 'Update-Pflicht aufgehoben.'));
+});
+$('#f-st-premium').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const an = ev.target.elements.premium_aktiv.value === 'an';
+  if (an && !steuerung.premium_aktiv
+      && !window.confirm('Premium-Funktionen sind dann nur noch nach Kauf nutzbar (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Premium gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
 });
 
 // ----- Gesucht, aber nicht im Katalog (katalog_nachfrage_liste) -----
@@ -493,6 +665,21 @@ async function ladeNachfrage() {
 
 // ----- Tägliche Füllrunde (werkbank_fuellrunde): Zahlen aus raeder.erstellt, Text von der Runde selbst -----
 
+// Kommas außerhalb von Klammern trennen die Stationen („…, Ridley Fenix, danach neue Marken (Stevens, Rose)“)
+function frStationen(text) {
+  const teile = [];
+  let tiefe = 0;
+  let akt = '';
+  for (const z of String(text || '')) {
+    if (z === '(') tiefe++;
+    if (z === ')') tiefe = Math.max(0, tiefe - 1);
+    if ((z === ',' || z === ';' || z === '\n') && !tiefe) { teile.push(akt); akt = ''; } else akt += z;
+  }
+  teile.push(akt);
+  return teile.map((t) => t.trim().replace(/^(danach|dann|und)\s+/i, '').replace(/\.$/, '')).filter(Boolean)
+    .map((t) => t.charAt(0).toUpperCase() + t.slice(1));
+}
+
 async function ladeFuellrunde() {
   const msg = $('#msg-fuellrunde');
   let d;
@@ -505,25 +692,44 @@ async function ladeFuellrunde() {
   }
   const tage = d.tage || [];
   const heute = tage[0] || { raeder: 0, teile: 0, marken: [] };
-  const gestern = tage[1];
+  const gestern = tage[1] || { raeder: 0, teile: 0 };
+  const woche = d.woche || [];
+  const summe7 = tage.slice(0, 7).reduce((n, t) => n + t.raeder, 0);
+  const top = woche[0];
+  const zahl = (titel, wert, unter) => {
+    const k = Object.assign(document.createElement('div'), { className: 'fr-zahl' });
+    k.append(Object.assign(document.createElement('div'), { className: 'eyebrow', textContent: titel }),
+      Object.assign(document.createElement('b'), { textContent: wert }),
+      Object.assign(document.createElement('p'), { className: 'fine', textContent: unter }));
+    return k;
+  };
+  $('#fr-zahlen').replaceChildren(
+    zahl('Heute neu', `${zahlDe(heute.raeder)}`, `${heute.raeder === 1 ? 'Rad' : 'Räder'}, ${zahlDe(heute.teile)} ${heute.teile === 1 ? 'Teil' : 'Teile'}`),
+    zahl('Gestern', `${zahlDe(gestern.raeder)}`, `${gestern.raeder === 1 ? 'Rad' : 'Räder'}, ${zahlDe(gestern.teile)} ${gestern.teile === 1 ? 'Teil' : 'Teile'}`),
+    zahl('Letzte 7 Tage', zahlDe(summe7), `Räder aus ${zahlDe(woche.length)} ${woche.length === 1 ? 'Marke' : 'Marken'}`),
+    zahl('Stärkste Marke', top ? top.marke : '–', top ? `+${zahlDe(top.n)} diese Woche, jetzt ${zahlDe(top.gesamt)}` : 'diese Woche noch nichts'));
+
   const zuletzt = tage.find((t) => t.bericht);
-  $('#fr-heute').textContent = `Heute ${zahlDe(heute.raeder)} ${heute.raeder === 1 ? 'Rad' : 'Räder'} und ${zahlDe(heute.teile)} ${heute.teile === 1 ? 'Teil' : 'Teile'} neu im Katalog`
-    + (heute.marken.length ? ` (${heute.marken.map((m) => `${m.marke} ${m.n}`).join(', ')})` : '')
-    + (gestern ? `, gestern ${zahlDe(gestern.raeder)}.` : '.');
-  const box = $('#fr-bericht');
-  box.replaceChildren();
   if (zuletzt) {
     const wann = new Date(zuletzt.gemeldet);
-    const kopf = `Bericht ${zuletzt === heute ? 'von heute' : 'vom ' + new Date(`${zuletzt.tag}T12:00:00`).toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`;
-    box.append(Object.assign(document.createElement('p'), { className: 'eyebrow', textContent: kopf }),
-      Object.assign(document.createElement('p'), { textContent: zuletzt.bericht || '' }));
-    if (zuletzt.probleme) box.append(Object.assign(document.createElement('p'), { className: 'msg fehler', textContent: zuletzt.probleme }));
-    if (zuletzt.naechster) box.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: `Nächster Lauf beginnt bei: ${zuletzt.naechster}` }));
+    stStatus('#fr-wann', `Bericht ${zuletzt === heute ? 'von heute' : 'vom ' + new Date(`${zuletzt.tag}T12:00:00`).toLocaleDateString('de-DE')}, ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr`);
+    $('#fr-bericht').textContent = zuletzt.bericht || '';
   } else {
-    box.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Noch kein Bericht. Die Runde meldet sich ab jetzt am Ende jedes Laufs hier.' }));
+    stStatus('#fr-wann', 'Noch kein Bericht');
+    $('#fr-bericht').textContent = 'Die Runde meldet sich am Ende jedes Laufs hier.';
   }
+  const stationen = frStationen(zuletzt && zuletzt.naechster);
+  $('#fr-weiter').hidden = !stationen.length;
+  $('#fr-pillen').replaceChildren(...stationen.map((t) => Object.assign(document.createElement('span'), { textContent: t })));
+  // Probleme der Runde (oft mit Teile-IDs) nur zusammengeklappt, ein Satz je Punkt
+  const hinweise = String((zuletzt && zuletzt.probleme) || '').split(/(?<=[.!])\s+(?=[A-ZÄÖÜ])/).map((t) => t.trim()).filter(Boolean);
+  const box = $('#fr-hinweise');
+  box.hidden = !hinweise.length;
+  box.querySelector('summary').textContent = `${zahlDe(hinweise.length)} ${hinweise.length === 1 ? 'Hinweis' : 'Hinweise'} der Runde (Abrufgrenzen, Lücken, Aufräumen)`;
+  box.querySelector('ul').replaceChildren(...hinweise.map((t) => Object.assign(document.createElement('li'), { textContent: t })));
+
   balken($('#fr-tage'), tage.slice(0, 7).map((t) => ({ label: tagText(t.tag), wert: t.raeder, tippName: 'Räder' })), SERIE[0]);
-  balken($('#fr-marken'), (d.woche || []).slice(0, 10).map((m) => ({ label: m.marke, wert: m.n, text: `+${zahlDe(m.n)} (${zahlDe(m.gesamt)})`, tippName: 'neu' })), SERIE[1]);
+  balken($('#fr-marken'), woche.slice(0, 7).map((m) => ({ label: m.marke, wert: m.n, text: `+${zahlDe(m.n)}`, tippName: 'neu' })), SERIE[1]);
 }
 
 // ----- Katalog-Qualität (katalog_qualitaet): Teile ohne Preis, mögliche Doppelte, Shop-Links -----
@@ -606,7 +812,10 @@ function qaPaar(p, msg) {
   leiste.append(zusammen, qaKnopf('Kein Duplikat', async () => {
     try {
       await rpc('teile_kein_duplikat', { p_a: p.a.id, p_b: p.b.id });
-      li.remove();
+      // Auch aus den geladenen Daten nehmen, sonst taucht das Paar beim nächsten Zeichnen (Reiterwechsel) wieder auf
+      qaDaten.doppelt = qaDaten.doppelt.filter((x) => x !== p);
+      $('#qa-zahl-doppelt').textContent = `(${zahlDe(qaDaten.doppelt.length)})`;
+      zeichneQualitaet();
     } catch (e) { meldung(msg, fehlerText(e), true); }
   }));
   li.append(kopf, teile, leiste);
