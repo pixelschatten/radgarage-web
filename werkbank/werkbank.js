@@ -1901,7 +1901,7 @@
     if (k) kontoVerwalten(k);
   }
 
-  function schlagwortEditor(email, worte) {
+  function schlagwortEditor(email, worte, geaendert = null) {
     const box = mk('div', { className: 'pf-worte' });
     const msg = mk('div', { className: 'msg', role: 'status' });
     const eingabe = mk('input', { type: 'text', placeholder: '+ Schlagwort', maxLength: 30, autocomplete: 'off' });
@@ -1913,6 +1913,7 @@
         worte = (await rpc('crm_schlagworte_setzen', { p_email: email, p_schlagworte: neu })) || [];
         zeichnen();
         ladeSchlagworte();
+        if (geaendert) geaendert(worte);
       } catch (e) { meldung(msg, fehlerText(e), true); }
     };
     const zeichnen = () => {
@@ -2079,8 +2080,74 @@
 
   // --- Kontakte und Sammelmail ---
 
+  // Mehrere ankreuzen und ihnen ein Schlagwort geben oder wegnehmen (Kontakte und Reiter Konten)
+  function wortAuswahl(ort, nachher) {
+    const gewaehlt = new Set();
+    let sichtbar = [];
+    const zahl = mk('strong');
+    const wort = mk('input', { type: 'text', placeholder: 'Schlagwort', maxLength: 30, autocomplete: 'off' });
+    wort.setAttribute('list', 'crm-schlagworte');
+    wort.setAttribute('aria-label', 'Schlagwort für die Auswahl');
+    const msg = mk('div', { className: 'msg', role: 'status' });
+    const alle = mk('button', { type: 'button', className: 'link-knopf' });
+    const leiste = mk('div', { className: 'wort-leiste', hidden: true });
+    const aktualisieren = () => {
+      leiste.hidden = !gewaehlt.size;
+      zahl.textContent = `${zahlDe(gewaehlt.size)} ausgewählt`;
+      alle.textContent = `Alle ${zahlDe(sichtbar.length)} angezeigten wählen`;
+      alle.hidden = sichtbar.every((e) => gewaehlt.has(e));
+      for (const h of ort.parentElement.querySelectorAll('input.wahl')) h.checked = gewaehlt.has(h.value);
+    };
+    const los = async (entfernen) => {
+      const w = wort.value.trim().replace(/^#/, '');
+      if (!w) { wort.focus(); return; }
+      meldung(msg, '');
+      try {
+        const n = await rpc('crm_schlagwort_viele', { p_emails: [...gewaehlt], p_wort: w, p_entfernen: entfernen });
+        const mehr = Math.max(0, gewaehlt.size - n);
+        gewaehlt.clear();
+        wort.value = '';
+        aktualisieren();
+        await ladeSchlagworte();
+        await nachher();
+        meldung(msg, '');
+        return { n, mehr, w };
+      } catch (e) { meldung(msg, fehlerText(e), true); return null; }
+    };
+    const melden = (r, entfernen) => {
+      if (!r) return;
+      const ziel = ort.closest('.t')?.querySelector('.msg') || msg;
+      meldung(ziel, `#${r.w} ${entfernen ? 'bei' : 'an'} ${zahlDe(r.n)} ${entfernen ? 'entfernt' : 'vergeben'}${r.mehr ? `, ${zahlDe(r.mehr)} ${entfernen ? 'hatten es nicht' : 'hatten es schon oder haben 12 Schlagworte'}` : ''}.`);
+    };
+    alle.addEventListener('click', () => { for (const e of sichtbar) gewaehlt.add(e); aktualisieren(); });
+    wort.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); los(false).then((r) => melden(r, false)); } });
+    leiste.append(zahl, alle, wort,
+      mk('button', { type: 'button', className: 'pill mini', textContent: 'Vergeben', onclick: () => los(false).then((r) => melden(r, false)) }),
+      mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Entfernen', onclick: () => los(true).then((r) => melden(r, true)) }),
+      mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Auswahl aufheben', onclick: () => { gewaehlt.clear(); aktualisieren(); } }),
+      msg);
+    ort.before(leiste);
+    return {
+      haken(email) {
+        const h = mk('input', { type: 'checkbox', className: 'wahl', value: email, checked: gewaehlt.has(email) });
+        h.setAttribute('aria-label', `${email} auswählen`);
+        h.addEventListener('change', () => { if (h.checked) gewaehlt.add(email); else gewaehlt.delete(email); aktualisieren(); });
+        return h;
+      },
+      // Nach jedem Neuzeichnen: Auswahl auf das Sichtbare beschränken
+      anzeigen(emails) {
+        sichtbar = emails;
+        for (const e of [...gewaehlt]) if (!emails.includes(e)) gewaehlt.delete(e);
+        aktualisieren();
+      },
+    };
+  }
+  const koAuswahl = wortAuswahl($('#ko-liste'), () => ladeKontakte());
+
   const SAMMEL_ART = { konten: 'service', premium: 'service', ohne_rad: 'service', inaktiv: 'service', neu: 'service',
     warteliste: 'warteliste', tester: 'warteliste', tester_iphone: 'warteliste', tester_android: 'warteliste', nur_bescheid: 'warteliste' };
+  // „Alle“ mit Schlagwort: Konten bekommen den Service-Fuß, reine Wartelisten-Einträge den Abmeldelink
+  const sammelArt = (gruppe, wort) => SAMMEL_ART[gruppe] || (gruppe === 'alle' && wort ? 'gemischt' : null);
   let koDaten = { anzahl: 0, kontakte: [] };
   let koSucheZeit = null;
 
@@ -2091,11 +2158,14 @@
     } catch (e) { meldung($('#msg-kontakte'), fehlerText(e), true); return; }
     $('#ko-zahl').textContent = `(${zahlDe(koDaten.anzahl)})`;
     $('#ko-stand').textContent = `Konten aus der App und die bestätigte Warteliste von radgarage.app${koDaten.stand ? `, Warteliste abgeglichen ${zeitKurz(koDaten.stand).replace(/\.$/, '')}` : ''}.`;
-    $('#ko-sammel').disabled = !SAMMEL_ART[$('#ko-gruppe').value];
-    $('#ko-sammel').title = SAMMEL_ART[$('#ko-gruppe').value] ? '' : 'Erst eine Gruppe aus Konten oder Warteliste wählen';
+    const art = sammelArt($('#ko-gruppe').value, $('#ko-wort').value);
+    $('#ko-sammel').disabled = !art;
+    $('#ko-sammel').textContent = $('#ko-wort').value ? `Sammelmail an #${$('#ko-wort').value}` : 'Sammelmail an diese Gruppe';
+    $('#ko-sammel').title = art ? '' : 'Erst eine Gruppe aus Konten oder Warteliste oder ein Schlagwort wählen';
+    koAuswahl.anzeigen(koDaten.kontakte.map((x) => x.email));
     const liste = $('#ko-liste');
     if (!koDaten.kontakte.length) { liste.innerHTML = '<p class="fine">Niemand in dieser Gruppe.</p>'; return; }
-    liste.replaceChildren(...koDaten.kontakte.map(kontaktZeile));
+    liste.replaceChildren(...koDaten.kontakte.map((x) => mk('div', { className: 'ko-zeile' }, koAuswahl.haken(x.email), kontaktZeile(x))));
     if (koDaten.anzahl > koDaten.kontakte.length) {
       liste.append(mk('p', { className: 'fine', textContent: `Die ersten ${zahlDe(koDaten.kontakte.length)} von ${zahlDe(koDaten.anzahl)}. Mit Suche oder Gruppe eingrenzen.` }));
     }
@@ -2146,7 +2216,7 @@
       mk('div', {}, mk('div', { className: 'name', textContent: m.betreff }),
         mk('div', { className: 'neben', textContent: `${zeitDe(m.erstellt)} · an ${zahlDe(m.anzahl)} (${gruppeText(m.gruppe)}${m.schlagwort ? `, #${m.schlagwort}` : ''}) · ${(m.team || '').split('@')[0]}` }),
         mk('div', { className: 'neben tb-text', textContent: m.text })),
-      mk('span', { className: 'sm-art', textContent: m.art === 'service' ? 'Service' : 'Warteliste' })))
+      mk('span', { className: 'sm-art', textContent: { service: 'Service', warteliste: 'Warteliste', gemischt: `#${m.schlagwort}` }[m.art] || m.art })))
       : [mk('li', { className: 'leer', textContent: 'Noch keine Sammelmail verschickt.' })]));
   }
   $('#sm-box').addEventListener('toggle', () => { if ($('#sm-box').open) ladeSammelmails(); });
@@ -2154,10 +2224,10 @@
   function sammelmailEditor() {
     const gruppe = $('#ko-gruppe').value;
     const wort = $('#ko-wort').value;
-    const art = SAMMEL_ART[gruppe];
+    const art = sammelArt(gruppe, wort);
     if (!art) return;
     const anzahl = koDaten.anzahl;
-    const gruppeText = `${$('#ko-gruppe').selectedOptions[0].parentElement.label || ''}: ${$('#ko-gruppe').selectedOptions[0].textContent}${wort ? `, #${wort}` : ''}`;
+    const gruppeText = art === 'gemischt' ? `#${wort}` : `${$('#ko-gruppe').selectedOptions[0].parentElement.label || ''}: ${$('#ko-gruppe').selectedOptions[0].textContent}${wort ? `, #${wort}` : ''}`;
     const f = mk('form', { autocomplete: 'off' });
     const betreff = mk('input', { name: 'betreff', required: true, minLength: 3, maxLength: 150,
       placeholder: art === 'service' ? 'z. B. Kurze Wartung heute Nacht' : 'z. B. Dein Testzugang zur Radgarage' });
@@ -2166,7 +2236,7 @@
     const msg = mk('div', { className: 'msg', role: 'status' });
     const vorschau = mk('iframe', { className: 'mail-vorschau', title: 'Vorschau der Mail', hidden: true });
     vorschau.setAttribute('sandbox', '');
-    const fuss = art === 'service'
+    const fuss = art !== 'warteliste'
       ? '\n\n–\nDu bekommst diese Mail als Info zu deinem Radgarage-Konto.'
       : '\n\n–\nDu bekommst diese Mail, weil du dich auf radgarage.app für die Warteliste eingetragen hast. Keine Mails mehr? Hier abmelden: https://radgarage.app/abmelden/?e=…';
     const test = mk('button', { type: 'button', className: 'pill ghost', textContent: 'Testmail an mich' });
@@ -2204,11 +2274,14 @@
     f.append(
       mk('p', { className: 'sm-hinweis', textContent: art === 'service'
         ? `An ${zahlDe(anzahl)} Konten (${gruppeText}). Nur Infos zum Dienst, zum Beispiel eine Störung, Wartung oder neue Bedingungen. Werbung und Angebote nicht, dafür fehlt die Einwilligung.`
+        : art === 'gemischt'
+        ? `An alle ${zahlDe(anzahl)} mit ${gruppeText}, Konten und Warteliste zusammen. Nur Infos zum Dienst, zu Testzugang oder Start, keine Werbung. Wer nur auf der Warteliste steht, bekommt automatisch einen Abmeldelink.`
         : `An ${zahlDe(anzahl)} Personen der Warteliste (${gruppeText}). Nur zu dem, wofür sie sich eingetragen haben: Testzugang und Start der App. Ein Abmeldelink kommt automatisch unter die Mail.` }),
       feldMit('Betreff', betreff), feldMit('Text', text),
       mk('div', { className: 'aktionen', style: 'margin:0' }, bausteinWahl(text, '')),
       mk('label', { className: 'sm-ok' }, ok, mk('span', { textContent: art === 'service'
         ? 'Die Mail enthält nur Infos zum Dienst, keine Werbung.'
+        : art === 'gemischt' ? 'Die Mail enthält nur Infos zum Dienst, zu Testzugang oder Start, keine Werbung.'
         : 'Die Mail passt zu Testzugang oder Start der App.' })),
       mk('p', { className: 'fine', textContent: 'Jede Person bekommt eine eigene Mail von kontakt@radgarage.app, ohne die anderen Adressen zu sehen. Antworten landen als Unterhaltung im Postfach.' }),
       vorschau, mk('div', { className: 'aktionen' }, senden, test, vorschauKnopf, mk('button', { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu })), msg);
@@ -3258,8 +3331,22 @@
   const datum = (d) => (d ? new Date(d).toLocaleDateString('de-DE') : '–');
   const gesperrt = (k) => k.gesperrt_bis && new Date(k.gesperrt_bis) > new Date();
 
+  let ktWorte = {};
+  async function ladeKontoWorte() {
+    if (!darf('konten_betreuen')) return;
+    try { ktWorte = (await rpc('crm_schlagwort_karte')) || {}; } catch { ktWorte = {}; }
+    ladeSchlagworte().then(() => {
+      const wahl = $('#kt-wort');
+      const vorher = wahl.value;
+      wahl.replaceChildren(new Option('Alle', ''), ...schlagworte.map((w) => new Option(`#${w.wort}`, w.wort)));
+      wahl.value = schlagworte.some((w) => w.wort === vorher) ? vorher : '';
+    });
+  }
+  const worteVon = (k) => ktWorte[(k.email || '').toLowerCase()] || [];
+
   async function ladeKonten() {
     meldung($('#msg-konten'), '');
+    const worteLaden = ladeKontoWorte();
     try {
       [konten, helfer] = await Promise.all([darf('konten_sehen') ? rpc('konten_liste') : [], darf('rollen') ? rpc('helfer_liste') : []]);
       konten = konten || [];
@@ -3290,6 +3377,7 @@
       kachel('k5', 'Aktiv', zahl(konten.filter((k) => k.letzte_anmeldung && new Date(k.letzte_anmeldung) > woche).length), 'in den letzten 7 Tagen'),
       kachel('k4', 'Premium', zahl(konten.filter((k) => k.premium).length), 'Konten'),
       kachel('k3', 'Familien', zahl(konten.filter((k) => k.familie === 'besitzer').length), ((n) => `${zahl(n)} ${n === 1 ? 'Mitglied' : 'Mitglieder'}`)(konten.filter((k) => k.familie === 'mitglied').length)));
+    await worteLaden;
     ktZeige = 50;
     zeichneKonten();
   }
@@ -3304,11 +3392,19 @@
     const liste = kontenGefiltert();
     $('#kt-zahl').textContent = `(${liste.length.toLocaleString('de-DE')})`;
     zeichneKontenListe(liste);
+    const wort = $('#kt-wort').value;
+    $('#kt-sammel').hidden = !(wort && darf('konten_verwalten'));
+    $('#kt-sammel').textContent = `Sammelmail an #${wort}`;
   }
   function kontenGefiltert() {
     const such = $('#kt-suche').value.trim().toLowerCase();
     const filter = $('#kt-filter').value;
-    return konten.filter((k) => (!such || (k.email || '').toLowerCase().includes(such) || String(k.id).startsWith(such))
+    const wort = $('#kt-wort').value;
+    // „#tester“ in der Suche sucht nach Schlagwort
+    const suchWort = such.startsWith('#') ? such.slice(1) : null;
+    return konten.filter((k) => (!such || (suchWort != null ? worteVon(k).some((w) => w.toLowerCase().startsWith(suchWort))
+        : (k.email || '').toLowerCase().includes(such) || String(k.id).startsWith(such)))
+      && (!wort || worteVon(k).includes(wort))
       && (filter === 'premium' ? k.premium : filter === 'familie' ? k.familie : filter === 'rolle' ? k.rolle
         : filter === 'gesperrt' ? gesperrt(k) : filter === 'unbestaetigt' ? !k.bestaetigt : true));
   }
@@ -3319,6 +3415,7 @@
       const zeile = document.createElement('div');
       zeile.className = 'mit-bild';
       const links = document.createElement('div');
+      if (darf('konten_betreuen') && k.email) zeile.append(ktAuswahl.haken(k.email.toLowerCase()));
       zeile.append(ava(k.email, bilder[k.profilbild], true), links);
       links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: k.email || `Konto ${String(k.id).slice(0, 8)}` }),
         Object.assign(document.createElement('div'), { className: 'fine', textContent: `Seit ${datum(k.registriert)} · zuletzt ${datum(k.letzte_anmeldung)} · ${k.raeder || 0} ${k.raeder === 1 ? 'Rad' : 'Räder'}` + helferText(k) }));
@@ -3333,6 +3430,7 @@
       else if (k.rolle) chip('ohne 2FA', 'warn');
       if (!k.bestaetigt) chip('nicht bestätigt', 'warn');
       if (gesperrt(k)) chip('gesperrt', 'warn');
+      for (const w of worteVon(k)) chip(`#${w}`, 'wort');
       links.append(chips);
       const b = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Verwalten' });
       b.addEventListener('click', () => kontoVerwalten(k));
@@ -3341,9 +3439,23 @@
     }));
     if (!liste.length) ul.innerHTML = '<li class="leer">Keine Konten gefunden.</li>';
     $('#kt-mehr').hidden = liste.length <= ktZeige;
+    ktAuswahl.anzeigen(liste.filter((k) => k.email).map((k) => k.email.toLowerCase()));
   }
   $('#kt-suche').addEventListener('input', () => { ktZeige = 50; zeichneKonten(); });
   $('#kt-filter').addEventListener('change', () => { ktZeige = 50; zeichneKonten(); });
+  $('#kt-wort').addEventListener('change', () => { ktZeige = 50; zeichneKonten(); });
+  const ktAuswahl = wortAuswahl($('#kt-liste'), async () => { await ladeKontoWorte(); zeichneKonten(); });
+  // Aus den Konten direkt zur Sammelmail an ein Schlagwort (CRM, Kontakte, Alle + Schlagwort)
+  $('#kt-sammel').addEventListener('click', async () => {
+    const wort = $('#kt-wort').value;
+    crmAnsicht = 'kontakte';
+    tab('crm');
+    $('#ko-gruppe').value = 'alle';
+    await ladeSchlagworte();
+    $('#ko-wort').value = wort;
+    await ladeKontakte();
+    sammelmailEditor();
+  });
   $('#kt-mehr').addEventListener('click', () => { ktZeige += 50; zeichneKonten(); });
 
   function kontoVerwalten(k) {
@@ -3444,6 +3556,10 @@
     // Das Super-Admin-Konto und das eigene sind vor Änderungen durch die Werkbank geschützt
     const geschuetzt = ich || k.rolle === 'superadmin';
     const teile = [info];
+    if (darf('konten_betreuen') && k.email) {
+      teile.push(block('Schlagworte', 'Nur intern, z. B. Tester, Familie, Freunde. Danach filtern in Konten, Kontakte und Postfach (#Wort), Sammelmail je Schlagwort.',
+        schlagwortEditor(k.email, worteVon(k), (w) => { ktWorte[k.email.toLowerCase()] = w; zeichneKonten(); })));
+    }
     if (darf('konten_verwalten')) teile.push(premium);
     else teile.push(Object.assign(document.createElement('p'), { className: 'fine', textContent: `Premium: ${k.premium ? 'aktiv' : 'nicht aktiv'}.` }));
     if (!geschuetzt && darf('konten_betreuen')) {
