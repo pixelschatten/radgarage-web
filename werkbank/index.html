@@ -24,7 +24,7 @@
   --bg: #F2EDE2; --surface: #E6DFCF; --surface2: #F8F4EA; --text: #28241E; --muted: #554D41; --line: #D2C8B4;
   --accent: #2E2A25; --on-accent: #F7F3EA; --nav: #2E2A25; --nav-fg: #DDD3BE;
   --k1: #F6C7A8; --k2: #C9C6F0; --k3: #F4DE8A; --k4: #B8E2C8; --k5: #B9D8F2;
-  --ink: #28241E; --ink2: #3F382F; --warn: #8A2E0A; --warn-bg: #F5D3BF; --shadow: rgba(46, 42, 37, .18);
+  --ink: #28241E; --ink2: #3F382F; --warn: #8A2E0A; --warn-bg: #F5D3BF; --shadow: rgba(46, 42, 37, .18); --papier: #FFFDF8; --papier-chip: #EFE8D9;
   --font: "Manrope", "Segoe UI", system-ui, sans-serif;
   --display: "Bricolage Grotesque", "Manrope", system-ui, sans-serif;
 }
@@ -33,7 +33,7 @@
     --bg: #1F2226; --surface: #2B2F34; --surface2: #363B41; --text: #EDEFF1; --muted: #B9BFC6; --line: #4A5058;
     --accent: #E6E9EC; --on-accent: #1F2226; --nav: #121417; --nav-fg: #B9BFC6;
     --k1: #4A3A31; --k2: #383A55; --k3: #46422A; --k4: #2E463A; --k5: #2F4054;
-    --ink: #EDEFF1; --ink2: #C9CED4; --warn: #FFB48C; --warn-bg: #4D2D20; --shadow: rgba(0, 0, 0, .45);
+    --ink: #EDEFF1; --ink2: #C9CED4; --warn: #FFB48C; --warn-bg: #4D2D20; --shadow: rgba(0, 0, 0, .45); --papier: #2B2F34; --papier-chip: #3E444B;
     color-scheme: dark;
   }
 }
@@ -41,7 +41,7 @@
   --bg: #1F2226; --surface: #2B2F34; --surface2: #363B41; --text: #EDEFF1; --muted: #B9BFC6; --line: #4A5058;
   --accent: #E6E9EC; --on-accent: #1F2226; --nav: #121417; --nav-fg: #B9BFC6;
   --k1: #4A3A31; --k2: #383A55; --k3: #46422A; --k4: #2E463A; --k5: #2F4054;
-  --ink: #EDEFF1; --ink2: #C9CED4; --warn: #FFB48C; --warn-bg: #4D2D20; --shadow: rgba(0, 0, 0, .45);
+  --ink: #EDEFF1; --ink2: #C9CED4; --warn: #FFB48C; --warn-bg: #4D2D20; --shadow: rgba(0, 0, 0, .45); --papier: #2B2F34; --papier-chip: #3E444B;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -260,7 +260,7 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .pf-leiste { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
 .pf-original { display: block; width: 100%; height: 420px; border: 0; border-radius: 12px; background: #fff; margin-top: 10px; }
 .pf-antwort { margin: 0; border-top: 1.5px solid var(--line); padding-top: 12px; }
-.pf-antwort textarea { width: 100%; min-height: 160px; max-height: 32vh; resize: vertical; }
+.pf-antwort textarea { width: 100%; min-height: 130px; max-height: 32vh; resize: vertical; }
 .pf-antwort .mail-vorschau { height: 300px; }
 .pf-antwort-leiste { display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap; margin-top: 8px; }
 .pf-antwort-leiste .fine { flex: 1 1 200px; min-width: 0; overflow-wrap: anywhere; }
@@ -508,6 +508,52 @@ details.als-tabelle td, details.als-tabelle th { padding: 6px 8px; font-variant-
 .pf-nachricht .meta { font-size: 13px; color: var(--muted); }
 .pf-nachricht.aus .meta { color: var(--ink2); }
 .pf-nachricht .fb-text { margin: 6px 0 0; }
+/* Mails lesen: eingegangene Mails als ruhige Leseansicht, eigene Antworten als Blase */
+.pf-nachricht.ein { align-self: stretch; max-width: none; background: var(--papier); border: 1px solid var(--line); border-radius: 20px; padding: 16px 24px 20px; }
+.pf-nachricht.ein .pf-blase-kopf { align-items: baseline; }
+.pf-inhalt { margin-top: 10px; max-width: 70ch; font-size: 16px; line-height: 1.65; color: var(--text); overflow-wrap: anywhere; }
+.pf-nachricht.aus .pf-inhalt { margin-top: 6px; font-size: 15px; line-height: 1.55; color: var(--ink); }
+.pf-inhalt p, .pf-inhalt ul, .pf-inhalt ol { margin: 0 0 .9em; }
+.pf-inhalt > :last-child { margin-bottom: 0; }
+.pf-inhalt ul, .pf-inhalt ol { padding-left: 1.3em; }
+.pf-inhalt li { margin: .25em 0; }
+.pf-inhalt h4 { margin: 1.1em 0 .4em; font: 800 18px/1.3 var(--display); letter-spacing: -.01em; color: var(--ink); }
+.pf-inhalt h4:first-child { margin-top: 0; }
+.pf-inhalt .leer { color: var(--muted); font-style: italic; }
+.pf-inhalt a { color: var(--ink); font-weight: 600; text-decoration: underline; text-decoration-thickness: 2px; text-decoration-color: var(--line); text-underline-offset: 3px; }
+.pf-inhalt a:hover, .pf-inhalt a:focus-visible { text-decoration-color: currentColor; }
+.pf-inhalt a.pf-linkchip { display: inline-block; margin-left: 4px; padding: 0 9px; border-radius: 999px; background: var(--papier-chip); font-size: 12.5px; font-weight: 700; line-height: 1.7; text-decoration: none; vertical-align: 1px; }
+.pf-inhalt a.pf-linkchip:hover { background: var(--line); }
+.pf-signatur { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.5; color: var(--muted); }
+.pf-signatur p { margin: 0 0 .4em; }
+details.pf-zitat { margin-top: 14px; }
+details.pf-zitat > summary { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; background: var(--papier-chip); color: var(--ink2); font: 700 13px/1.2 var(--font); cursor: pointer; list-style: none; }
+details.pf-zitat > summary::-webkit-details-marker { display: none; }
+details.pf-zitat > summary::before { content: "▸"; transition: transform .15s; }
+details.pf-zitat[open] > summary::before { transform: rotate(90deg); }
+.pf-zitat-text { margin-top: 10px; padding-left: 14px; border-left: 3px solid var(--line); font-size: 15px; color: var(--muted); }
+.pf-linkliste { list-style: none; margin: 10px 0 0; padding: 0; font-size: 14px; }
+@media (max-width: 640px) { .pf-nachricht.ein { padding: 14px 16px 16px; border-radius: 16px; } .pf-inhalt { font-size: 15.5px; } .pf-antwort textarea { min-height: 96px; } }
+/* Gelesen/ungelesen direkt in der Liste */
+.pf-eintrag { position: relative; border-top: 1.5px solid var(--line); }
+.pf-eintrag:first-child { border-top: 0; }
+.pf-eintrag .pf-zeile { border-top: 0; }
+.pf-gelesen { position: absolute; right: 12px; bottom: 9px; height: 26px; padding: 0 10px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface2); color: var(--ink); font: 700 12px/1 var(--font); cursor: pointer; opacity: 0; transition: opacity .12s; }
+.pf-eintrag:hover .pf-gelesen, .pf-gelesen:focus-visible { opacity: 1; }
+.pf-gelesen:hover { border-color: var(--accent); }
+@media (hover: none) { .pf-gelesen { opacity: 1; } .pf-eintrag .pf-zeile { padding-bottom: 40px; } }
+/* Ordner */
+.pf-ordner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.ordner-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: 700 14px/1 var(--font); cursor: pointer; }
+.ordner-chip:hover { border-color: var(--accent); }
+.ordner-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.ordner-chip .opt { font-size: 12px; opacity: .7; }
+.ordner-chip.neu::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+.ordner-chip.plus { border-style: dashed; color: var(--ink2); }
+input.ordner-feld { width: 190px; height: 32px; padding: 0 12px; font-size: 14px; border-radius: 999px; }
+.pf-werkzeuge input.ordner-feld { width: 190px; }
+.ordner-aktionen { display: inline-flex; gap: 14px; margin-left: 6px; font-size: 14px; }
+.pf-meta .or { background: var(--k2); color: var(--ink); }
 .crm-reiter { flex-wrap: wrap; border-radius: 22px; margin-bottom: 14px; }
 .pf-meta { display: flex; flex-wrap: wrap; gap: 4px 6px; margin-top: 3px; }
 .pf-meta span { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--surface); color: var(--ink2); }
@@ -1269,6 +1315,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           </div>
           <input type="search" id="pf-suche" placeholder="Adresse, Name, Betreff oder #Schlagwort" autocomplete="off" aria-label="Unterhaltungen suchen">
         </div>
+        <div class="pf-ordner" id="pf-ordner" role="group" aria-label="Ordner"></div>
         <div class="msg" role="status" id="msg-postfach"></div>
         <div class="karten" id="pf-liste"></div>
         <p class="fine" style="margin-top:10px">Antworten gehen von kontakt@radgarage.app raus. Unterhaltungen werden ein Jahr nach der letzten Nachricht gelöscht, Spam nach 30 Tagen.</p>
@@ -1538,7 +1585,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="js/01-kern.js?v=2026-10-28-15"></script>
 <script src="js/02-erfassen.js?v=2026-10-28-15"></script>
 <script src="js/03-freigaben.js?v=2026-10-28-15"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-15"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-15b"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-28-15"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-28-15"></script>
 <script src="js/07-uebersicht.js?v=2026-10-28-15"></script>
