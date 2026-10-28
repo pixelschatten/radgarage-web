@@ -542,25 +542,36 @@ details.pf-zitat[open] > summary::before { transform: rotate(90deg); }
 .pf-linkliste { list-style: none; margin: 10px 0 0; padding: 0; font-size: 14px; }
 @media (max-width: 640px) { .pf-nachricht.ein { padding: 14px 16px 16px; border-radius: 16px; } .pf-inhalt { font-size: 15.5px; } .pf-antwort textarea { min-height: 96px; } }
 /* Gelesen/ungelesen direkt in der Liste */
-.pf-eintrag { position: relative; border-top: 1.5px solid var(--line); }
+.pf-eintrag { position: relative; display: flex; align-items: flex-start; border-top: 1.5px solid var(--line); }
 .pf-eintrag:first-child { border-top: 0; }
-.pf-eintrag .pf-zeile { border-top: 0; }
+.pf-eintrag .pf-zeile { flex: 1; min-width: 0; border-top: 0; padding-left: 10px; }
+.pf-eintrag input.wahl { margin-top: 24px; }
+.pf-eintrag:has(input.wahl:checked) { background: color-mix(in srgb, var(--k5) 55%, transparent); }
+@media (max-width: 620px) { #pf-status { flex-wrap: wrap; border-radius: 22px; } }
+.pf-auswahl select { height: 30px; padding: 0 10px; font-size: 13px; font-weight: 700; border-radius: 999px; width: auto; background: var(--on-accent); color: var(--accent); border: 0; }
 .pf-gelesen { position: absolute; right: 12px; bottom: 9px; height: 26px; padding: 0 10px; border: 1.5px solid var(--line); border-radius: 999px; background: var(--surface2); color: var(--ink); font: 700 12px/1 var(--font); cursor: pointer; opacity: 0; transition: opacity .12s; }
 .pf-eintrag:hover .pf-gelesen, .pf-gelesen:focus-visible { opacity: 1; }
 .pf-gelesen:hover { border-color: var(--accent); }
 @media (hover: none) { .pf-gelesen { opacity: 1; } .pf-eintrag .pf-zeile { padding-bottom: 40px; } }
 /* Ordner */
 .pf-ordner { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
-.ordner-chip { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border: 1.5px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: 700 14px/1 var(--font); cursor: pointer; }
+.ordner-chip { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 12px 0 5px; border: 1.5px solid var(--line); border-radius: 999px; background: transparent; color: var(--ink); font: 700 14px/1 var(--font); cursor: pointer; }
 .ordner-chip:hover { border-color: var(--accent); }
 .ordner-chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .ordner-chip .opt { font-size: 12px; opacity: .7; }
 .ordner-chip.neu::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
-.ordner-chip.plus { border-style: dashed; color: var(--ink2); }
+.ordner-chip.plus { border-style: dashed; color: var(--ink2); padding-left: 12px; }
+/* Ordnersymbol: Kachel in der Ordnerfarbe (--of, eine der fünf Kachelfarben), darin der Ordner als Linie */
+.ordner-symbol { display: inline-grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 8px; background: var(--of, var(--surface2)); color: var(--ink); }
+.ordner-symbol svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+.ordner-chip[aria-pressed="true"] .ordner-symbol { box-shadow: 0 0 0 1.5px var(--on-accent); }
+.ordner-wahl { display: inline-flex; align-items: center; gap: 6px; }
+.ordner-wahl .ordner-symbol { width: 28px; height: 28px; border-radius: 9px; }
 input.ordner-feld { width: 190px; height: 32px; padding: 0 12px; font-size: 14px; border-radius: 999px; }
 .pf-werkzeuge input.ordner-feld { width: 190px; }
 .ordner-aktionen { display: inline-flex; gap: 14px; margin-left: 6px; font-size: 14px; }
-.pf-meta .or { background: var(--k2); color: var(--ink); }
+.pf-meta .or { display: inline-flex; align-items: center; gap: 4px; background: var(--of, var(--k2)); color: var(--ink); }
+.pf-meta .or svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 /* Warteliste */
 .wl-kacheln { margin-top: 14px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
 #wl-suche { flex: 1 1 200px; min-width: 0; }
@@ -681,6 +692,24 @@ table.rechte td.nein { color: var(--muted); }
 .suche-gruppe .treffer button[aria-selected="true"] { border-color: var(--accent); }
 .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); z-index: 60; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; max-width: calc(100% - 32px); padding: 12px 16px; border-radius: 18px; background: var(--accent); color: var(--on-accent); box-shadow: 0 12px 30px var(--shadow); font-weight: 600; }
 .toast .pill { background: var(--on-accent); color: var(--accent); }
+/* Lade-Anzeige (ladeFetch in js/01-kern.js): Kreis im Knopf, danach kurz ein Haken, dünner Balken oben */
+#ladebalken { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 100; pointer-events: none; overflow: hidden; opacity: 0; transition: opacity .2s; }
+#ladebalken.an { opacity: 1; }
+#ladebalken::before { content: ""; position: absolute; top: 0; bottom: 0; left: -40%; width: 40%; border-radius: 0 3px 3px 0; background: var(--accent); animation: ladebalken 1.1s ease-in-out infinite; }
+@keyframes ladebalken { from { left: -40%; } to { left: 100%; } }
+.laedt { cursor: progress !important; }
+.laedt-rel { position: relative; }
+.laedt-klein::after, .laedt-gross::after { content: ""; position: absolute; top: 50%; width: 16px; height: 16px; margin-top: -8px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--lade-farbe, currentColor); border-right-color: transparent; animation: laedt-dreh .7s linear infinite; }
+.laedt-gross::after { right: 16px; }
+.laedt-klein, .lade-fertig { -webkit-text-fill-color: transparent; }
+.laedt-klein > *, .lade-fertig > * { visibility: hidden; }
+.laedt-klein::after { left: 50%; margin-left: -8px; }
+.mini.laedt-klein::after, .pf-gelesen.laedt-klein::after { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; }
+.lade-fertig::after { content: ""; position: absolute; top: 50%; left: 50%; width: 12px; height: 6px; margin: -5px 0 0 -6px; border: solid var(--lade-farbe, currentColor); border-width: 0 0 2.5px 2.5px; transform: rotate(-45deg); animation: lade-haken .25s ease-out; }
+.laedt-leise { opacity: .55; transition: opacity .15s; }
+@keyframes laedt-dreh { to { transform: rotate(360deg); } }
+@keyframes lade-haken { from { opacity: 0; transform: rotate(-45deg) scale(.4); } }
+@media (prefers-reduced-motion: reduce) { .laedt-klein::after, .laedt-gross::after { animation-duration: 2s; } #ladebalken::before { animation-duration: 3s; } }
 .leer-plot { color: var(--muted); font-size: 14px; padding: 18px 0; }
 
 [hidden] { display: none !important; }
@@ -1646,10 +1675,10 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-17"></script>
+<script src="js/01-kern.js?v=2026-10-28-laden"></script>
 <script src="js/02-erfassen.js?v=2026-10-28-17"></script>
 <script src="js/03-freigaben.js?v=2026-10-28-17"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-warteliste"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-auswahl"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-28-17"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-28-17"></script>
 <script src="js/07-uebersicht.js?v=2026-10-28-17"></script>
