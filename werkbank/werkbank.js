@@ -346,6 +346,7 @@
     for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
     if (name === 'freigaben') ladeOffen();
     if (name === 'eigene') ladeEigene();
+    if (name === 'erfassen') entwurfAnbieten();
     if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
     if (name === 'katalog') katalogLaden();
     if (name === 'uebersicht') ladeUebersicht();
@@ -383,6 +384,7 @@
 
   function zeichneTeile() {
     pflichtCheck();
+    if (radTeile.length) entwurfMerken();
     const ul = $('#rad-teile');
     $('#teile-zahl').textContent = radTeile.length ? `(${radTeile.length})` : '';
     if (!radTeile.length) {
@@ -391,41 +393,76 @@
         : '<li class="leer">Noch keine Teile. Unter „Teil hinzufügen“ suchen oder neu anlegen. Barcode ist immer freiwillig.</li>';
       return;
     }
-    ul.replaceChildren(...radTeile.map((t, i) => {
-      const li = document.createElement('li');
-      const links = document.createElement('div');
-      const name = document.createElement('div');
-      name.className = 'name';
-      name.textContent = t.name;
-      const neben = document.createElement('div');
-      neben.className = 'neben';
-      const marke = document.createElement('span');
-      marke.className = 'marke' + (t.neu ? ' neu' : '');
-      marke.textContent = t.neu ? 'neu' : t.kategorie;
-      neben.append(marke, t.neu ? ' ' + t.kategorie : '');
-      links.append(name, neben);
-      const weg = document.createElement('button');
-      weg.type = 'button';
-      weg.className = 'pill ghost klein';
-      weg.textContent = 'Entfernen';
-      weg.addEventListener('click', () => { radTeile.splice(i, 1); zeichneTeile(); });
-      li.append(links, weg);
-      if (!t.neu) {
-        const ean = document.createElement('div');
-        ean.className = 'ean';
-        const inp = document.createElement('input');
-        inp.inputMode = 'numeric';
-        inp.maxLength = 14;
-        inp.placeholder = 'Barcode (freiwillig)';
-        inp.value = t.ean || '';
-        inp.setAttribute('aria-label', 'Barcode zu ' + t.name);
-        inp.addEventListener('input', () => { t.ean = inp.value.replace(/\D/g, ''); });
-        ean.append(inp);
-        scanKnopf(ean, inp, (code) => { t.ean = code; });
-        li.append(ean);
-      }
-      return li;
-    }));
+    // Nach Kategorie gruppiert in der Reihenfolge der Pflichtteile, darunter die fehlenden Pflichtteile zum Antippen
+    const { wichtig, vielleicht } = fehlendePflichtteile();
+    const reihenfolge = [...PFLICHTTEILE, 'Motor', 'Akku', ...TEIL_KATEGORIEN];
+    const rang = (k) => { const r = reihenfolge.indexOf(k); return r < 0 ? reihenfolge.length : r; };
+    const gruppen = new Map();
+    radTeile.forEach((t, i) => { if (!gruppen.has(t.kategorie)) gruppen.set(t.kategorie, []); gruppen.get(t.kategorie).push(i); });
+    const zeilen = [];
+    for (const k of [...gruppen.keys()].sort((a, b) => rang(a) - rang(b))) {
+      zeilen.push(Object.assign(document.createElement('li'), { className: 'gruppe-kopf', textContent: k }));
+      for (const i of gruppen.get(k)) zeilen.push(teilAmRadZeile(radTeile[i], i));
+    }
+    if (wichtig.length || vielleicht.length) zeilen.push(fehltZeile(wichtig, vielleicht));
+    ul.replaceChildren(...zeilen);
+  }
+
+  // Fehlende Pflichtteile als Knöpfe: Antippen sucht im Katalog nach der Kategorie
+  function fehltZeile(wichtig, vielleicht) {
+    const li = document.createElement('li');
+    li.className = 'platz';
+    li.append(Object.assign(document.createElement('div'), { className: 'name', textContent: wichtig.length ? 'Fehlt noch' : 'Fehlt oft zu Recht' }));
+    const chips = document.createElement('div');
+    chips.className = 'platz-chips';
+    for (const k of [...wichtig, ...vielleicht]) {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'platz-chip' + (vielleicht.includes(k) ? ' vielleicht' : ''), textContent: `＋ ${k}` });
+      if (vielleicht.includes(k)) b.title = 'Fehlt oft zu Recht';
+      b.addEventListener('click', () => {
+        $('#suche').value = `${k} `;
+        $('#suche').focus();
+        suche($('#suche').value);
+      });
+      chips.append(b);
+    }
+    li.append(chips);
+    return li;
+  }
+
+  function teilAmRadZeile(t, i) {
+    const li = document.createElement('li');
+    const links = document.createElement('div');
+    const name = document.createElement('div');
+    name.className = 'name';
+    name.textContent = t.name;
+    const neben = document.createElement('div');
+    neben.className = 'neben';
+    const marke = document.createElement('span');
+    marke.className = 'marke neu';
+    marke.textContent = 'neu im Katalog';
+    if (t.neu) neben.append(marke);
+    links.append(name, neben);
+    const weg = document.createElement('button');
+    weg.type = 'button';
+    weg.className = 'pill ghost klein';
+    weg.textContent = 'Entfernen';
+    weg.addEventListener('click', () => { radTeile.splice(i, 1); zeichneTeile(); });
+    li.append(links, weg);
+    if (!t.neu) {
+      const ean = document.createElement('div');
+      ean.className = 'ean';
+      const inp = document.createElement('input');
+      inp.inputMode = 'numeric';
+      inp.maxLength = 14;
+      inp.placeholder = 'Barcode (freiwillig)';
+      inp.value = t.ean || '';
+      inp.setAttribute('aria-label', 'Barcode zu ' + t.name);
+      inp.addEventListener('input', () => { t.ean = inp.value.replace(/\D/g, ''); });
+      ean.append(inp);
+      scanKnopf(ean, inp, (code) => { t.ean = code; });
+      li.append(ean);
+    }
+    return li;
   }
 
   let suchZaehler = 0;
@@ -541,6 +578,8 @@
     appUebernahme = null;
     $('#f-rad').reset();
     radTeile = [];
+    entwurfWeg();
+    $('#naechste').hidden = true;
     ergaenzenEnde();
     zeichneTeile();
     meldung($('#f-rad .msg'), '');
@@ -599,9 +638,16 @@
         throw e;
       }
       const name = `${f.hersteller.value.trim()} ${f.reihe.value.trim()} ${f.ausstattung.value.trim()}`.trim();
+      letztesRad = {
+        hersteller: f.hersteller.value.trim(), reihe: f.reihe.value.trim(), baujahr: f.baujahr.value, kategorie: f.kategorie.value,
+        uvp: f.uvp.value, quelle: f.quelle.value.trim(), live: !!(ergebnis && ergebnis.live), teile: radTeile.map((t) => ({ ...t, ean: '' })),
+      };
       f.reset();
       radTeile = [];
       zeichneTeile();
+      entwurfWeg();
+      $('#naechste-text').textContent = `${letztesRad.hersteller} ${letztesRad.reihe} ${letztesRad.baujahr} mit denselben ${letztesRad.teile.length} Teilen`;
+      $('#naechste').hidden = false;
       await appUebernahmeFertig();
       meldung(msg, ergebnis && ergebnis.live
         ? `${name} ist jetzt im Katalog.`
@@ -609,6 +655,88 @@
       if (darf('katalog_pflegen')) ladeOffen();
     });
   });
+
+  // ----- Nächste Ausstattung: Marke, Reihe, Jahr und Teile vom gerade gespeicherten Rad übernehmen -----
+
+  let letztesRad = null;
+  $('#naechste-nein').addEventListener('click', () => { $('#naechste').hidden = true; letztesRad = null; });
+  $('#naechste-los').addEventListener('click', async () => {
+    const r = letztesRad;
+    if (!r) return;
+    $('#naechste').hidden = true;
+    const f = $('#f-rad');
+    // Neu angelegte Teile stehen jetzt im Katalog: über Marke und Name wiederfinden, damit sie nicht doppelt angelegt werden
+    if (r.live) {
+      for (const t of r.teile.filter((x) => x.neu)) {
+        const { data } = await sb.from('teile').select('id, marke, name, kategorie').eq('marke', t.neu.marke).eq('name', t.neu.name).limit(1);
+        if (data && data[0]) Object.assign(t, { teil_id: data[0].id, neu: undefined, name: `${data[0].marke} ${data[0].name}`, kategorie: data[0].kategorie });
+      }
+    }
+    f.hersteller.value = r.hersteller;
+    f.reihe.value = r.reihe;
+    f.baujahr.value = r.baujahr;
+    f.kategorie.value = r.kategorie;
+    f.uvp.value = '';
+    f.quelle.value = r.quelle;
+    radTeile = r.teile.map((t) => { const x = { ...t }; if (!x.neu) delete x.neu; return x; });
+    letztesRad = null;
+    zeichneTeile();
+    entwurfMerken();
+    meldung($('#f-rad .msg'), 'Übernommen. Jetzt Ausstattung und UVP eintragen und die Teile tauschen, die anders sind.');
+    f.ausstattung.focus();
+  });
+
+  // ----- Entwurf: ein angefangenes neues Rad bleibt im Browser, auch nach dem Abmelden -----
+
+  const ENTWURF = 'werkbank-entwurf';
+  const ENTWURF_FELDER = ['hersteller', 'baujahr', 'reihe', 'ausstattung', 'kategorie', 'uvp', 'quelle'];
+  let entwurfTimer = null;
+  function entwurfMerken(ev) {
+    // Wer selbst weitertippt, braucht das Angebot „Nächste Ausstattung“ nicht mehr
+    if (ev && ev.type) $('#naechste').hidden = true;
+    clearTimeout(entwurfTimer);
+    entwurfTimer = setTimeout(() => {
+      // Ergänzungen und App-Übernahmen hängen an Daten vom Server, gemerkt wird nur ein neues Rad
+      if (ergaenzen || appUebernahme) return;
+      const f = $('#f-rad');
+      const felder = Object.fromEntries(ENTWURF_FELDER.map((n) => [n, f[n].value]));
+      if (!radTeile.length && !felder.hersteller.trim() && !felder.reihe.trim()) return;
+      $('#entwurf-box').hidden = true;
+      try { localStorage.setItem(ENTWURF, JSON.stringify({ felder, teile: radTeile, zeit: Date.now() })); } catch { /* ohne Speicher kein Entwurf */ }
+    }, 400);
+  }
+  function entwurfWeg() {
+    clearTimeout(entwurfTimer);
+    $('#entwurf-box').hidden = true;
+    try { localStorage.removeItem(ENTWURF); } catch { /* egal */ }
+  }
+  function entwurfLesen() {
+    try { const e = JSON.parse(localStorage.getItem(ENTWURF) || 'null'); return e && e.felder ? e : null; } catch { return null; }
+  }
+  function entwurfAnbieten() {
+    const e = entwurfLesen();
+    const f = $('#f-rad');
+    const leer = !radTeile.length && !ergaenzen && !f.hersteller.value && !f.reihe.value;
+    $('#entwurf-box').hidden = !e || !leer;
+    if (!e || !leer) return;
+    const name = `${e.felder.hersteller} ${e.felder.reihe} ${e.felder.ausstattung}`.trim() || 'Ohne Namen';
+    const wann = new Date(e.zeit).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+    $('#entwurf-text').textContent = `${name}${e.felder.baujahr ? ` (${e.felder.baujahr})` : ''}, ${e.teile.length} ${e.teile.length === 1 ? 'Teil' : 'Teile'}, zuletzt ${wann} Uhr`;
+  }
+  $('#entwurf-weiter').addEventListener('click', () => {
+    const e = entwurfLesen();
+    if (!e) return;
+    const f = $('#f-rad');
+    for (const n of ENTWURF_FELDER) if (e.felder[n] != null) f[n].value = e.felder[n];
+    radTeile = Array.isArray(e.teile) ? e.teile : [];
+    $('#entwurf-box').hidden = true;
+    zeichneTeile();
+    f.hersteller.dispatchEvent(new Event('input', { bubbles: true }));
+    meldung($('#f-rad .msg'), 'Entwurf geladen.');
+  });
+  $('#entwurf-weg').addEventListener('click', () => { if (window.confirm('Angefangenes Rad verwerfen?')) entwurfWeg(); });
+  $('#f-rad').addEventListener('input', entwurfMerken);
+  $('#f-rad').addEventListener('change', entwurfMerken);
 
   // ----- Pflichtteile (wie src/data/helfer.ts in der App) -----
 
@@ -632,14 +760,14 @@
   function pflichtCheck() {
     const box = $('#pflicht-check');
     if (!radTeile.length && !ergaenzen) { box.hidden = true; return; }
-    const { wichtig, vielleicht } = fehlendePflichtteile();
-    box.hidden = false;
+    const { wichtig } = fehlendePflichtteile();
+    // Was fehlt, steht als Knöpfe in der Liste, hier nur die Erfolgsmeldung
+    box.hidden = wichtig.length > 0;
     box.classList.toggle('ok', !wichtig.length);
     box.replaceChildren();
     const kopf = document.createElement('strong');
-    kopf.textContent = wichtig.length ? `Noch offen: ${wichtig.join(', ')}` : 'Alle wichtigen Teile sind drin.';
+    kopf.textContent = 'Alle wichtigen Teile sind drin.';
     box.append(kopf);
-    if (vielleicht.length) box.append(`Fehlen oft zu Recht: ${vielleicht.join(', ')}`);
   }
   $('#f-rad').kategorie.addEventListener('change', pflichtCheck);
 
@@ -2096,6 +2224,78 @@
     li.append(eans);
     return li;
   }
+
+  // ----- Barcode-Serie: viele Barcodes hintereinander zuordnen -----
+
+  let serieCode = null;
+  let serieTimer = null;
+  let serieZaehler = 0;
+  scanKnopf($('#serie-feld'), $('#serie-ean'), () => $('#f-serie').requestSubmit(), true);
+  const serieLog = (text, fehler) => {
+    const li = Object.assign(document.createElement('li'), { textContent: text });
+    if (fehler) li.classList.add('fehler');
+    $('#serie-log').prepend(li);
+  };
+  const serieWeiter = (info) => {
+    serieCode = null;
+    $('#serie-wahl').hidden = true;
+    $('#serie-suche').value = '';
+    $('#serie-treffer').replaceChildren();
+    $('#serie-ean').value = '';
+    $('#serie-info').textContent = info || '';
+    $('#serie-ean').focus();
+  };
+  $('#f-serie').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    let code = $('#serie-ean').value.replace(/\D/g, '');
+    if (code.length < 8 || code.length > 14) { $('#serie-info').textContent = 'Ein Barcode hat 8 bis 14 Ziffern.'; return; }
+    // UPC-A (12 Stellen) steht im Katalog als EAN-13 mit führender 0
+    if (code.length === 12) code = '0' + code;
+    const { data, error } = await sb.from('teile').select('marke, name').contains('ean', [code]).limit(1);
+    if (error) { $('#serie-info').textContent = fehlerText(error); return; }
+    if (data && data[0]) {
+      serieLog(`${code}: schon bei ${data[0].marke} ${data[0].name}`);
+      serieWeiter('Kennt der Katalog schon. Nächster Barcode.');
+      return;
+    }
+    serieCode = code;
+    $('#serie-info').textContent = `${code} ist neu.`;
+    $('#serie-wahl').hidden = false;
+    $('#serie-suche').focus();
+  });
+  $('#serie-ueberspringen').addEventListener('click', () => { serieLog(`${serieCode}: übersprungen`); serieWeiter(); });
+  $('#serie-suche').addEventListener('input', () => {
+    clearTimeout(serieTimer);
+    serieTimer = setTimeout(async () => {
+      const nr = ++serieZaehler;
+      const woerter = woerterAus($('#serie-suche').value);
+      if (!woerter.length) { $('#serie-treffer').replaceChildren(); return; }
+      let q = sb.from('teile').select('id, marke, name, kategorie, ean').limit(15);
+      for (const w of woerter) q = q.or(`marke.ilike.*${w}*,name.ilike.*${w}*`);
+      const { data } = await q;
+      if (nr !== serieZaehler) return;
+      $('#serie-treffer').replaceChildren(...(data || []).map((t) => {
+        const li = document.createElement('li');
+        const b = Object.assign(document.createElement('button'), { type: 'button' });
+        b.append(Object.assign(document.createElement('span'), { textContent: `${t.marke} ${t.name}` }),
+          Object.assign(document.createElement('small'), { textContent: t.kategorie + ((t.ean || []).length ? ` · ${t.ean.length} Barcode${t.ean.length > 1 ? 's' : ''}` : '') }));
+        b.addEventListener('click', async () => {
+          const code = serieCode;
+          try {
+            const r = await rpc('katalog_teil_ean', { p_teil_id: t.id, p_ean: code });
+            serieLog(`${code} → ${t.marke} ${t.name}${r && r.live ? '' : ' (wartet auf Prüfung)'}`);
+            serieWeiter('Gespeichert. Nächster Barcode.');
+          } catch (e) {
+            serieLog(`${code}: ${fehlerText(e)}`, true);
+            $('#serie-info').textContent = fehlerText(e);
+          }
+        });
+        li.append(b);
+        return li;
+      }));
+    }, 300);
+  });
+  $('#serie').addEventListener('toggle', () => { if ($('#serie').open) $('#serie-ean').focus(); });
 
   // ----- Doppelte Teile vermeiden: beim Neuanlegen ähnliche Katalogteile zeigen -----
 
