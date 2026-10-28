@@ -14,6 +14,7 @@ const VERLAUF_TEXTE = {
   konto_mail: 'Mail an Konto', postfach_antwort: 'Antwort aus dem Postfach', postfach_geloescht: 'Unterhaltung gelöscht', konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
   wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
   rueckgaengig: 'Rückgängig gemacht',
+  app_steuerung: 'App steuern', crm_sammelmail: 'Sammelmail', datenauskunft: 'Datenschutz', premium_geschenkt: 'Store-Start',
 };
 let baustellen = [];
 let bsZeige = 30;
