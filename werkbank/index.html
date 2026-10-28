@@ -629,8 +629,8 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
     <h2>Werkbank für den Katalog</h2>
     <p class="fine">Nur für freigeschaltete Radgarage-Konten. Du bekommst einen Code per E-Mail oder nutzt dein Passwort, danach fragt die Seite nach deinem zweiten Faktor.</p>
     <form id="f-mail">
-      <label>E-Mail-Adresse deines Radgarage-Kontos
-        <input type="email" name="email" autocomplete="username" required>
+      <label>E-Mail-Adresse oder Benutzername
+        <input type="text" name="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
       </label>
       <label id="pw-feld" hidden>Passwort
         <input type="password" name="passwort" autocomplete="current-password">
@@ -644,7 +644,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
   <section class="t eng" id="s-code" hidden>
     <div class="eyebrow">Schritt 1 von 2</div>
     <h2>Code aus der E-Mail</h2>
-    <p class="fine">Wir haben einen 6-stelligen Code an <strong id="code-mail"></strong> geschickt.</p>
+    <p class="fine" id="code-text">Wir haben einen 6-stelligen Code an <strong id="code-mail"></strong> geschickt.</p>
     <form id="f-code">
       <label>Code
         <input class="code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6,10}" maxlength="10" required>
@@ -1274,9 +1274,19 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
     <section data-panel="konto" hidden>
       <!-- Paare mit ähnlicher Höhe nebeneinander, breite Kacheln über beide Spalten, die Kacheln einer Zeile sind gleich hoch -->
       <div class="raster konto-raster">
-        <div class="t k4">
+        <div class="t k4 ganz">
           <h3>Sicherheit deines Kontos</h3>
           <ul class="status" id="sicher-status"></ul>
+        </div>
+        <div class="t k1">
+          <h3>Benutzername</h3>
+          <p class="fine">Steht oben statt deiner E-Mail-Adresse. Beim Anmelden kannst du ihn statt der Adresse eintippen, der zweite Faktor bleibt.</p>
+          <form id="f-name" autocomplete="off">
+            <label><span>Name <small>3 bis 24 Zeichen, z. B. marino oder m.scholz</small></span>
+              <input name="name" maxlength="24" pattern="[A-Za-z0-9][A-Za-z0-9._\-]{2,23}" autocapitalize="none" spellcheck="false" placeholder="noch keiner"></label>
+            <div class="aktionen"><button class="pill klein" type="submit">Name speichern</button></div>
+            <div class="msg" role="status"></div>
+          </form>
         </div>
         <div class="t k5">
           <h3>Automatisch abmelden</h3>
@@ -1449,16 +1459,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-13"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-13"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-13"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-13"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-13"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-13"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-13"></script>
-<script src="js/08-konten.js?v=2026-10-28-13"></script>
-<script src="js/09-katalog.js?v=2026-10-28-13"></script>
-<script src="js/10-statistik.js?v=2026-10-28-13"></script>
-<script src="js/11-start.js?v=2026-10-28-13"></script>
+<script src="js/01-kern.js?v=2026-10-28-14"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-14"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-14"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-14"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-14"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-14"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-14"></script>
+<script src="js/08-konten.js?v=2026-10-28-14"></script>
+<script src="js/09-katalog.js?v=2026-10-28-14"></script>
+<script src="js/10-statistik.js?v=2026-10-28-14"></script>
+<script src="js/11-start.js?v=2026-10-28-14"></script>
 </body>
 </html>
