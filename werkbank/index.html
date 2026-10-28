@@ -337,7 +337,27 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .ablehnen-grund textarea { width: 100%; }
 .rueckmeldung { border-left: 4px solid var(--warn); }
 .liste li .nf-knoepfe { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
-@media (max-width: 560px) { .liste li:has(> .nf-knoepfe) { grid-template-columns: 1fr; } .liste li .nf-knoepfe { justify-content: flex-start; } }
+/* Listen mit Knöpfen in schmalen Kacheln: Knöpfe rutschen unter den Text statt ihn zu quetschen */
+#qa-liste li:not(.qa-paar):not(.leer), #nf-liste li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
+#qa-liste li:not(.qa-paar) > div:first-child, #nf-liste li > div:first-child { flex: 1 1 240px; min-width: 0; }
+/* Mögliche Doppelte: zwei gleich große Karten, Unterschiede markiert, Knöpfe als Leiste */
+#qa-liste li.qa-paar { display: block; padding: 14px; }
+.qa-kopf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+.qa-kopf .chip { padding-right: 10px; }
+.qa-teile { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.qa-teil { display: grid; gap: 6px; align-content: start; justify-items: start; padding: 12px 14px; border-radius: 14px; border: 1px dashed var(--line); }
+.qa-teil.bleibt { border-style: solid; border-color: var(--ink2); }
+.qa-teil .name { overflow-wrap: break-word; }
+@media (max-width: 560px) {
+  .nur-breit { display: none; }
+  /* Drei gleich breite Felder statt eines umbrechenden Pillen-Bands, Zahlen dürfen in die zweite Zeile */
+  #qa-ansicht { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; border-radius: 18px; }
+  #qa-ansicht button { height: auto; min-height: 38px; padding: 6px 4px; line-height: 1.25; white-space: normal; border-radius: 14px; }
+}
+.qa-teil mark { background: var(--k3); color: var(--ink); border-radius: 4px; padding: 0 3px; }
+.qa-rolle { font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.qa-rolle.bleibt { color: var(--ink); }
+.qa-leiste { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .status { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .status li { display: flex; gap: 10px; align-items: baseline; }
 .status li b { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; background: var(--ink); color: var(--bg); }
@@ -956,7 +976,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <p class="fine">Was die App besser macht: Richtpreise an häufig verbauten Teilen, keine doppelten Teile, funktionierende Shop-Links.</p>
           <div class="segment" role="radiogroup" aria-label="Prüfung" id="qa-ansicht" style="margin:6px 0 12px; flex-wrap: wrap">
             <button type="button" role="radio" data-ansicht="preis" aria-checked="true">Ohne Preis <span class="opt" id="qa-zahl-preis"></span></button>
-            <button type="button" role="radio" data-ansicht="doppelt" aria-checked="false">Mögliche Doppelte <span class="opt" id="qa-zahl-doppelt"></span></button>
+            <button type="button" role="radio" data-ansicht="doppelt" aria-checked="false"><span class="nur-breit">Mögliche </span>Doppelte <span class="opt" id="qa-zahl-doppelt"></span></button>
             <button type="button" role="radio" data-ansicht="shops" aria-checked="false">Shop-Links</button>
           </div>
           <p class="fine" id="qa-info"></p>
@@ -1425,16 +1445,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-11"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-11"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-11"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-11"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-11"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-11"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-11"></script>
-<script src="js/08-konten.js?v=2026-10-28-11"></script>
-<script src="js/09-katalog.js?v=2026-10-28-11"></script>
-<script src="js/10-statistik.js?v=2026-10-28-11"></script>
-<script src="js/11-start.js?v=2026-10-28-11"></script>
+<script src="js/01-kern.js?v=2026-10-28-12"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-12"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-12"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-28-12"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-12"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-12"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-12"></script>
+<script src="js/08-konten.js?v=2026-10-28-12"></script>
+<script src="js/09-katalog.js?v=2026-10-28-12"></script>
+<script src="js/10-statistik.js?v=2026-10-28-12"></script>
+<script src="js/11-start.js?v=2026-10-28-12"></script>
 </body>
 </html>
