@@ -71,7 +71,7 @@ h1 { font-size: clamp(40px, 5.6vw, 70px); line-height: 1; margin: 12px 0 16px; t
 .hero .shot { grid-column: span 5; grid-row: span 3; display: flex; align-items: flex-end; justify-content: center; padding: 28px 28px 0; min-height: 520px; }
 .hero .plaetze { grid-column: span 4; }
 .hero .katalog { grid-column: span 3; }
-.phone { width: 100%; max-width: 290px; display: block; border-radius: 34px 34px 0 0; border: 6px solid var(--nav); border-bottom: 0; box-shadow: 0 18px 40px var(--shadow); }
+.phone { width: 100%; max-width: 290px; height: auto; display: block; border-radius: 34px 34px 0 0; border: 6px solid var(--nav); border-bottom: 0; box-shadow: 0 18px 40px var(--shadow); }
 .phone.full { border-radius: 30px; border-bottom: 6px solid var(--nav); }
 
 /* Anmeldung */
@@ -286,6 +286,10 @@ footer { padding-bottom: 40px; }
 }
 @media (prefers-reduced-motion: reduce) { .karte { transition: none; } .karte:hover { transform: none; } }
 
+/* Textseiten (Über uns, So prüfen wir) */
+.text-abschnitt p, .text-abschnitt ul { max-width: 46em; }
+.text-abschnitt p + p { margin-top: 10px; }
+
 /* Modellseiten: Verschleißteile als Kacheln, alle Teile als Tabelle nach Gruppen. */
 .voll { grid-column: span 12; }
 .zwischen { font-size: 30px; margin: 14px 0 12px; }
@@ -388,3 +392,17 @@ footer { padding-bottom: 40px; }
   .vergleichstabelle .zahl { text-align: left; white-space: normal; }
   .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; }
 }
+
+/* Kurz gefragt, Vergleich mit dem Nachbarmodell, Anleitungen fürs Rad */
+.gefragt .antworten { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; margin-top: 6px; }
+.gefragt h3 { font-size: 19px; margin: 14px 0 4px; }
+.gefragt p { margin: 0; color: var(--ink2); }
+.nachbar-vgl > p { max-width: 46em; }
+.nachbar-vgl .tabelle-rahmen { margin-top: 12px; }
+.vergleichstabelle.unterschied { min-width: 560px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips a { text-decoration: none; font-weight: 700; font-size: 15px; padding: 8px 14px; border-radius: 999px; background: rgba(255, 255, 255, .5); color: var(--ink); }
+.chips a:hover { background: var(--surface2); }
+:root[data-theme="dark"] .chips a { background: rgba(255, 255, 255, .08); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chips a { background: rgba(255, 255, 255, .08); } }
+@media (max-width: 700px) { .gefragt .antworten { grid-template-columns: 1fr; } .vergleichstabelle.unterschied { min-width: 0; } }

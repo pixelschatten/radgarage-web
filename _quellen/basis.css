@@ -71,7 +71,7 @@ h1 { font-size: clamp(40px, 5.6vw, 70px); line-height: 1; margin: 12px 0 16px; t
 .hero .shot { grid-column: span 5; grid-row: span 3; display: flex; align-items: flex-end; justify-content: center; padding: 28px 28px 0; min-height: 520px; }
 .hero .plaetze { grid-column: span 4; }
 .hero .katalog { grid-column: span 3; }
-.phone { width: 100%; max-width: 290px; display: block; border-radius: 34px 34px 0 0; border: 6px solid var(--nav); border-bottom: 0; box-shadow: 0 18px 40px var(--shadow); }
+.phone { width: 100%; max-width: 290px; height: auto; display: block; border-radius: 34px 34px 0 0; border: 6px solid var(--nav); border-bottom: 0; box-shadow: 0 18px 40px var(--shadow); }
 .phone.full { border-radius: 30px; border-bottom: 6px solid var(--nav); }
 
 /* Anmeldung */

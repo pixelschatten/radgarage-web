@@ -256,6 +256,14 @@ def e(s):
     return html.escape(s, quote=True)
 
 
+MONATE = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November',
+          'Dezember']
+
+
+def monat(datum):
+    return f'{MONATE[int(datum[5:7]) - 1]} {datum[:4]}'
+
+
 def euro(n):
     return f'ca. {n} €'
 
@@ -315,7 +323,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 3  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 4  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
@@ -328,6 +336,8 @@ FUSS_INHALT = f'''  <footer>
       <a href="/teile/">Ersatzteile</a>
       <a href="/anleitungen/">Anleitungen</a>
       <a href="/feedback/">Feedback</a>
+      <a href="/ueber-uns/">Über uns</a>
+      <a href="/so-pruefen-wir/">So prüfen wir</a>
       <a href="{UMFRAGE}" target="_blank" rel="noopener">Zur Umfrage</a>
       <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
       <a href="/impressum.html">Impressum</a>
@@ -415,13 +425,14 @@ def anleitung_seite(a, alle):
     howto = {
         '@context': 'https://schema.org', '@type': 'HowTo',
         'name': a['h1'], 'description': a['beschreibung'], 'inLanguage': 'de',
-        'totalTime': f'PT{a["minuten"]}M', 'dateModified': STAND,
+        'totalTime': f'PT{a["minuten"]}M', 'dateModified': a.get('stand', STAND),
         'tool': [{'@type': 'HowToTool', 'name': n} for n, _ in a['werkzeug']],
         'step': [
             {'@type': 'HowToStep', 'position': i + 1, 'name': t, 'text': x, 'url': f'{SEITE}{pfad}#schritt-{i + 1}'}
             for i, (t, x) in enumerate(a['schritte'])
         ],
-        'publisher': {'@type': 'Organization', 'name': 'Radgarage', 'url': SEITE + '/'},
+        'publisher': {'@type': 'Organization', '@id': f'{SEITE}/#org', 'name': 'Radgarage', 'url': SEITE + '/'},
+        'author': {'@type': 'Organization', '@id': f'{SEITE}/#org', 'name': 'Radgarage', 'url': SEITE + '/'},
     }
     if werkzeug_summe:
         howto['estimatedCost'] = {'@type': 'MonetaryAmount', 'currency': 'EUR', 'value': werkzeug_summe}
@@ -503,7 +514,7 @@ def anleitung_seite(a, alle):
       <div class="karten">{"".join(karte(x) for x in verwandt)}</div>
     </section>
   </article>
-  <p class="hinweis">Diese Anleitung ersetzt nicht die Anleitung des Herstellers. Drehmomente und Verschleißgrenzen deiner Teile stehen dort oder auf dem Bauteil. Arbeiten an Bremsen und Lenkung sind sicherheitsrelevant: Wenn du unsicher bist, lass sie von einer Fachwerkstatt machen. Stand: Oktober 2026.</p>
+  <p class="hinweis">Diese Anleitung ersetzt nicht die Anleitung des Herstellers. Drehmomente und Verschleißgrenzen deiner Teile stehen dort oder auf dem Bauteil. Arbeiten an Bremsen und Lenkung sind sicherheitsrelevant: Wenn du unsicher bist, lass sie von einer Fachwerkstatt machen. Von der Radgarage, Stand: {monat(a.get("stand", STAND))}. <a href="/so-pruefen-wir/">So prüfen wir</a> · <a href="/ueber-uns/">Über uns</a></p>
   </main>
 ''')
     if a['video']:

@@ -100,3 +100,17 @@
   .vergleichstabelle .zahl { text-align: left; white-space: normal; }
   .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; }
 }
+
+/* Kurz gefragt, Vergleich mit dem Nachbarmodell, Anleitungen fürs Rad */
+.gefragt .antworten { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 32px; margin-top: 6px; }
+.gefragt h3 { font-size: 19px; margin: 14px 0 4px; }
+.gefragt p { margin: 0; color: var(--ink2); }
+.nachbar-vgl > p { max-width: 46em; }
+.nachbar-vgl .tabelle-rahmen { margin-top: 12px; }
+.vergleichstabelle.unterschied { min-width: 560px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips a { text-decoration: none; font-weight: 700; font-size: 15px; padding: 8px 14px; border-radius: 999px; background: rgba(255, 255, 255, .5); color: var(--ink); }
+.chips a:hover { background: var(--surface2); }
+:root[data-theme="dark"] .chips a { background: rgba(255, 255, 255, .08); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .chips a { background: rgba(255, 255, 255, .08); } }
+@media (max-width: 700px) { .gefragt .antworten { grid-template-columns: 1fr; } .vergleichstabelle.unterschied { min-width: 0; } }
