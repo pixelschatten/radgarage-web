@@ -391,6 +391,12 @@ label.schalter input:focus-visible + .schiene { outline: 3px solid var(--accent)
 #qa-liste li:not(.qa-paar) > div:first-child, #nf-liste li > div:first-child { flex: 1 1 240px; min-width: 0; }
 /* Mögliche Doppelte: zwei gleich große Karten, Unterschiede markiert, Knöpfe als Leiste */
 #qa-liste li.qa-paar { display: block; padding: 14px; }
+/* Ohne Preis und Shop-Links: kompakte Zeilen wie bei den Baustellen */
+#qa-liste { gap: 4px; }
+#qa-liste li:not(.qa-paar):not(.leer) { padding: 7px 8px 7px 14px; border-radius: 12px; gap: 4px 10px; }
+#qa-liste li:not(.qa-paar) .name { font-size: 15px; }
+#qa-liste li:not(.qa-paar) .neben { font-size: 13px; }
+#qa-liste li:not(.qa-paar) .knopf-weich { padding: 6px 12px; font-size: 13px; }
 .qa-kopf { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
 .qa-kopf .chip { padding-right: 10px; }
 .qa-teile { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
@@ -665,6 +671,7 @@ table.rechte td.nein { color: var(--muted); }
   .t { padding: 22px 18px; border-radius: 22px; }
 }
 @media (max-width: 560px) {
+  #qa-liste li:not(.qa-paar) > div:first-child { flex: 1 1 0; }
   #bs-liste li { flex-wrap: wrap; }
   #bs-liste li > div:first-child { flex: 1 1 100%; }
   #bs-liste .aktionen { justify-content: flex-start; }
@@ -1583,16 +1590,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-15"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-15"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-15"></script>
+<script src="js/01-kern.js?v=2026-10-28-16"></script>
+<script src="js/02-erfassen.js?v=2026-10-28-16"></script>
+<script src="js/03-freigaben.js?v=2026-10-28-16"></script>
 <script src="js/04-postfach-crm.js?v=2026-10-28-vorschau"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-15"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-15"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-15"></script>
-<script src="js/08-konten.js?v=2026-10-28-15"></script>
-<script src="js/09-katalog.js?v=2026-10-28-15"></script>
-<script src="js/10-statistik.js?v=2026-10-28-15"></script>
-<script src="js/11-start.js?v=2026-10-28-15"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-28-16"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-28-16"></script>
+<script src="js/07-uebersicht.js?v=2026-10-28-16"></script>
+<script src="js/08-konten.js?v=2026-10-28-16"></script>
+<script src="js/09-katalog.js?v=2026-10-28-16"></script>
+<script src="js/10-statistik.js?v=2026-10-28-16"></script>
+<script src="js/11-start.js?v=2026-10-28-16"></script>
 </body>
 </html>
