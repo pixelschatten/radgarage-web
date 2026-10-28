@@ -25,8 +25,9 @@ async function ladePostfach() {
   meldung($('#msg-postfach'), '');
   for (const b of $$('#pf-status button')) b.setAttribute('aria-checked', String(b.dataset.status === pfStatus));
   try {
-    pfListe = (await rpc('postfach_liste', { p_status: pfStatus, p_suche: $('#pf-suche').value })) || [];
-    if (pfStatus === 'offen' && !$('#pf-suche').value.trim()) {
+    ladeOrdner();
+    pfListe = (await rpc('postfach_liste', { p_status: pfStatus, p_suche: $('#pf-suche').value, p_ordner: pfOrdner })) || [];
+    if (pfStatus === 'offen' && !$('#pf-suche').value.trim() && !pfOrdner) {
       $('#pf-zahl-offen').textContent = pfListe.length ? `(${pfListe.length})` : '';
       postfachZahlSetzen(pfListe.filter((u) => u.ungelesen > 0).length);
     }
@@ -65,6 +66,7 @@ function postfachKarte(u) {
   const meta = [];
   if (u.zugewiesen_email) meta.push(Object.assign(document.createElement('span'), { className: 'zu', textContent: `→ ${u.zugewiesen_email.split('@')[0]}` }));
   if (u.wiedervorlage) meta.push(Object.assign(document.createElement('span'), { className: 'wv', textContent: `⏰ ${new Date(u.wiedervorlage).toLocaleString('de-DE', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`, title: `Wiedervorlage ${zeitDe(u.wiedervorlage)}` }));
+  if (u.ordner_name && pfOrdner !== u.ordner) meta.push(Object.assign(document.createElement('span'), { className: 'or', textContent: `📁 ${u.ordner_name}` }));
   for (const w of u.schlagworte || []) meta.push(Object.assign(document.createElement('span'), { textContent: `#${w}` }));
   if (u.zuletzt) {
     mitte.append(Object.assign(document.createElement('span'), {
@@ -79,21 +81,157 @@ function postfachKarte(u) {
   zeile.append(ava(u.name || u.email), mitte);
   zeile.setAttribute('aria-label', `${wer}: ${u.betreff || 'ohne Betreff'}${u.ungelesen > 0 ? ', ungelesen' : ''}`);
   zeile.addEventListener('click', () => unterhaltung(u.id));
-  return zeile;
+  // Gelesen/ungelesen umschalten, ohne die Mail zu öffnen
+  const ungelesen = u.ungelesen > 0;
+  const schalter = Object.assign(document.createElement('button'), {
+    type: 'button', className: 'pf-gelesen', textContent: ungelesen ? 'Gelesen' : 'Ungelesen',
+    title: ungelesen ? 'Als gelesen markieren' : 'Als ungelesen markieren',
+  });
+  schalter.addEventListener('click', async () => {
+    schalter.disabled = true;
+    try {
+      await rpc('postfach_gelesen', { p_id: u.id, p_gelesen: ungelesen });
+      await ladePostfach();
+      postfachZahl();
+    } catch (e) { meldung($('#msg-postfach'), fehlerText(e), true); schalter.disabled = false; }
+  });
+  const eintrag = Object.assign(document.createElement('div'), { className: 'pf-eintrag' });
+  eintrag.append(zeile, schalter);
+  return eintrag;
 }
 
-// Text mit anklickbaren Adressen (nur http/https, öffnet in neuem Tab ohne Zugriff auf die Werkbank)
-function mitLinks(text) {
-  const p = Object.assign(document.createElement('p'), { className: 'fb-text' });
+// ----- Mailtext lesbar aufbereiten: Absätze, Listen, Links, eingeklappter Verlauf, leise Signatur -----
+
+const linkA = (url, text) => {
+  const a = document.createElement('a');
+  Object.assign(a, { href: url, textContent: text, title: url, target: '_blank', rel: 'noopener noreferrer' });
+  return a;
+};
+// „shop.de/fahrrad/kette…“ statt der ganzen Adresse
+function kurzUrl(url) {
+  try {
+    const u = new URL(url);
+    const t = u.hostname.replace(/^www\./, '') + (u.pathname === '/' ? '' : u.pathname);
+    return t.length > 42 ? `${t.slice(0, 40)}…` : t;
+  } catch { return url; }
+}
+
+// Eine Zeile mit **fett**, „Text (https://…)“ und nackten Adressen
+function zeileMitLinks(zeile) {
+  const raus = [];
+  const ganz = zeile.match(/^(.{1,90}?) \((https?:\/\/[^\s)]+)\)$/);
+  if (ganz && !/https?:\/\//.test(ganz[1])) return [linkA(ganz[2], ganz[1])];
   let ab = 0;
-  for (const m of text.matchAll(/https?:\/\/[^\s<>()"]+/g)) {
-    p.append(text.slice(ab, m.index));
-    const url = m[0].replace(/[.,;:!?]+$/, '');
-    p.append(Object.assign(document.createElement('a'), { href: url, textContent: url, target: '_blank', rel: 'noopener noreferrer' }));
-    ab = m.index + url.length;
+  for (const m of zeile.matchAll(/\*\*([^*\n]+)\*\*|\((https?:\/\/[^\s)]+)\)|https?:\/\/[^\s<>()"]+/g)) {
+    raus.push(zeile.slice(ab, m.index));
+    if (m[1]) {
+      raus.push(Object.assign(document.createElement('strong'), { textContent: m[1] }));
+      ab = m.index + m[0].length;
+    } else if (m[2]) {
+      // „Text (Adresse)“ mitten im Satz: Text bleibt, dahinter ein kleiner Link
+      const vorher = zeile.slice(0, m.index).trimEnd();
+      if (!vorher.endsWith(m[2])) raus.push(Object.assign(linkA(m[2], `${kurzUrl(m[2])} ↗`), { className: 'pf-linkchip' }));
+      ab = m.index + m[0].length;
+    } else {
+      const url = m[0].replace(/[.,;:!?]+$/, '');
+      raus.push(linkA(url, kurzUrl(url)));
+      ab = m.index + url.length;
+    }
   }
-  p.append(text.slice(ab));
-  return p;
+  raus.push(zeile.slice(ab));
+  return raus.filter((x) => x !== '');
+}
+
+function absaetze(text) {
+  const raus = [];
+  for (const block of text.split(/\n[ \t]*\n/)) {
+    const zeilen = block.split('\n').filter((z) => z.trim());
+    if (!zeilen.length) continue;
+    if (zeilen.every((z) => /^\s*([-*•–]|\d{1,2}[.)])\s+/.test(z))) {
+      const liste = document.createElement(/^\s*\d/.test(zeilen[0]) ? 'ol' : 'ul');
+      for (const z of zeilen) {
+        const li = document.createElement('li');
+        li.append(...zeileMitLinks(z.replace(/^\s*([-*•–]|\d{1,2}[.)])\s+/, '')));
+        liste.append(li);
+      }
+      raus.push(liste);
+      continue;
+    }
+    const kopf = zeilen.length === 1 && zeilen[0].match(/^#{1,6}\s+(.+)$/);
+    const p = document.createElement(kopf ? 'h4' : 'p');
+    if (kopf) { p.textContent = kopf[1].replace(/\*\*/g, ''); raus.push(p); continue; }
+    zeilen.forEach((z, i) => {
+      if (i) p.append(document.createElement('br'));
+      p.append(...zeileMitLinks(z.trim()));
+    });
+    raus.push(p);
+  }
+  return raus;
+}
+
+// Wo beginnt der zitierte Verlauf? „Am … schrieb …:“, „On … wrote:“, „> …“, „-----Ursprüngliche Nachricht-----“, „Von: … Gesendet: …“
+function zitatAnfang(zeilen) {
+  for (let i = 1; i < zeilen.length; i += 1) {
+    const z = zeilen[i].trim();
+    const zwei = `${z} ${(zeilen[i + 1] || '').trim()}`;
+    if (/^>/.test(z) && zeilen.slice(i).filter((x) => x.trim()).every((x) => /^>/.test(x.trim()) || /^(Am|On) /.test(x.trim()))) return i;
+    if (/^(Am|On|Le) .{3,240}(schrieb|geschrieben|wrote|a écrit)[^:]{0,80}:$/i.test(z)) return i;
+    if (/^(Am|On) .{3,240}(schrieb|geschrieben|wrote)[^:]{0,80}:$/i.test(zwei)) return i;
+    if (/^-{2,}\s*(Original Message|Ursprüngliche Nachricht|Originalnachricht|Forwarded message|Weitergeleitete Nachricht)/i.test(z)) return i;
+    if (/^(Von|From):\s.+/.test(z) && zeilen.slice(i + 1, i + 4).some((x) => /^(Gesendet|Sent|Datum|Date):/.test(x.trim()))) return i;
+  }
+  return -1;
+}
+
+// Text einer Mail als ruhige Leseansicht
+function mailInhalt(roh) {
+  let text = String(roh || '').replace(/\r\n?/g, '\n');
+  // Rest von HTML-Quelltext (alte Einträge): ohne Darstellung in reinen Text umwandeln, nichts davon wird ausgeführt
+  if (/(<|&lt;)(!doctype|html|meta|body|div|p|br|table|span)\b/i.test(text)) {
+    const html = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+      .replace(/<(br|\/p|\/div|\/tr|\/li|\/h\d)\b[^>]*>/gi, '$&\n');
+    text = (new DOMParser().parseFromString(html, 'text/html').body.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  const box = Object.assign(document.createElement('div'), { className: 'pf-inhalt' });
+  if (!text.trim()) { box.append(Object.assign(document.createElement('p'), { className: 'leer', textContent: '(kein Text)' })); return box; }
+
+  let links = [];
+  const li = text.indexOf('\n\nLinks in der Mail:\n');
+  if (li >= 0) {
+    links = text.slice(li + 21).split('\n').map((z) => z.trim()).filter((z) => /^https?:\/\//.test(z));
+    text = text.slice(0, li);
+  }
+  let zeilen = text.split('\n');
+  const za = zitatAnfang(zeilen);
+  const zitat = za > 0 ? zeilen.slice(za) : [];
+  if (za > 0) zeilen = zeilen.slice(0, za);
+  // Signatur nach „-- “ oder „Von meinem iPhone gesendet“ leiser
+  let sig = [];
+  const si = zeilen.findIndex((z, i) => i > 0 && (z.trimEnd() === '--' || /^(Von meinem .{2,30} gesendet|Gesendet von meinem .{2,30}|Sent from my .{2,30})$/i.test(z.trim())));
+  if (si > 0) { sig = zeilen.slice(si).filter((z) => z.trimEnd() !== '--'); zeilen = zeilen.slice(0, si); }
+
+  box.append(...absaetze(zeilen.join('\n')));
+  if (sig.some((z) => z.trim())) {
+    const s = Object.assign(document.createElement('div'), { className: 'pf-signatur' });
+    s.append(...absaetze(sig.join('\n')));
+    box.append(s);
+  }
+  const klappe = (titel, inhalt, art) => {
+    const d = Object.assign(document.createElement('details'), { className: art });
+    d.append(Object.assign(document.createElement('summary'), { textContent: titel }), inhalt);
+    box.append(d);
+  };
+  if (zitat.length) {
+    const z = Object.assign(document.createElement('div'), { className: 'pf-zitat-text' });
+    z.append(...absaetze(zitat.map((x) => x.replace(/^\s*(>\s?)+/, '')).join('\n')));
+    klappe('Bisheriger Verlauf', z, 'pf-zitat');
+  }
+  if (links.length) {
+    const ul = Object.assign(document.createElement('ul'), { className: 'pf-linkliste' });
+    for (const l of links) { const x = document.createElement('li'); x.append(linkA(l, kurzUrl(l))); ul.append(x); }
+    klappe(`Weitere Links aus der Mail (${links.length})`, ul, 'pf-zitat');
+  }
+  return box;
 }
 
 // Original-HTML in einem Rahmen ohne Skripte und ohne Zugriff auf die Werkbank. Bilder aus dem Netz erst auf Knopfdruck,
@@ -122,7 +260,7 @@ function nachrichtBlase(n) {
   if (n.richtung === 'aus' && n.status && n.status >= 300) hinweise.push(`Von Brevo abgelehnt (${n.status})`);
   if (n.richtung === 'ein' && n.spam >= 15) hinweise.push('Wahrscheinlich Spam');
   if (hinweise.length) d.append(Object.assign(document.createElement('div'), { className: 'pf-warnung', textContent: hinweise.join(' · ') }));
-  const text = mitLinks(n.text || '(kein Text)');
+  const text = mailInhalt(n.text);
   d.append(text);
   if (n.anhaenge && n.anhaenge.length) {
     d.append(Object.assign(document.createElement('div'), { className: 'meta', textContent: `📎 ${n.anhaenge.map((a) => a.name).join(', ')} (Anhänge werden nicht übernommen)` }));
@@ -195,6 +333,10 @@ async function unterhaltung(id) {
       : statusKnopf('Wieder öffnen', () => rpc('postfach_setzen', { p_id: u.id, p_status: 'offen' })),
     u.status === 'spam' ? statusKnopf('Kein Spam', () => rpc('postfach_setzen', { p_id: u.id, p_status: 'offen' }))
       : statusKnopf('Spam', () => rpc('postfach_setzen', { p_id: u.id, p_status: 'spam' })),
+    statusKnopf('Ungelesen', async () => {
+      await rpc('postfach_gelesen', { p_id: u.id, p_gelesen: false });
+      postfachZahl();
+    }),
     statusKnopf('Löschen', async (b) => {
       if (!b.dataset.sicher) { b.dataset.sicher = '1'; b.textContent = 'Wirklich löschen?'; b.classList.add('gefahr'); return false; }
       await rpc('postfach_loeschen', { p_id: u.id });
@@ -253,7 +395,9 @@ async function unterhaltung(id) {
   koerper.append(personKarte(u.email, { name: u.name, aktuell: u.id }), haupt);
   dialog(u.betreff || '(ohne Betreff)', kopf, werkzeugLeiste(u, neuLaden), koerper);
   $('#dlg .dlg-box').classList.add('mail', 'mit-person');
-  verlauf.scrollTop = verlauf.scrollHeight;
+  // Zum Anfang der neuesten Nachricht, damit lange Mails oben beginnen
+  const neueste = verlauf.lastElementChild;
+  if (neueste) verlauf.scrollTop += neueste.getBoundingClientRect().top - verlauf.getBoundingClientRect().top - 4;
   const pos = text.value.indexOf('\n\n') + 2;
   text.focus({ preventScroll: true });
   text.setSelectionRange(pos, pos);
@@ -641,7 +785,112 @@ function werkzeugLeiste(u, neuLaden) {
     else if (a) setzen(wiedervorlageZeit(a));
   });
   wann.addEventListener('change', () => { if (wann.value) setzen(new Date(wann.value)); });
-  return mk('div', { className: 'pf-werkzeuge' }, zuw, wv, wann, msg);
+  return mk('div', { className: 'pf-werkzeuge' }, zuw, wv, wann, ordnerWahl(u, msg), msg);
+}
+
+// --- Ordner: Unterhaltungen ablegen (crm_ordner_*, postfach_ablegen) ---
+
+let pfOrdner = null;
+let ordnerListe = [];
+async function ladeOrdner() {
+  try { ordnerListe = (await rpc('crm_ordner_liste')) || []; } catch { return; }
+  if (pfOrdner && !ordnerListe.some((o) => o.id === pfOrdner)) { pfOrdner = null; ladePostfach(); }
+  ordnerLeiste();
+}
+
+// Kleines Eingabefeld statt Rückfrage-Fenster: Enter speichert, Esc bricht ab
+function ordnerEingabe(ersetzt, start, speichern) {
+  const feld = mk('input', { type: 'text', value: start, maxLength: 40, placeholder: 'Ordnername', className: 'ordner-feld' });
+  feld.setAttribute('aria-label', 'Ordnername');
+  const zurueck = () => feld.replaceWith(ersetzt);
+  let fertig = false;
+  feld.addEventListener('keydown', async (ev) => {
+    // Esc bricht nur die Eingabe ab, nicht das Mail-Fenster
+    if (ev.key === 'Escape') { ev.stopPropagation(); fertig = true; zurueck(); return; }
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    if (!feld.value.trim()) { fertig = true; zurueck(); return; }
+    fertig = true;
+    try { await speichern(feld.value); zurueck(); } catch (e) { fertig = false; meldung($('#msg-postfach'), fehlerText(e), true); }
+  });
+  feld.addEventListener('blur', () => { if (!fertig && !feld.value.trim()) zurueck(); });
+  ersetzt.replaceWith(feld);
+  feld.focus();
+  feld.select();
+}
+
+function ordnerLeiste() {
+  const ort = $('#pf-ordner');
+  const chip = (titel, id, o) => {
+    const b = mk('button', { type: 'button', className: `ordner-chip${o && o.ungelesen ? ' neu' : ''}`, textContent: titel });
+    b.setAttribute('aria-pressed', String(pfOrdner === id));
+    if (o) b.append(mk('span', { className: 'opt', textContent: String(o.anzahl) }));
+    b.addEventListener('click', () => {
+      if (pfOrdner === id) return;
+      pfOrdner = id;
+      // Im Ordner zuerst alles zeigen, der Status schränkt danach weiter ein
+      if (id) pfStatus = '';
+      ordnerLeiste();
+      ladePostfach();
+    });
+    return b;
+  };
+  const neu = mk('button', { type: 'button', className: 'ordner-chip plus', textContent: '+ Ordner' });
+  neu.addEventListener('click', () => ordnerEingabe(neu, '', async (name) => {
+    pfOrdner = await rpc('crm_ordner_speichern', { p_id: null, p_name: name });
+    pfStatus = '';
+    ladePostfach();
+  }));
+  const teile = [chip('Alle Mails', null), ...ordnerListe.map((o) => chip(`📁 ${o.name}`, o.id, o)), neu];
+  const akt = ordnerListe.find((o) => o.id === pfOrdner);
+  if (akt) {
+    const um = mk('button', { type: 'button', className: 'link-knopf', textContent: 'Umbenennen' });
+    um.addEventListener('click', () => ordnerEingabe(um, akt.name, async (name) => {
+      await rpc('crm_ordner_speichern', { p_id: akt.id, p_name: name });
+      ladePostfach();
+    }));
+    const weg = sicherKnopf('Ordner löschen', async () => {
+      await rpc('crm_ordner_loeschen', { p_id: akt.id });
+      pfOrdner = null;
+      ladePostfach();
+      meldung($('#msg-postfach'), `Ordner „${akt.name}“ gelöscht. Die Mails darin sind noch da, nur ohne Ordner.`);
+    }, 'link-knopf');
+    teile.push(mk('span', { className: 'ordner-aktionen' }, um, weg));
+  }
+  ort.replaceChildren(...teile);
+}
+
+// Auswahl im Mail-Fenster: Ordner wählen, keiner oder gleich einen neuen anlegen
+function ordnerWahl(u, msg) {
+  const wahl = mk('select');
+  wahl.setAttribute('aria-label', 'Ordner');
+  const fuellen = () => {
+    wahl.replaceChildren(new Option('Kein Ordner', ''), ...ordnerListe.map((o) => new Option(`📁 ${o.name}`, String(o.id))),
+      new Option('Neuer Ordner …', 'neu'));
+    wahl.value = u.ordner ? String(u.ordner) : '';
+  };
+  fuellen();
+  const ablegen = async (id) => {
+    await rpc('postfach_ablegen', { p_id: u.id, p_ordner: id });
+    u.ordner = id;
+    await ladeOrdner();
+    ladePostfach();
+    const o = ordnerListe.find((x) => x.id === id);
+    meldung(msg, id ? `In „${o ? o.name : 'Ordner'}“ abgelegt.` : 'Aus dem Ordner genommen.');
+  };
+  wahl.addEventListener('change', async () => {
+    if (wahl.value === 'neu') {
+      fuellen();
+      ordnerEingabe(wahl, '', async (name) => {
+        const id = await rpc('crm_ordner_speichern', { p_id: null, p_name: name });
+        await ablegen(id);
+        fuellen();
+      });
+      return;
+    }
+    try { await ablegen(wahl.value ? Number(wahl.value) : null); } catch (e) { meldung(msg, fehlerText(e), true); }
+  });
+  return wahl;
 }
 
 // --- Kontakte und Sammelmail ---
