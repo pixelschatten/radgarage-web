@@ -319,7 +319,8 @@ async function ladeSicherheit() {
   meldung($('#msg-codes'), '');
   meldung($('#msg-sitzungen'), '');
   const [faktoren, codes] = await Promise.all([
-    sb.auth.mfa.listFactors().then((r) => r.data ? r.data.totp.filter((f) => f.status === 'verified') : []),
+    Promise.all([sb.auth.mfa.listFactors(), sb.auth.getUser()])
+      .then(([r, u]) => r.data ? standardZuerst(r.data.totp.filter((f) => f.status === 'verified'), u.data && u.data.user).map((f, i, l) => ({ ...f, standard: l.length > 1 && i === 0 })) : []),
     rpc('wiederherstellung_status').catch(() => null),
   ]);
   codesOffen = codes ? codes.offen : null;
@@ -353,7 +354,9 @@ function zeichneFaktoren(faktoren) {
   ul.replaceChildren(...faktoren.map((f) => {
     const li = document.createElement('li');
     const links = document.createElement('div');
-    links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' }),
+    const name = Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' });
+    if (f.standard) name.append(' ', Object.assign(document.createElement('span'), { className: 'marke neu', textContent: 'Standard', title: 'Steht beim Anmelden oben und ist vorausgewählt' }));
+    links.append(name,
       Object.assign(document.createElement('div'), { className: 'neben', textContent: `Eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
     const umb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Umbenennen' });
     umb.addEventListener('click', () => {
@@ -380,10 +383,21 @@ function zeichneFaktoren(faktoren) {
       b.disabled = true;
       const { error } = await sb.auth.mfa.unenroll({ factorId: f.id });
       if (error) { window.alert(fehlerText(error)); b.disabled = false; return; }
+      if (f.standard) await sb.auth.updateUser({ data: { zwei_faktor_standard: null } });
       ladeSicherheit();
     });
     const akt = document.createElement('div');
     akt.className = 'aktionen';
+    if (faktoren.length > 1 && !f.standard) {
+      const st = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Als Standard', title: 'Beim Anmelden oben und vorausgewählt' });
+      st.addEventListener('click', async () => {
+        st.disabled = true;
+        const { error } = await sb.auth.updateUser({ data: { zwei_faktor_standard: f.id } });
+        if (error) { window.alert(fehlerText(error)); st.disabled = false; return; }
+        ladeSicherheit();
+      });
+      akt.append(st);
+    }
     akt.append(umb, b);
     li.append(links, akt);
     return li;
