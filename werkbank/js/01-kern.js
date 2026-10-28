@@ -62,6 +62,12 @@ const RECHTE_TEXT = [
 // Welche Rollen jemand vergeben darf
 const vergebbar = () => (rolle === 'superadmin' ? ['helfer', 'support', 'admin'] : darf('rollen') ? ['helfer'] : []);
 let faktorId = null;
+// Bevorzugter Authenticator (Konto → Zweiter Faktor → Als Standard), in user_metadata, damit er in jedem Browser gilt
+const standardFaktor = (user) => (user && user.user_metadata && user.user_metadata.zwei_faktor_standard) || null;
+const standardZuerst = (liste, user) => {
+  const id = standardFaktor(user);
+  return [...liste].sort((a, b) => (b.id === id) - (a.id === id));
+};
 let radTeile = []; // { teil_id, name, kategorie, ean } oder { neu: {...}, name, kategorie, ean }
 // Beim Ergänzen eines vorhandenen Rads: { rad, vorhanden: [{ id, name, kategorie }], weg: Set }. radTeile sind dann die neuen Teile.
 let ergaenzen = null;
@@ -221,7 +227,7 @@ async function weiter() {
 
   const { data: faktoren, error: e2 } = await sb.auth.mfa.listFactors();
   if (e2) throw e2;
-  const bestaetigt = faktoren.totp.filter((f) => f.status === 'verified');
+  const bestaetigt = standardZuerst(faktoren.totp.filter((f) => f.status === 'verified'), session && session.user);
   if (bestaetigt.length) {
     faktorId = bestaetigt[0].id;
     $('#f-faktor').reset();
