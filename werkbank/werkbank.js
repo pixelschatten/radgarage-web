@@ -42,7 +42,7 @@
   // Spiegel der Rechte-Matrix auf dem Server (meine_rolle liefert sie mit, das hier ist nur der Rückfall)
   const RECHTE_JE_ROLLE = {
     superadmin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'konten_sehen', 'konten_betreuen', 'konten_verwalten', 'rollen', 'system', 'feedback'],
-    admin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'rollen', 'feedback'],
+    admin: ['katalog_erfassen', 'katalog_pflegen', 'statistik', 'konten_sehen', 'konten_betreuen', 'rollen', 'feedback'],
     support: ['statistik', 'konten_sehen', 'konten_betreuen', 'feedback'],
     helfer: ['katalog_erfassen'],
   };
@@ -52,7 +52,7 @@
     ['statistik', 'Statistik', 'Zusammengefasste Zahlen, keine einzelnen Personen.'],
     ['feedback', 'Feedback', 'Nachrichten von radgarage.app/feedback lesen, abhaken, beantworten.'],
     ['konten_sehen', 'Konten sehen', 'Liste der Konten mit Profilbild. Nur mit zweitem Faktor.'],
-    ['konten_betreuen', 'Konten betreuen', 'Sperren, zweiten Faktor zurücksetzen, E-Mail-CRM.'],
+    ['konten_betreuen', 'Konten betreuen', 'E-Mail-CRM, Mail-Signatur, sperren, zweiten Faktor zurücksetzen.'],
     ['konten_verwalten', 'Konten verwalten', 'Konten löschen, Premium schenken, Sammelmails.'],
     ['rollen', 'Rollen vergeben', 'Super-Admin: alle Rollen. Admin: nur Helfer.'],
     ['system', 'Systemstatus', 'Speicher und Grenzen von Supabase.'],
@@ -3128,6 +3128,7 @@
     rolle: 'Rolle gesetzt', rolle_gesetzt: 'Rolle gesetzt', rolle_weg: 'Rolle entfernt',
     konto_mail: 'Mail an Konto', postfach_antwort: 'Antwort aus dem Postfach', postfach_geloescht: 'Unterhaltung gelöscht', konto_premium: 'Premium geändert', konto_gesperrt: 'Sperre geändert', konto_geloescht: 'Konto gelöscht',
     wiederherstellung_benutzt: 'Wiederherstellungscode benutzt', zwei_faktor_zurueckgesetzt: 'Zweiter Faktor zurückgesetzt',
+    rueckgaengig: 'Rückgängig gemacht',
   };
   let baustellen = [];
   let bsZeige = 30;
@@ -3174,6 +3175,8 @@
     } catch (e) {
       meldung($('#msg-uebersicht'), fehlerText(e), true);
     }
+    ladeBetrieb();
+    ladePapierkorb();
     ladeVerlauf();
     ladeShops();
     await ladeBaustellen();
@@ -3312,15 +3315,167 @@
       tb.replaceChildren(...liste.map((v) => {
         const tr = document.createElement('tr');
         const wann = new Date(v.wann);
+        const ende = document.createElement('td');
+        if (v.rueckgaengig) ende.append(rueckgaengigKnopf(v, 'Rückgängig'));
+        else if (v.rueckgaengig_am) ende.append(Object.assign(document.createElement('span'), { className: 'chip', textContent: 'zurückgedreht' }));
+        tr.classList.toggle('zurueck', !!v.rueckgaengig_am);
         tr.append(Object.assign(document.createElement('td'), { className: 'wann', textContent: `${wann.toLocaleDateString('de-DE')} ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}` }),
           Object.assign(document.createElement('td'), { textContent: v.von || '–' }),
-          Object.assign(document.createElement('td'), { textContent: `${VERLAUF_TEXTE[v.art] || v.art}${v.text ? ': ' + v.text : ''}` }));
+          Object.assign(document.createElement('td'), { textContent: verlaufText(v) }), ende);
         return tr;
       }));
-      if (!liste.length) tb.innerHTML = `<tr><td colspan="3" class="fine">${verlauf.length ? 'Keine passenden Einträge, „Mehr zeigen“ lädt ältere.' : 'Noch keine Einträge.'}</td></tr>`;
+      if (!liste.length) tb.innerHTML = `<tr><td colspan="4" class="fine">${verlauf.length ? 'Keine passenden Einträge, „Mehr zeigen“ lädt ältere.' : 'Noch keine Einträge.'}</td></tr>`;
     }
   }
   $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
+
+  // „rueckgaengig“ trägt die ursprüngliche Art vorn im Text (rad_geloescht: Cube …)
+  function verlaufText(v) {
+    const teile = (v.text || '').split(': ');
+    // Vorn stehen bei Rückgängig die Arten der zurückgedrehten Einträge, auch mehrfach (rueckgaengig: rad_geaendert: …)
+    for (let i = 0; v.art === 'rueckgaengig' && i < teile.length - 1 && VERLAUF_TEXTE[teile[i]]; i++) {
+      teile[i] = teile[i] === 'rueckgaengig' ? 'Rückgängig' : VERLAUF_TEXTE[teile[i]];
+    }
+    const text = teile.join(': ');
+    return `${VERLAUF_TEXTE[v.art] || v.art}${text ? ': ' + text : ''}`;
+  }
+
+  // ----- Rückgängig und Papierkorb (katalog_rueckgaengig, katalog_papierkorb) -----
+
+  function rueckgaengigKnopf(v, titel, ziel = null) {
+    const b = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: titel });
+    b.addEventListener('click', async () => {
+      if (!window.confirm(`${verlaufText(v)}\n\nDiesen Stand wirklich zurückdrehen? Das landet selbst im Verlauf und lässt sich ebenso zurückdrehen.`)) return;
+      b.disabled = true;
+      const msg = ziel || $('#msg-uebersicht');
+      meldung(msg, '');
+      try {
+        const r = await rpc('katalog_rueckgaengig', { p_id: v.id });
+        meldung(msg, `Zurückgedreht (${zahlDe(r.zeilen)} ${r.zeilen === 1 ? 'Änderung' : 'Änderungen'}).`);
+        await Promise.all([ladeVerlauf(), ladePapierkorb()]);
+        ladeBaustellen();
+        kat.raeder = null; kat.teile = null;
+      } catch (e) {
+        meldung(msg, fehlerText(e), true);
+        b.disabled = false;
+      }
+    });
+    return b;
+  }
+
+  const PK_TEXTE = {
+    rad_geloescht: 'Rad gelöscht', rad_abgelehnt: 'Rad abgelehnt', teil_geloescht: 'Teil gelöscht',
+    teile_zusammengefuehrt: 'Teile zusammengeführt', shop_geloescht: 'Shop gelöscht',
+  };
+  async function ladePapierkorb() {
+    const ul = $('#pk-liste');
+    try {
+      const liste = (await rpc('katalog_papierkorb')) || [];
+      $('#pk-zahl').textContent = liste.length ? `(${zahlDe(liste.length)})` : '';
+      ul.replaceChildren(...liste.map((v) => {
+        const li = document.createElement('li');
+        const links = document.createElement('div');
+        const wann = new Date(v.wann);
+        links.append(Object.assign(document.createElement('div'), { className: 'name', textContent: v.text || '' }),
+          Object.assign(document.createElement('span'), { className: 'neben',
+            textContent: `${PK_TEXTE[v.art] || v.art} am ${wann.toLocaleDateString('de-DE')} um ${wann.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`
+              + `${v.von ? ' von ' + v.von : ''}${v.teile ? `, mit ${zahlDe(v.teile)} ${v.art === 'teile_zusammengefuehrt' ? 'Zuordnungen' : 'Teilen'}` : ''}` }));
+        li.append(links, rueckgaengigKnopf({ ...v, art: v.art }, v.art === 'teile_zusammengefuehrt' ? 'Trennen' : 'Wiederherstellen', $('#msg-papierkorb')));
+        return li;
+      }));
+      if (!liste.length) ul.innerHTML = '<li class="leer">Leer. Was du löschst, liegt hier 30 Tage.</li>';
+    } catch (e) {
+      ul.replaceChildren();
+      meldung($('#msg-papierkorb'), fehlerText(e), true);
+    }
+  }
+
+  // ----- Läuft alles? (werkbank_betrieb) -----
+
+  const AMPEL_TEXT = { gruen: 'Alles grün', gelb: 'Bitte ansehen', rot: 'Störung' };
+  function vorZeit(d) {
+    if (!d) return 'noch nie';
+    const min = Math.round((Date.now() - new Date(d).getTime()) / 60000);
+    if (min < 1) return 'gerade eben';
+    if (min < 60) return `vor ${min} Min.`;
+    if (min < 60 * 24) return `vor ${Math.round(min / 60)} Std.`;
+    const t = Math.round(min / 1440);
+    return t === 1 ? 'gestern' : `vor ${t} Tagen`;
+  }
+  function wieOft(min) {
+    if (min < 60) return `alle ${min} Min.`;
+    if (min === 60) return 'stündlich';
+    if (min === 1440) return 'täglich';
+    if (min === 10080) return 'wöchentlich';
+    return `alle ${Math.round(min / 60)} Std.`;
+  }
+  async function ladeBetrieb() {
+    const karte = $('#betrieb');
+    meldung($('#msg-betrieb'), '');
+    let b;
+    try {
+      b = await rpc('werkbank_betrieb');
+    } catch (e) {
+      $('#be-ampel').className = 'ampel';
+      $('#be-ampel').textContent = 'unbekannt';
+      $('#be-stand').textContent = '';
+      meldung($('#msg-betrieb'), fehlerText(e), true);
+      return;
+    }
+    karte.classList.remove('k1', 'k3', 'k4');
+    karte.classList.add(b.ampel === 'rot' ? 'k1' : b.ampel === 'gelb' ? 'k3' : 'k4');
+    $('#be-ampel').className = `ampel ${b.ampel}`;
+    $('#be-ampel').textContent = AMPEL_TEXT[b.ampel] || b.ampel;
+    $('#be-stand').textContent = `Geprüft ${new Date(b.stand).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} Uhr. Rote Punkte stehen auch in deiner Morgen-Mail.`;
+    $('#be-probleme').replaceChildren(...(b.probleme || []).map((p) => Object.assign(document.createElement('li'), { className: p.stufe, textContent: p.text })));
+
+    const feld = (titel, wert, unter, anteil = null) => {
+      const d = Object.assign(document.createElement('div'), { className: 'be-feld' });
+      d.append(Object.assign(document.createElement('div'), { className: 'eyebrow', textContent: titel }),
+        Object.assign(document.createElement('b'), { textContent: wert }),
+        Object.assign(document.createElement('p'), { className: 'fine', textContent: unter }));
+      if (anteil !== null) {
+        const bal = Object.assign(document.createElement('div'), { className: 'balken' });
+        bal.append(Object.assign(document.createElement('span'), { style: `width:${Math.min(100, Math.max(2, anteil * 100)).toFixed(1)}%` }));
+        d.append(bal);
+      }
+      return d;
+    };
+    const s = b.sicherung;
+    const zeiten = b.zeitplaene || [];
+    const zeitOk = zeiten.filter((z) => z.aktiv && z.status !== 'failed').length;
+    const a = b.anfragen || {};
+    $('#be-gitter').replaceChildren(
+      feld('Datensicherung', s ? vorZeit(s.wann) : 'noch keine',
+        s ? `${s.ok ? 'erfolgreich' : 'fehlgeschlagen'}${s.bytes ? `, ${groesse(s.bytes)} verschlüsselt` : ''}, ${zahlDe(b.sicherungen_30)} ${b.sicherungen_30 === 1 ? 'Sicherung' : 'Sicherungen'} in 30 Tagen` : 'Einrichtung siehe docs/datensicherung.md im App-Repo'),
+      feld('Zeitpläne', `${zahlDe(zeitOk)} von ${zahlDe(zeiten.length)}`, 'laufen ohne Fehler'),
+      feld('Brevo, 24 Std.', a.fehler_24h ? `${zahlDe(a.fehler_24h)} Fehler` : 'keine Fehler', `${zahlDe(a.gesamt_24h)} Mails und Abrufe`),
+      feld('Werkbank-Mails heute', `${zahlDe(b.mails.heute)} / ${zahlDe(b.mails.grenze)}`, 'Grenze für Sammelmails', b.mails.heute / b.mails.grenze),
+      feld('Datenbank', groesse(b.datenbank.bytes), `von ${groesse(b.datenbank.grenze)} im Gratis-Plan`, b.datenbank.bytes / b.datenbank.grenze),
+      feld('Postfach', vorZeit(b.postfach.letzter_eingang), 'letzte eingegangene Mail'));
+    if (s && s.lauf) {
+      const f = $('#be-gitter').firstElementChild;
+      f.append(Object.assign(document.createElement('a'), { href: s.lauf, target: '_blank', rel: 'noopener', className: 'fine', textContent: 'Lauf ansehen' }));
+    }
+
+    $('#be-zeit-zahl').textContent = `(${zahlDe(zeiten.length)})`;
+    $('#be-zeit').replaceChildren(...zeiten.map((z) => {
+      const tr = document.createElement('tr');
+      const zuletzt = document.createElement('td');
+      zuletzt.append(vorZeit(z.letzter));
+      if (!z.aktiv) zuletzt.append(' ', Object.assign(document.createElement('span'), { className: 'chip warn', textContent: 'aus' }));
+      else if (z.status === 'failed') zuletzt.append(' ', Object.assign(document.createElement('span'), { className: 'chip warn', textContent: 'Fehler', title: z.meldung || '' }));
+      tr.append(Object.assign(document.createElement('td'), { textContent: z.titel }),
+        Object.assign(document.createElement('td'), { textContent: wieOft(z.minuten) }), zuletzt,
+        Object.assign(document.createElement('td'), { textContent: `${zahlDe(z.laeufe_24h)} ${z.laeufe_24h === 1 ? 'Lauf' : 'Läufe'}${z.fehler_24h ? `, ${zahlDe(z.fehler_24h)} Fehler` : ''}` }));
+      return tr;
+    }));
+    const fehler = a.letzte_fehler || [];
+    $('#be-fehler').textContent = fehler.length
+      ? 'Letzte Fehler bei Brevo: ' + fehler.map((f) => `${new Date(f.wann).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} (${f.status || 'ohne Antwort'}${f.fehler ? ': ' + f.fehler.slice(0, 80) : ''})`).join(' · ')
+      : 'Keine Fehler bei Brevo in den letzten 7 Tagen.';
+  }
+  $('#be-neu').addEventListener('click', ladeBetrieb);
 
   // ----- Registrierte Konten -----
 
