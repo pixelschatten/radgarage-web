@@ -11,10 +11,9 @@ const zeitDe = (d) => new Date(d).toLocaleString('de-DE', { dateStyle: 'medium',
 
 function postfachZahlSetzen(n) {
   pfUngelesen = n;
-  for (const el of [$('#zahl-postfach'), $('#pf-zahl-neu')]) {
-    el.hidden = !n;
-    el.textContent = String(n);
-  }
+  $('#pf-zahl-neu').hidden = !n;
+  $('#pf-zahl-neu').textContent = String(n);
+  hinweiseZeichnen();
 }
 
 async function postfachZahl() {
@@ -1422,14 +1421,11 @@ $('#wl-abgleich').addEventListener('click', async (ev) => {
   b.disabled = false;
 });
 
-// ----- Neu dabei: Glocke oben und Kachel im CRM (neu-dabei.sql) -----
+// ----- Neu dabei: Kachel im CRM (neu-dabei.sql) -----
 // Neue Einträge auf der Warteliste und neue Konten seit dem eigenen letzten Blick. Der Stand liegt je Person auf dem Server,
-// gilt also auf jedem Gerät. Alle zwei Minuten neu gefragt, solange die Werkbank sichtbar ist.
+// gilt also auf jedem Gerät. Die Glocke oben (Teil 11) zählt sie mit allen anderen Hinweisen.
 
-const TITEL_WERKBANK = document.title;
 let neuDaten = null;
-let neuBekannt = null;
-let neuToastZeit = null;
 
 function neuZeile(email, zeile, chips) {
   const person = mk('button', { type: 'button', className: 'wl-person' }, ava(email), mk('span', { className: 'pf-mitte' },
@@ -1451,18 +1447,11 @@ function neuGruppe(titel, teil, art, ziel, zeile) {
 }
 
 function zeichneNeu(zeigen = false) {
+  hinweiseZeichnen();
   const d = neuDaten;
   const w = d && d.warteliste;
   const k = d && d.konten;
   const n = (w ? w.anzahl : 0) + (k ? k.anzahl : 0);
-  const glocke = $('#neu-glocke');
-  glocke.classList.toggle('neu', n > 0);
-  $('#neu-zahl').hidden = !n;
-  $('#neu-zahl').textContent = n > 99 ? '99+' : String(n);
-  const teile = [w && w.anzahl ? `${zahlDe(w.anzahl)} auf der Warteliste` : '', k && k.anzahl ? `${zahlDe(k.anzahl)} ${k.anzahl === 1 ? 'neues Konto' : 'neue Konten'}` : ''].filter(Boolean);
-  glocke.title = n ? `Neu dabei: ${teile.join(', ')}` : 'Neu dabei: nichts Neues';
-  glocke.setAttribute('aria-label', glocke.title);
-  document.title = n ? `(${n}) ${TITEL_WERKBANK}` : TITEL_WERKBANK;
   const kachel = $('#neu-kachel');
   if (!d) { kachel.hidden = true; return; }
   if (zeigen || n) kachel.hidden = false;
@@ -1483,30 +1472,10 @@ function zeichneNeu(zeigen = false) {
   ].filter(Boolean));
 }
 
-function neuToast(d) {
-  // Nur melden, was seit dem letzten Abruf in dieser Sitzung dazugekommen ist
-  const jetzt = new Set([...(d.warteliste?.eintraege || []).map((x) => `w:${x.email}`), ...(d.konten?.eintraege || []).map((x) => `k:${x.id}`)]);
-  const vorher = neuBekannt;
-  neuBekannt = jetzt;
-  if (!vorher) return;
-  const frisch = [...jetzt].filter((x) => !vorher.has(x));
-  if (!frisch.length) return;
-  const w = frisch.filter((x) => x.startsWith('w:')).map((x) => x.slice(2));
-  const k = frisch.filter((x) => x.startsWith('k:')).length;
-  const teile = [];
-  if (w.length) teile.push(w.length === 1 ? `${w[0]} steht jetzt auf der Warteliste` : `${w.length} neu auf der Warteliste`);
-  if (k) teile.push(k === 1 ? 'ein neues Konto' : `${k} neue Konten`);
-  $('#neu-toast-text').textContent = `Neu dabei: ${teile.join(', ')}.`;
-  $('#neu-toast').hidden = false;
-  clearTimeout(neuToastZeit);
-  neuToastZeit = setTimeout(() => { $('#neu-toast').hidden = true; }, 15000);
-}
-
 async function neuDabei(zeigen = false) {
-  if (!darf('konten_betreuen') || $('#s-werkbank').hidden) { neuDaten = null; neuBekannt = null; zeichneNeu(); return; }
+  if (!darf('konten_betreuen') || $('#s-werkbank').hidden) { neuDaten = null; zeichneNeu(); return; }
   try {
     neuDaten = await rpc('neu_dabei');
-    neuToast(neuDaten);
   } catch (e) {
     if (zeigen) meldung($('#msg-neu'), fehlerText(e), true);
     return;
@@ -1523,18 +1492,12 @@ async function neuGesehen(art = null) {
   } catch (e) { meldung($('#msg-neu'), fehlerText(e), true); }
 }
 
-$('#neu-glocke').addEventListener('click', async () => {
-  $('#neu-toast').hidden = true;
+// Sprung aus der Glocke: CRM öffnen, Kachel zeigen
+async function neuKachelZeigen() {
   tab('crm');
   await neuDabei(true);
   $('#neu-kachel').scrollIntoView({ behavior: 'smooth', block: 'start' });
-});
+}
+
 $('#neu-gesehen').addEventListener('click', () => neuGesehen());
 $('#neu-laden').addEventListener('click', () => neuDabei(true));
-$('#neu-toast-auf').addEventListener('click', () => $('#neu-glocke').click());
-$('#neu-toast-zu').addEventListener('click', () => { $('#neu-toast').hidden = true; });
-setInterval(() => {
-  if (document.visibilityState === 'visible') neuDabei();
-  else if ($('#s-werkbank').hidden) zeichneNeu();
-}, 120000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && neuDaten) neuDabei(); });
