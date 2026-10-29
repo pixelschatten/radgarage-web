@@ -393,6 +393,7 @@ $('#abmelden').addEventListener('click', async () => {
   $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
   ergaenzenEnde();
   zeige('s-mail');
+  neuDabei();
 });
 
 // ---------- Werkbank ----------
@@ -468,6 +469,7 @@ async function werkbank() {
   if (darf('katalog_pflegen')) ladeOffen();
   if (darf('feedback')) feedbackZahl();
   if (darf('konten_betreuen')) { postfachZahl(); ladeSignatur(); }
+  neuDabei();
   letzteAktivitaet = Date.now();
   pruefeCodes();
   ladeEigenesBild();
