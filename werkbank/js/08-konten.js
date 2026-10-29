@@ -54,7 +54,7 @@ async function ladeKonten() {
   $('#kt-kacheln').replaceChildren(
     kachel('k1', 'Konten', zahl(konten.length), `${zahl(konten.filter((k) => k.raeder > 0).length)} mit Rädern`),
     kachel('k5', 'Aktiv', zahl(konten.filter((k) => k.letzte_anmeldung && new Date(k.letzte_anmeldung) > woche).length), 'in den letzten 7 Tagen'),
-    kachel('k4', 'Premium', zahl(konten.filter((k) => k.premium).length), 'Konten'),
+    kachel('k4', 'Tester-Abzeichen', zahl(konten.filter((k) => k.premium).length), 'Konten'),
     kachel('k3', 'Familien', zahl(konten.filter((k) => k.familie === 'besitzer').length), ((n) => `${zahl(n)} ${n === 1 ? 'Mitglied' : 'Mitglieder'}`)(konten.filter((k) => k.familie === 'mitglied').length)));
   await worteLaden;
   ktZeige = 50;
@@ -102,7 +102,7 @@ function zeichneKontenListe(liste) {
     chips.className = 'eans';
     const chip = (text, art) => chips.append(Object.assign(document.createElement('span'), { className: 'chip' + (art ? ' ' + art : ''), textContent: text }));
     for (const a of k.anbieter || []) chip(ANBIETER[a] || a);
-    if (k.premium) chip('Premium', 'gut');
+    if (k.premium) chip(k.premium === 'kauf' ? 'Premium' : 'Tester-Abzeichen', 'gut');
     if (k.familie) chip(k.familie === 'besitzer' ? 'Familie gegründet' : 'In Familie');
     if (k.rolle) chip(ROLLEN[k.rolle] || k.rolle);
     if (k.zwei_faktor) chip('2FA', 'gut');
@@ -172,12 +172,12 @@ function kontoVerwalten(k) {
     + (k.familie === 'besitzer' ? ` Hat die Familiengarage „${k.familie_name || ''}“ gegründet${k.familie_mitglieder ? ` (${k.familie_mitglieder} ${k.familie_mitglieder === 1 ? 'Mitglied' : 'Mitglieder'})` : ''}.` : k.familie ? ` Mitglied der Familiengarage „${k.familie_name || ''}“.` : '')
     + ` Kennung ${k.id}.`;
 
-  const premium = block('Premium', k.premium ? `Aktiv (${k.premium === 'geschenk' ? 'geschenkt' : k.premium === 'kauf' ? 'gekauft' : k.premium}).` : 'Nicht aktiv.',
+  const premium = block('Tester-Abzeichen', k.premium ? (k.premium === 'kauf' ? 'Premium gekauft.' : 'Vergeben.') : 'Nicht vergeben.',
     k.premium === 'kauf'
       ? Object.assign(document.createElement('span'), { className: 'fine', textContent: 'Gekauftes Premium lässt sich hier nicht zurücknehmen.' })
       : k.premium
-      ? knopf('Premium entziehen', async () => { if (!window.confirm(`Premium für ${k.email} entziehen?`)) return false; await rpc('konto_premium', { p_nutzer: k.id, p_an: false }); })
-      : knopf('Premium schenken', () => rpc('konto_premium', { p_nutzer: k.id, p_an: true }), 'pill klein'));
+      ? knopf('Abzeichen entziehen', async () => { if (!window.confirm(`Tester-Abzeichen für ${k.email} entziehen?`)) return false; await rpc('konto_premium', { p_nutzer: k.id, p_an: false }); })
+      : knopf('Abzeichen geben', () => rpc('konto_premium', { p_nutzer: k.id, p_an: true }), 'pill klein'));
 
   const dauer = document.createElement('select');
   dauer.setAttribute('aria-label', 'Dauer der Sperre');

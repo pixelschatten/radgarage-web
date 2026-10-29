@@ -1386,7 +1386,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
         <button class="knopf-weich" type="button" id="steuer-neu" data-recht="system">Neu laden</button>
       </div>
       <div class="segment st-reiter" role="tablist" aria-label="Bereich" id="as-reiter">
-        <button type="button" role="tab" data-as="hinweise" data-recht="system" aria-selected="true">Hinweise<span class="nur-breit"> und Käufe</span></button>
+        <button type="button" role="tab" data-as="hinweise" data-recht="system" aria-selected="true">Hinweise<span class="nur-breit"> und Schalter</span></button>
         <button type="button" role="tab" data-as="partner" data-recht="system" aria-selected="false">Partner</button>
         <button type="button" role="tab" data-as="shops" aria-selected="false">Shops</button>
         <button type="button" role="tab" data-as="tester" data-recht="system" aria-selected="false">Store-Start<span class="nur-breit"> und Tester</span></button>
@@ -1426,13 +1426,13 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
                 <div class="msg" role="status"></div>
               </form>
               <form class="st-kachel" id="f-st-premium" autocomplete="off">
-                <div class="st-titel"><h4>Käufe</h4><span class="st-status" id="st-s-premium"></span></div>
-                <p class="fine">Bis zum Store-Start ist alles frei. Wirkt nur in App-Versionen mit eingebautem Kauf, ältere bleiben frei.</p>
-                <div class="st-wahl" role="radiogroup" aria-label="Käufe">
+                <div class="st-titel"><h4>Premium-Sperre (geparkt)</h4><span class="st-status" id="st-s-premium"></span></div>
+                <p class="fine">Die App ist gratis und offen, auch das PDF. Dieser Schalter wirkt nur, wenn das Premium-Modell im Code wieder eingeschaltet wird (PREMIUM_MODELL in premium.ts). Der Kaffee braucht keinen Schalter.</p>
+                <div class="st-wahl" role="radiogroup" aria-label="Premium-Sperre">
                   <label><input type="radio" name="premium_aktiv" value="aus"><b>Alles frei</b><span>Alle Funktionen ohne Kauf, wie in der Testphase.</span></label>
-                  <label><input type="radio" name="premium_aktiv" value="an"><b>PDF nur nach Kauf</b><span>Das Wartungsheft-PDF kostet einzeln 1,49 € (in App-Versionen mit eingebautem Kauf). Die App bleibt sonst gratis und offen.</span></label>
+                  <label><input type="radio" name="premium_aktiv" value="an"><b>Nur nach Kauf</b><span>Nur mit Premium-Modell: Premium-Funktionen und PDF erst nach dem Kauf. Heute ohne Wirkung.</span></label>
                 </div>
-                <div class="st-fuss"><button class="pill klein" type="submit">Käufe speichern</button></div>
+                <div class="st-fuss"><button class="pill klein" type="submit">Speichern</button></div>
                 <div class="msg" role="status"></div>
               </form>
             </div>
@@ -1485,7 +1485,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
           <h3>Store-Start und Tester</h3>
           <p class="fine">Testplätze aus der Warteliste, wer davon die App nutzt, Googles Pflicht für den geschlossenen Test und TestFlight. Was nur in der Play Console und in App Store Connect steht, trägst du unten ein.</p>
           <div class="be-gitter" id="ts-gitter"></div>
-          <div class="aktionen" style="margin-top:12px"><button class="pill klein" type="button" id="ts-schenken">Premium an alle Tester verschenken</button></div>
+          <div class="aktionen" style="margin-top:12px"><button class="pill klein" type="button" id="ts-schenken">Abzeichen an alle Tester vergeben</button></div>
           <details class="be-details">
             <summary>Zahlen aus den Stores eintragen</summary>
             <form id="f-tester" autocomplete="off">
@@ -1598,7 +1598,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
         <p class="fine">Was in einer Garage steht, ist hier nicht zu sehen, nur die Anzahl der Räder. <span data-recht="konten_betreuen">Konten ankreuzen, um mehreren auf einmal ein Schlagwort zu geben.</span></p>
         <div class="zeile">
           <label>Suchen<input type="search" id="kt-suche" placeholder="E-Mail-Adresse oder #Schlagwort"></label>
-          <label>Zeigen<select id="kt-filter"><option value="">Alle</option><option value="premium">Mit Premium</option><option value="familie">In einer Familiengarage</option><option value="rolle">Mit Rolle</option><option value="gesperrt">Gesperrt</option><option value="unbestaetigt">E-Mail nicht bestätigt</option></select></label>
+          <label>Zeigen<select id="kt-filter"><option value="">Alle</option><option value="premium">Mit Tester-Abzeichen</option><option value="familie">In einer Familiengarage</option><option value="rolle">Mit Rolle</option><option value="gesperrt">Gesperrt</option><option value="unbestaetigt">E-Mail nicht bestätigt</option></select></label>
           <label data-recht="konten_betreuen">Schlagwort<select id="kt-wort"><option value="">Alle</option></select></label>
         </div>
         <div class="aktionen" style="margin:10px 0 0" data-recht="konten_verwalten"><button class="pill klein" type="button" id="kt-sammel" hidden>Sammelmail</button></div>
@@ -1702,7 +1702,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
               <option value="alle">Alle</option>
               <optgroup label="Konten">
                 <option value="konten">Alle Konten</option>
-                <option value="premium">Mit Premium</option>
+                <option value="premium">Mit Tester-Abzeichen</option>
                 <option value="ohne_rad">Noch ohne Rad</option>
                 <option value="inaktiv">30 Tage nicht aktiv</option>
                 <option value="neu">Neu (14 Tage)</option>
@@ -1953,8 +1953,8 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 <script src="js/04-postfach-crm.js?v=2026-10-29-baustellen"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-29-baustellen"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-29-baustellen"></script>
-<script src="js/07-uebersicht.js?v=2026-10-29-offen"></script>
-<script src="js/08-konten.js?v=2026-10-29-baustellen"></script>
+<script src="js/07-uebersicht.js?v=2026-10-29-frei"></script>
+<script src="js/08-konten.js?v=2026-10-29-frei"></script>
 <script src="js/09-katalog.js?v=2026-10-29-baustellen"></script>
 <script src="js/10-statistik.js?v=2026-10-29-baustellen"></script>
 <script src="js/11-start.js?v=2026-10-29-baustellen"></script>
