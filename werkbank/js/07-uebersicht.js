@@ -540,7 +540,7 @@ function steuerungZeigen() {
   stStatus('#st-s-update', st.mindest_version ? `Ab ${st.mindest_version}` : 'Aus', st.mindest_version ? 'warn' : '');
   $('#st-update-weg').hidden = !st.mindest_version;
 
-  stStatus('#st-s-premium', st.premium_aktiv ? 'PDF nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
+  stStatus('#st-s-premium', st.premium_aktiv ? 'Nur nach Kauf (geparkt)' : 'Alles frei', st.premium_aktiv ? 'an' : '');
 
   partnerVorschau();
 }
@@ -748,8 +748,8 @@ $('#f-st-premium').addEventListener('submit', (ev) => {
   ev.preventDefault();
   const an = ev.target.elements.premium_aktiv.value === 'an';
   if (an && !steuerung.premium_aktiv
-      && !window.confirm('Das Wartungsheft-PDF kostet dann einzeln 1,49 € (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
-  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Das PDF gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
+      && !window.confirm('Wirkt nur, wenn das Premium-Modell im Code wieder an ist. Trotzdem einschalten?')) return;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Wirkt erst mit Premium-Modell.' : 'Gespeichert. Alles ist frei.'));
 });
 
 $('#f-st-takt').addEventListener('submit', (ev) => {
@@ -1137,7 +1137,7 @@ function zeichneTester(t) {
       g.start ? `${g.tester == null ? '?' : zahlDe(g.tester)} von 12 Testern${g.tester != null && g.tester < 12 ? `, es fehlen ${12 - g.tester}` : ''}, frühestens am ${datumKurz(g.fertig_ab)} fertig${g.erfuellt ? ' ✓' : ''}`
         : 'Startdatum unten eintragen, sobald der geschlossene Test läuft', g.start ? Math.min(1, (g.tag || 0) / 14) : null),
     feld('TestFlight', `${tf.tester == null ? '?' : zahlDe(tf.tester)} / ${zahlDe(tf.grenze)}`, 'Tester in App Store Connect', tf.tester != null && tf.grenze ? tf.tester / tf.grenze : null),
-    feld('Premium-Geschenk', gs.am ? `${zahlDe(gs.geschenkt)} verschenkt` : 'noch nicht', gs.offen ? `${zahlDe(gs.offen)} mit Testplatz haben es noch nicht` : 'Alle mit Testplatz haben es'));
+    feld('Tester-Abzeichen', gs.am ? `${zahlDe(gs.geschenkt)} vergeben` : 'noch nicht', gs.offen ? `${zahlDe(gs.offen)} mit Testplatz haben es noch nicht` : 'Alle mit Testplatz haben es'));
   $('#ts-schenken').disabled = !gs.offen;
   const f = $('#f-tester');
   const e = t.eingaben || {};
@@ -1155,11 +1155,11 @@ $('#f-tester').addEventListener('submit', (ev) => {
   });
 });
 $('#ts-schenken').addEventListener('click', async () => {
-  if (!window.confirm('Allen mit Testplatz Premium schenken? Das gilt dauerhaft und lässt sich nur einzeln im Konto zurücknehmen. Gedacht für den Store-Start.')) return;
+  if (!window.confirm('Allen mit Testplatz das Abzeichen „Tester der ersten Stunde“ geben? Es gilt dauerhaft und lässt sich nur einzeln im Konto zurücknehmen.')) return;
   try {
     const n = await rpc('tester_premium_schenken');
     await ladeTester();
-    meldung($('#msg-tester'), `Premium an ${zahlDe(n)} Tester verschenkt. Es wird beim nächsten App-Start ans Konto gebunden.`);
+    meldung($('#msg-tester'), `Abzeichen an ${zahlDe(n)} Tester vergeben. Es erscheint beim nächsten App-Start am Konto.`);
   } catch (e) {
     meldung($('#msg-tester'), fehlerText(e), true);
   }
