@@ -1437,30 +1437,28 @@ function neuZeile(email, zeile, chips) {
 }
 
 function neuGruppe(titel, teil, art, ziel, zeile) {
+  if (!teil.anzahl) return null;
   const kopf = mk('div', { className: 'neu-gruppe-kopf' }, mk('h4', { textContent: `${titel} · ${zahlDe(teil.anzahl)} neu` }),
     mk('div', { className: 'aktionen', style: 'margin:0' }, ziel,
-      teil.anzahl ? Object.assign(mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Gesehen' }), { onclick: () => neuGesehen(art) }) : null));
+      Object.assign(mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Gesehen' }), { onclick: () => neuGesehen(art) })));
   const mehr = teil.anzahl - teil.eintraege.length;
   return mk('div', { className: 'neu-gruppe' }, kopf, ...teil.eintraege.map(zeile),
-    !teil.anzahl ? mk('p', { className: 'fine', textContent: 'Nichts Neues.' }) : null,
     mehr > 0 ? mk('p', { className: 'fine', textContent: `und ${zahlDe(mehr)} weitere` }) : null);
 }
 
-function zeichneNeu(zeigen = false) {
+// Die Kachel steht nur da, solange es Neues gibt; nach „Gesehen“ verschwindet sie ganz
+function zeichneNeu() {
   hinweiseZeichnen();
   const d = neuDaten;
   const w = d && d.warteliste;
   const k = d && d.konten;
   const n = (w ? w.anzahl : 0) + (k ? k.anzahl : 0);
   const kachel = $('#neu-kachel');
-  if (!d) { kachel.hidden = true; return; }
-  if (zeigen || n) kachel.hidden = false;
-  if (kachel.hidden) return;
-  $('#neu-kachel-zahl').hidden = !n;
+  kachel.hidden = !n;
+  if (!n) return;
   $('#neu-kachel-zahl').textContent = String(n);
   const seit = [w, k].filter(Boolean).map((x) => new Date(x.seit)).sort((a, b) => a - b)[0];
-  $('#neu-seit').textContent = n ? `Seit deinem letzten Blick (${zeitKurz(seit)}). Ein Klick öffnet die Personenkarte.` : 'Alles gesehen. Neue Einträge erscheinen hier und an der Glocke oben.';
-  $('#neu-gesehen').hidden = !n;
+  $('#neu-seit').textContent = `Seit deinem letzten Blick (${zeitKurz(seit)}). Ein Klick öffnet die Personenkarte.`;
   const zurListe = (text, fn) => Object.assign(mk('button', { type: 'button', className: 'pill ghost mini', textContent: text }), { onclick: fn });
   $('#neu-spalten').replaceChildren(...[
     w && neuGruppe('Warteliste', w, 'warteliste', zurListe('Zur Warteliste', () => crmZeigen('warteliste')), (x) => neuZeile(x.email,
@@ -1473,6 +1471,7 @@ function zeichneNeu(zeigen = false) {
 }
 
 async function neuDabei(zeigen = false) {
+  // zeigen: Fehler beim Laden melden (Knopf „Neu laden“)
   if (!darf('konten_betreuen') || $('#s-werkbank').hidden) { neuDaten = null; zeichneNeu(); return; }
   try {
     neuDaten = await rpc('neu_dabei');
@@ -1480,7 +1479,7 @@ async function neuDabei(zeigen = false) {
     if (zeigen) meldung($('#msg-neu'), fehlerText(e), true);
     return;
   }
-  zeichneNeu(zeigen);
+  zeichneNeu();
 }
 
 async function neuGesehen(art = null) {
@@ -1496,7 +1495,7 @@ async function neuGesehen(art = null) {
 async function neuKachelZeigen() {
   tab('crm');
   await neuDabei(true);
-  $('#neu-kachel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  if (!$('#neu-kachel').hidden) $('#neu-kachel').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 $('#neu-gesehen').addEventListener('click', () => neuGesehen());
