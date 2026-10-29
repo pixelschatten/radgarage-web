@@ -310,19 +310,29 @@ $('#kat-suche').addEventListener('input', () => { clearTimeout(katTimer); katTim
 for (const id of ['#kat-art', '#kat-jahr']) $(id).addEventListener('change', katalogZeichnen);
 $('#kat-neu').addEventListener('click', () => katalogLaden(true));
 
-// ----- E-Mail an ein Konto (Bento-Vorlage auf dem Server, konto_mail_senden) -----
+// ----- E-Mail an ein Konto oder an die Warteliste (Bento-Vorlage auf dem Server, crm_mail_senden) -----
+// Wer auf der Warteliste steht, bekommt den Abmeldelink automatisch unter die Mail. Andere Adressen gehen nicht.
 
 async function mailEditor(vorher = null) {
   if (!konten.length) { try { konten = (await rpc('konten_liste')) || []; } catch { /* ohne Vorschläge weiter */ } }
+  let warteliste = [];
+  try { warteliste = ((await rpc('crm_warteliste', { p_art: 'alle', p_suche: null })) || {}).kontakte || []; } catch { /* nur Konten */ }
   let absender = ['kontakt@radgarage.app'];
   try { absender = (await rpc('konto_mail_absender')) || absender; } catch { /* Standard */ }
   const f = document.createElement('form');
   f.autocomplete = 'off';
   const liste = Object.assign(document.createElement('datalist'), { id: 'mail-konten' });
-  liste.append(...konten.filter((k) => k.email).map((k) => new Option(k.email)));
+  const kontoAdressen = new Set(konten.filter((k) => k.email).map((k) => k.email.toLowerCase()));
+  const wlAdressen = new Set(warteliste.map((w) => w.email.toLowerCase()));
+  liste.append(...[...new Set([...kontoAdressen, ...wlAdressen])].sort().map((e) => {
+    const o = new Option(e);
+    o.label = kontoAdressen.has(e) ? (wlAdressen.has(e) ? 'Konto, Warteliste' : 'Konto') : 'Warteliste';
+    return o;
+  }));
   const feld = (text, el) => { const l = document.createElement('label'); l.append(Object.assign(document.createElement('span'), { className: 'pflicht', textContent: text }), el); return l; };
-  const an = Object.assign(document.createElement('input'), { name: 'an', type: 'email', required: true, value: vorher ? vorher.email : '', placeholder: 'E-Mail-Adresse eines Kontos' });
+  const an = Object.assign(document.createElement('input'), { name: 'an', type: 'email', required: true, value: vorher ? vorher.email : '', placeholder: 'Adresse eines Kontos oder von der Warteliste' });
   an.setAttribute('list', 'mail-konten');
+  const wer = Object.assign(document.createElement('p'), { className: 'fine mail-wer' });
   const von = document.createElement('select');
   von.name = 'von';
   von.append(...absender.map((a) => new Option(a, a)));
@@ -336,40 +346,51 @@ async function mailEditor(vorher = null) {
   const akt = document.createElement('div');
   akt.className = 'aktionen';
   akt.append(senden, vorschauKnopf, Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
-  const tb = bausteinWahl(text, '');
+  const tb = bausteinWahl(text, '', { betreff });
   tb.style.marginTop = '-4px';
-  f.append(liste, feld('An', an), feld('Von', von), feld('Betreff', betreff), feld('Text', text), tb,
+  f.append(liste, feld('An', an), wer, feld('Von', von), feld('Betreff', betreff), feld('Text', text), tb,
     Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Kommt im Radgarage-Design mit Logo, Impressum und Datenschutz. Die Mail und die Antworten darauf stehen im E-Mail-CRM.' }),
     vorschau, akt, msg);
 
-  const konto = () => konten.find((k) => (k.email || '').toLowerCase() === an.value.trim().toLowerCase());
+  const adresse = () => an.value.trim().toLowerCase();
+  const aufListe = () => wlAdressen.has(adresse());
+  const werZeigen = () => {
+    const e = adresse();
+    const k = kontoAdressen.has(e);
+    wer.textContent = !e.includes('@') ? '' : aufListe()
+      ? `${k ? 'Konto und Warteliste' : 'Warteliste'}: Der Abmeldelink kommt automatisch unter die Mail. Nur zu Testzugang oder Start, keine Werbung.`
+      : k ? 'Konto: Service-Mail ohne Abmeldelink.' : 'Kein Konto und nicht auf der Warteliste. An diese Adresse geht keine Mail.';
+    wer.classList.toggle('fehler', e.includes('@') && !k && !aufListe());
+  };
+  an.addEventListener('input', werZeigen);
+  werZeigen();
   vorschauKnopf.addEventListener('click', async () => {
     try {
-      vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff.value, p_text: text.value });
+      vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff.value, p_text: text.value + (aufListe() ? FUSS_WARTELISTE : '') });
       vorschau.hidden = false;
       vorschau.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     } catch (e) { meldung(msg, fehlerText(e), true); }
   });
   f.addEventListener('submit', async (ev) => {
     ev.preventDefault();
-    const k = konto();
-    if (!k) { meldung(msg, 'Zu dieser Adresse gibt es kein Konto.', true); return; }
-    if (!window.confirm(`Mail „${betreff.value.trim()}“ jetzt an ${k.email} schicken?`)) return;
+    const e = adresse();
+    if (!kontoAdressen.has(e) && !aufListe()) { meldung(msg, 'Zu dieser Adresse gibt es kein Konto und keinen Eintrag auf der Warteliste.', true); return; }
+    if (!window.confirm(`Mail „${betreff.value.trim()}“ jetzt an ${e} schicken?`)) return;
     senden.disabled = true;
     meldung(msg, 'Wird gesendet …');
     try {
-      const r = await rpc('konto_mail_senden', { p_nutzer: k.id, p_betreff: betreff.value, p_text: text.value, p_absender: von.value });
+      const r = await rpc('crm_mail_senden', { p_email: e, p_betreff: betreff.value, p_text: text.value, p_absender: von.value });
       // Brevo antwortet asynchron: kurz nachsehen, ob die Mail angenommen wurde
       let st = null;
       for (let i = 0; i < 6 && !(st && st.status); i += 1) {
         await new Promise((ok) => setTimeout(ok, 1000));
-        st = await rpc('konto_mail_status', { p_id: r.id }).catch(() => null);
+        st = await rpc('postfach_status', { p_nachricht: r.nachricht }).catch(() => null);
       }
       if (st && st.status && st.status >= 300) { meldung(msg, `Brevo hat die Mail abgelehnt (${st.status}). ${st.fehler || ''}`, true); senden.disabled = false; return; }
       dialogZu();
       const fertig = st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`;
       meldung($('#msg-konten'), fertig);
-      if (darf('konten_betreuen')) ladePostfach();
+      if (darf('konten_betreuen')) { await ladePostfach(); meldung($('#msg-postfach'), fertig); }
     } catch (e) {
       meldung(msg, fehlerText(e), true);
       senden.disabled = false;
@@ -377,6 +398,9 @@ async function mailEditor(vorher = null) {
   });
   dialog(vorher ? `E-Mail an ${vorher.email}` : 'E-Mail schreiben', f);
   $('#dlg .dlg-box').classList.add('breit');
+  // Vorlagen landen zwischen Anrede und Signatur
+  const pos = text.value.indexOf('\n\n') + 2;
+  text.setSelectionRange(pos, pos);
   (vorher ? betreff : an).focus();
 }
 $('#mail-neu').addEventListener('click', () => mailEditor());
