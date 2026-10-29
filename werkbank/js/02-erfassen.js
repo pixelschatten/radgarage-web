@@ -637,10 +637,35 @@ function scanKnopf(wo, inp, danach, alsIcon) {
   wo.append(b);
 }
 
-function scannen() {
+// Der Barcode-Leser (zxing.js, gut 300 KB) kommt erst beim ersten Scannen, nicht schon beim Öffnen der Werkbank
+let zxingLaedt = null;
+function zxingLaden() {
+  if (window.ZXing) return Promise.resolve();
+  if (!zxingLaedt) {
+    zxingLaedt = new Promise((ok, fehler) => {
+      const s = Object.assign(document.createElement('script'), { src: 'zxing.js?v=0.21.3' });
+      s.onload = ok;
+      s.onerror = () => { zxingLaedt = null; s.remove(); fehler(new Error('Scanner nicht geladen')); };
+      document.head.append(s);
+    });
+  }
+  return zxingLaedt;
+}
+
+async function scannen() {
+  const box = $('#scanner');
+  if (!window.ZXing) {
+    $('#scanner-text').textContent = 'Scanner wird geladen …';
+    box.hidden = false;
+    scanAbbruch = () => { box.hidden = true; };
+    try { await zxingLaden(); } catch {
+      box.hidden = true;
+      window.alert('Der Scanner ließ sich nicht laden. Bitte Verbindung prüfen oder den Code abtippen.');
+      return null;
+    }
+    if (box.hidden) return null; // in der Zwischenzeit geschlossen
+  }
   return new Promise((fertig) => {
-    if (!window.ZXing) { window.alert('Der Scanner lädt noch, bitte gleich noch einmal.'); fertig(null); return; }
-    const box = $('#scanner');
     const video = $('#scanner-video');
     $('#scanner-text').textContent = 'Barcode in den Rahmen halten …';
     box.hidden = false;

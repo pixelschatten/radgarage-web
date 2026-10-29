@@ -14,16 +14,46 @@ const jahre = (liste) => {
 };
 const el = (tag, cls, text) => Object.assign(document.createElement(tag), cls ? { className: cls } : {}, text != null ? { textContent: text } : {});
 
+// Der ganze Katalog ist gut 800 KB. Er liegt im Browser (localStorage) und wird nur neu geholt, wenn sich etwas
+// geändert hat: Anzahl und letzte Änderung je Tabelle (zwei winzige Abfragen) vergleichen, spätestens nach einem Tag.
+const KAT_SPEICHER = 'werkbank-katalog';
+async function katalogStand() {
+  const kopf = async (tabelle) => {
+    const { data, count, error } = await sb.from(tabelle).select('geaendert', { count: 'exact' }).order('geaendert', { ascending: false }).limit(1);
+    if (error) throw error;
+    return `${count}/${(data && data[0] && data[0].geaendert) || ''}`;
+  };
+  const [r, t] = await Promise.all([kopf('raeder'), kopf('teile')]);
+  return `${rolle}|${r}|${t}`;
+}
+function katalogAusSpeicher(stand) {
+  try {
+    const x = JSON.parse(localStorage.getItem(KAT_SPEICHER) || 'null');
+    if (x && x.stand === stand && Date.now() - x.zeit < 864e5) return x;
+  } catch { /* dann frisch laden */ }
+  return null;
+}
+function katalogSpeichern(stand) {
+  try { localStorage.setItem(KAT_SPEICHER, JSON.stringify({ stand, zeit: Date.now(), raeder: kat.raeder, teile: kat.teile })); }
+  catch { try { localStorage.removeItem(KAT_SPEICHER); } catch { /* kein Speicher, geht auch so */ } }
+}
+
 async function katalogLaden(neu = false) {
   const box = $('#kat-inhalt');
   if (neu) { kat.raeder = null; kat.teile = null; }
   try {
     if (!kat.raeder) {
       box.replaceChildren(el('p', 'fine', 'Lade den Katalog …'));
-      [kat.raeder, kat.teile] = await Promise.all([
-        alleZeilen('raeder', 'id, hersteller, reihe, modell, baujahr, kategorie, uvp_eur, geprueft', 'id'),
-        alleZeilen('teile', 'id, marke, name, kategorie, richtpreis_eur, ean, merkmale', 'id'),
-      ]);
+      const stand = await katalogStand().catch(() => null);
+      const gemerkt = stand && !neu ? katalogAusSpeicher(stand) : null;
+      if (gemerkt) [kat.raeder, kat.teile] = [gemerkt.raeder, gemerkt.teile];
+      else {
+        [kat.raeder, kat.teile] = await Promise.all([
+          alleZeilen('raeder', 'id, hersteller, reihe, modell, baujahr, kategorie, uvp_eur, geprueft', 'id'),
+          alleZeilen('teile', 'id, marke, name, kategorie, richtpreis_eur, ean, merkmale', 'id'),
+        ]);
+        if (stand) katalogSpeichern(stand);
+      }
       const arten = [...new Set(kat.raeder.map((r) => r.kategorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'de'));
       $('#kat-art').replaceChildren(new Option('Alle Radarten', ''), ...arten.map((a) => new Option(a, a)));
       const js = [...new Set(kat.raeder.map((r) => r.baujahr).filter(Boolean))].sort((a, b) => b - a);

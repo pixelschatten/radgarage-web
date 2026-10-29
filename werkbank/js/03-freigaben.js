@@ -158,12 +158,24 @@ function ergaenzungKarte(g, admin) {
   return div;
 }
 
-async function ladeAlleOffenen() {
-  const [raeder, ergaenzungen] = await Promise.all([
-    rpc('katalog_offen'),
-    rpc('katalog_ergaenzungen_offen').catch(() => []),
-  ]);
-  return { raeder: raeder || [], ergaenzungen: ergaenzungen || [] };
+function ladeAlleOffenen(frisch = false) {
+  return geteilt('offen', async () => {
+    const [raeder, ergaenzungen] = await Promise.all([
+      rpc('katalog_offen'),
+      rpc('katalog_ergaenzungen_offen').catch(() => []),
+    ]);
+    return { raeder: raeder || [], ergaenzungen: ergaenzungen || [] };
+  }, frisch);
+}
+
+// Nur die Zahlen für Glocke und Reiter, ohne die Freigaben-Liste zu zeichnen
+async function freigabenZahlen() {
+  try {
+    const { raeder, ergaenzungen } = await ladeAlleOffenen();
+    helferOffen = raeder.length + ergaenzungen.length;
+  } catch { /* Zahl ist nur Beiwerk */ }
+  try { await ladeApp(); } catch { /* dito */ }
+  zahlenSetzen();
 }
 
 let helferOffen = 0;
@@ -176,10 +188,10 @@ function zahlenSetzen() {
   hinweiseZeichnen();
 }
 
-async function ladeOffen() {
+async function ladeOffen(frisch = false) {
   meldung($('#msg-freigaben'), '');
   try {
-    const { raeder, ergaenzungen } = await ladeAlleOffenen();
+    const { raeder, ergaenzungen } = await ladeAlleOffenen(frisch);
     helferOffen = raeder.length + ergaenzungen.length;
     const box = $('#offen');
     box.replaceChildren(...raeder.map((r) => radKarte(r, true)), ...ergaenzungen.map((g) => ergaenzungKarte(g, true)));
@@ -188,7 +200,7 @@ async function ladeOffen() {
     meldung($('#msg-freigaben'), fehlerText(e), true);
   }
   try {
-    await ladeApp();
+    await ladeApp(frisch);
     if (fgAnsicht === 'app') zeichneApp();
   } catch (e) {
     appGruppen = [];

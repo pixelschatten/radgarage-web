@@ -17,6 +17,7 @@ const VERLAUF_TEXTE = {
   app_steuerung: 'App steuern', crm_sammelmail: 'Sammelmail', datenauskunft: 'Datenschutz', premium_geschenkt: 'Store-Start',
 };
 let baustellen = [];
+let bsGeladen = false;
 let bsZeige = 30;
 let bsOffen = false;
 let mkOffen = false;
@@ -63,12 +64,31 @@ async function ladeUebersicht() {
   }
   ladeBetrieb();
   ladeFuellrunde();
-  ladeNachfrage();
-  ladeQualitaet();
-  ladePapierkorb();
-  ladeVerlauf();
+  // Weiter unten erst, wenn man hinscrollt (am Handy steht das meiste außerhalb des Bildschirms)
+  beiSicht('#nachfrage', ladeNachfrage);
+  beiSicht('#qualitaet', ladeQualitaet);
+  beiSicht('#verlauf', () => { ladePapierkorb(); ladeVerlauf(); });
+  // „Heute zu tun“ gleich zeigen, die Baustellen (dauern ein, zwei Sekunden) kommen dazu, sobald sie da sind
+  ladeAufgaben();
   await ladeBaustellen();
   ladeAufgaben();
+}
+
+// Lädt eine Kachel, sobald sie in die Nähe des Bildschirms kommt (oder gleich, wenn sie schon zu sehen ist)
+const sichtBeobachter = new Map();
+function beiSicht(sel, fn) {
+  const el = $(sel);
+  const vorher = sichtBeobachter.get(sel);
+  if (vorher) vorher.disconnect();
+  if (!el || !('IntersectionObserver' in window)) { fn(); return; }
+  const b = new IntersectionObserver((eintraege) => {
+    if (!eintraege.some((e) => e.isIntersecting)) return;
+    b.disconnect();
+    sichtBeobachter.delete(sel);
+    fn();
+  }, { rootMargin: '400px 0px' });
+  sichtBeobachter.set(sel, b);
+  b.observe(el);
 }
 
 // Was gerade ansteht, mit Sprung an die richtige Stelle
@@ -77,7 +97,7 @@ async function ladeAufgaben() {
   const [offen, app, stat] = await Promise.all([
     ladeAlleOffenen().catch(() => null),
     ladeApp().catch(() => null),
-    rpc('werkbank_statistik', { p_tage: 7 }).catch(() => null),
+    geteilt('statistik7', () => rpc('werkbank_statistik', { p_tage: 7 })).catch(() => null),
   ]);
   if (offen) helferOffen = offen.raeder.length + offen.ergaenzungen.length;
   zahlenSetzen();
@@ -104,7 +124,7 @@ async function ladeAufgaben() {
     b.addEventListener('click', fn);
     return b;
   }));
-  if (!punkte.length) box.innerHTML = '<p class="fine">Nichts offen. Zeit für neue Räder.</p>';
+  if (!punkte.length) box.innerHTML = bsGeladen ? '<p class="fine">Nichts offen. Zeit für neue Räder.</p>' : '<p class="fine">Lade …</p>';
 }
 
 async function ladeBaustellen() {
@@ -114,6 +134,7 @@ async function ladeBaustellen() {
     baustellen = [];
     meldung($('#msg-uebersicht'), fehlerText(e), true);
   }
+  bsGeladen = true;
   bsZeige = 30;
   baustellenFilterFuellen();
   zeichneBaustellen();
@@ -388,12 +409,17 @@ function wieOft(min) {
   if (min === 10080) return 'wöchentlich';
   return `alle ${Math.round(min / 60)} Std.`;
 }
+// Glocke und Kachel „Läuft alles?“ fragen beim Öffnen gleichzeitig, das geht mit einer Abfrage
+function betriebLaden() {
+  return geteilt('betrieb', () => rpc('werkbank_betrieb'));
+}
+
 async function ladeBetrieb() {
   const karte = $('#betrieb');
   meldung($('#msg-betrieb'), '');
   let b;
   try {
-    b = await rpc('werkbank_betrieb');
+    b = await betriebLaden();
   } catch (e) {
     $('#be-ampel').className = 'ampel';
     $('#be-ampel').textContent = 'unbekannt';
