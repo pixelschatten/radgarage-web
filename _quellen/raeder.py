@@ -36,6 +36,16 @@ SHOPS = [
     ('ROSE Bikes', 'https://www.rosebikes.de/search?q={q}'),
 ]
 FARBEN = ['k1', 'k2', 'k3', 'k4', 'k5']
+# Radversicherung als Anzeige auf den Radseiten, wie in der App (src/data/versicherung.ts).
+# Ohne Partnerlink erscheint der Kasten nicht. Richtwert aus denselben Beispielbeiträgen wie in der App.
+VERSICHERUNG = {
+    'name': 'hepster',
+    'link': None,  # Awin-Deeplink mit Platzhalter {ziel}, siehe versicherung_link()
+    'ziel': {'rad': 'https://hepster.com/de-de/fahrradversicherung', 'ebike': 'https://hepster.com/de-de/e-bike-versicherung'},
+    'anteil_monat': {'rad': 0.0042, 'ebike': 0.0022},
+    'mindestens': 2.42,
+    'stand': 'Oktober 2026',
+}
 JAHRES_KM = 3000  # Beispiel-Fahrleistung für die Wartungskosten pro Jahr
 
 
@@ -352,6 +362,35 @@ def verschleiss_kachel(t, farbe):
     return f'<div class="t {farbe} teilkarte">{"".join(zeilen)}</div>'
 
 
+def ist_ebike(r):
+    return r['kategorie'].startswith('E-') or any(t['kategorie'] in ('Motor', 'Akku') for t in r['teile'])
+
+
+def versicherung_link(art):
+    v = VERSICHERUNG
+    return v['link'].replace('{ziel}', quote_plus(v['ziel'][art])) if v['link'] else None
+
+
+def versicherung_kasten(r):
+    """Kasten „Rad versichern“: nur mit Partnerlink und UVP, klar als Anzeige gekennzeichnet."""
+    art = 'ebike' if ist_ebike(r) else 'rad'
+    link = versicherung_link(art)
+    if not link or not r['uvp_eur']:
+        return ''
+    v = VERSICHERUNG
+    monat = max(v['mindestens'], round(float(r['uvp_eur']) * v['anteil_monat'][art] * 2) / 2)
+    betrag = f'{monat:.2f}'.replace('.', ',').replace(',00', '')
+    wort = 'E-Bike' if art == 'ebike' else 'Rad'
+    return f'''    <aside class="t k3 voll versichern" aria-labelledby="vs-titel">
+      <span class="eyebrow">Anzeige</span>
+      <h2 id="vs-titel" style="font-size:26px;margin:6px 0 4px">{wort} versichern</h2>
+      <p>Bei einem Neupreis von {tsd(round(r["uvp_eur"]))} € kostet eine Versicherung gegen Diebstahl, Unfall und Vandalismus grob <b>{betrag} € im Monat</b>. Deinen genauen Beitrag rechnest du bei {e(v["name"])} aus.</p>
+      <div class="actions"><a class="pill" href="{e(link)}" target="_blank" rel="sponsored noopener">Beitrag bei {e(v["name"])} berechnen</a><span class="eyebrow">Anzeige</span></div>
+      <p class="klein">Grober Richtwert aus Beispielbeiträgen ({v["stand"]}), kein Angebot. Wir vergleichen keine Tarife und beraten nicht. Schließt du über den Link ab, bekommen wir eine Provision, dein Beitrag ändert sich dadurch nicht. <a href="/datenschutz.html#partnerlinks">Datenschutz</a></p>
+    </aside>
+'''
+
+
 def rad_seite(r, alle):
     reihe = [(r['reihe'], r['reihe_pfad'])] if r['reihe_pfad'] else []
     nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r['hersteller'], f'/raeder/{r["marke_slug"]}/')]
@@ -409,6 +448,7 @@ def rad_seite(r, alle):
       <p>Für {e(" und ".join(luecken))} fehlt im Katalog noch ein Teil oder ein Richtpreis. Ohne sie wäre der Wert zu niedrig, deshalb rechnen wir ihn hier noch nicht aus. Weißt du, was verbaut ist? <a href="#verbessern">Schick uns einen Hinweis.</a></p>
     </section>
 ''')
+    out.append(versicherung_kasten(r))
     gruppen = []
     for name, kats in GRUPPEN:
         g = [t for t in teile if t['kategorie'] in kats]
