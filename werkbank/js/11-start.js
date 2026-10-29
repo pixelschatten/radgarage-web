@@ -76,28 +76,75 @@ csvKnopf('#csv-konten', async () => {
       k.premium || '', k.familie || '', k.raeder || 0, k.rolle || '', k.zwei_faktor ? 'ja' : 'nein', gesperrt(k) ? k.gesperrt_bis : '']));
 });
 
-// ---------- Suche über alles (Strg+K oder /) ----------
+// ---------- Suche über alles (Strg+K oder /), direkt im Feld oben in der Leiste ----------
 
 let sucheNr = 0;
+let sucheTimer = null;
+const sucheFeld = $('#suche-feld');
+const sucheBox = $('#suche-ergebnis');
+const handySuche = matchMedia('(max-width: 760px)');
+function sucheZeigen() {
+  if (!sucheBox.children.length) { sucheZu(); return; }
+  // Am Handy liegen die Treffer fest unter der Leiste
+  if (handySuche.matches) document.documentElement.style.setProperty('--suche-oben', `${$('header.leiste').getBoundingClientRect().bottom + 8}px`);
+  sucheBox.hidden = false;
+  sucheFeld.setAttribute('aria-expanded', 'true');
+}
+function sucheZu(ganz) {
+  sucheBox.hidden = true;
+  sucheFeld.setAttribute('aria-expanded', 'false');
+  if (ganz) { $('header.leiste').classList.remove('sucht'); sucheFeld.blur(); }
+}
 function sucheOeffnen() {
   if ($('#s-werkbank').hidden) return;
-  const admin = darf('konten_sehen');
-  const feld = Object.assign(document.createElement('input'), { type: 'search', placeholder: admin ? 'Rad, Teil, Barcode oder E-Mail' : 'Rad, Teil oder Barcode', autocomplete: 'off' });
-  const box = document.createElement('div');
-  let timer = null;
-  feld.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => sucheLos(feld.value, box), 200); });
-  feld.addEventListener('keydown', (ev) => {
-    const knoepfe = $$('button', box);
-    if (!knoepfe.length || !['ArrowDown', 'ArrowUp', 'Enter'].includes(ev.key)) return;
-    ev.preventDefault();
-    let i = knoepfe.findIndex((b) => b.getAttribute('aria-selected') === 'true');
-    if (ev.key === 'Enter') { (knoepfe[i] || knoepfe[0]).click(); return; }
-    i = ev.key === 'ArrowDown' ? Math.min(knoepfe.length - 1, i + 1) : Math.max(0, i - 1);
-    knoepfe.forEach((b, j) => b.setAttribute('aria-selected', String(j === i)));
-    knoepfe[i].scrollIntoView({ block: 'nearest' });
-  });
-  dialog('Suchen', feld, box, Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Pfeiltasten wählen, Enter öffnet, Esc schließt.' }));
+  $('header.leiste').classList.add('sucht');
+  sucheFeld.focus();
+  sucheFeld.select();
 }
+sucheFeld.addEventListener('focus', () => {
+  sucheFeld.placeholder = darf('konten_sehen') ? 'Rad, Teil, Barcode oder E-Mail' : 'Rad, Teil oder Barcode';
+  sucheZeigen();
+});
+sucheFeld.addEventListener('blur', () => { sucheFeld.placeholder = 'Suchen'; });
+sucheFeld.addEventListener('input', () => {
+  $('#suche-box').classList.toggle('hat-text', !!sucheFeld.value);
+  clearTimeout(sucheTimer);
+  sucheTimer = setTimeout(async () => {
+    await sucheLos(sucheFeld.value, sucheBox);
+    if (document.activeElement === sucheFeld) sucheZeigen();
+  }, 200);
+});
+sucheFeld.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape') {
+    ev.preventDefault();
+    if (!sucheBox.hidden) { sucheZu(); return; }
+    sucheFeld.value = '';
+    $('#suche-box').classList.remove('hat-text');
+    sucheBox.replaceChildren();
+    sucheZu(true);
+    return;
+  }
+  const knoepfe = sucheBox.hidden ? [] : $$('button', sucheBox);
+  if (!knoepfe.length || !['ArrowDown', 'ArrowUp', 'Enter'].includes(ev.key)) return;
+  ev.preventDefault();
+  let i = knoepfe.findIndex((b) => b.getAttribute('aria-selected') === 'true');
+  if (ev.key === 'Enter') { (knoepfe[i] || knoepfe[0]).click(); return; }
+  i = ev.key === 'ArrowDown' ? Math.min(knoepfe.length - 1, i + 1) : Math.max(0, i - 1);
+  knoepfe.forEach((b, j) => b.setAttribute('aria-selected', String(j === i)));
+  knoepfe[i].scrollIntoView({ block: 'nearest' });
+});
+$('#suche-zu').addEventListener('click', () => {
+  sucheFeld.value = '';
+  $('#suche-box').classList.remove('hat-text');
+  sucheBox.replaceChildren();
+  sucheZu(true);
+});
+$('#suche-auf').addEventListener('click', sucheOeffnen);
+document.addEventListener('click', (ev) => {
+  const offen = !sucheBox.hidden || $('header.leiste').classList.contains('sucht');
+  if (offen && !ev.target.closest('#suche-box, #suche-auf')) sucheZu(handySuche.matches);
+});
+handySuche.addEventListener('change', () => sucheZu(true));
 
 async function sucheLos(text, box) {
   const nr = ++sucheNr;
@@ -123,7 +170,7 @@ async function sucheLos(text, box) {
       const li = document.createElement('li');
       const b = Object.assign(document.createElement('button'), { type: 'button' });
       b.append(Object.assign(document.createElement('span'), { textContent: haupt }), Object.assign(document.createElement('small'), { textContent: neben }));
-      b.addEventListener('click', () => { dialogZu(); fn(); });
+      b.addEventListener('click', () => { sucheZu(true); fn(); });
       li.append(b);
       ul.append(li);
     }
@@ -145,10 +192,10 @@ async function sucheLos(text, box) {
   ].filter(Boolean);
   box.replaceChildren(...teilen);
   if (!teilen.length) box.replaceChildren(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Nichts gefunden.' }));
+  else if (!handySuche.matches) box.append(Object.assign(document.createElement('p'), { className: 'fine', textContent: 'Pfeiltasten wählen, Enter öffnet, Esc schließt.' }));
   const erstes = $('button', box);
   if (erstes) erstes.setAttribute('aria-selected', 'true');
 }
-$('#suche-auf').addEventListener('click', sucheOeffnen);
 document.addEventListener('keydown', (ev) => {
   const tippt = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement && document.activeElement.tagName);
   if ((ev.key === 'k' && (ev.ctrlKey || ev.metaKey)) || (ev.key === '/' && !tippt)) {
