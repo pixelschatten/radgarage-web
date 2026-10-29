@@ -453,17 +453,64 @@ def euro(n):
     return f'ca. {n} €'
 
 
-HAUPTMENUE = [('/anleitungen/', 'Anleitungen'), ('/raeder/', 'Räder'), ('/teile/', 'Ersatzteile')]
+# Farbe der Anleitungskarten nach Bereich am Rad: Antrieb apricot, Bremse lila, Laufrad blau, Pflege grün, Rest gelb
+BEREICH_FARBE = {'Kette': 'k1', 'Kassette': 'k1', 'Schaltung': 'k1', 'Bremsbeläge': 'k2', 'Bremsscheibe': 'k2', 'Bremse': 'k2',
+                 'Reifen': 'k5', 'Schlauch': 'k5', 'Pflege': 'k4'}
+for _a in ANLEITUNGEN:
+    _a['farbe'] = BEREICH_FARBE.get(_a['teil'], 'k3')
+
+HAUPTMENUE = [('/raeder/', 'Räder'), ('/teile/', 'Ersatzteile'), ('/anleitungen/', 'Anleitungen'), ('/wissen/', 'Wissen')]
+# Rechner, Auswertungen und Übersichten, die im Menü unter „Wissen“ hängen: (Pfad, Name, Art, Satz)
+WISSEN_SEITEN = [
+    ('/reifengroessen/', 'Reifengrößen', 'Rechner', 'ETRTO, Zoll und 700C umrechnen, mit passendem Schlauch'),
+    ('/verschleissrechner/', 'Verschleißrechner', 'Rechner', 'Wann Kette, Beläge, Reifen und Kassette fällig sind'),
+    ('/unterhaltskosten/', 'Unterhaltskosten', 'Auswertung', 'Was ein Fahrrad je 1.000 km kostet, nach Radtyp'),
+    ('/schaltgruppen/', 'Schaltgruppen', 'Übersicht', 'Welche Kette und Kassette zu deiner Gruppe passen'),
+    ('/e-bike-systeme/', 'E-Bike-Systeme', 'Übersicht', 'Welcher Motor, welcher Akku, was zusammenpasst'),
+    ('/einbetten/', 'Rechner einbetten', 'Für deine Website', 'Unsere Rechner kostenlos und ohne Cookies einbinden'),
+]
+
+WISSEN_FARBE = {'Rechner': 'k1', 'Auswertung': 'k3', 'Übersicht': 'k2', 'Für deine Website': 'k4'}
+
+
+def wissen_karten(ebene='h3'):
+    return ''.join(f'<a class="t {WISSEN_FARBE[art]} karte" href="{p}"><span class="eyebrow">{e(art)}</span>'
+                   f'<{ebene}>{e(n)}</{ebene}><span class="meta">{e(satz)}</span></a>' for p, n, art, satz in WISSEN_SEITEN)
 
 
 def kopfnav(pfad):
     """Hauptmenü im Kopf. Der Bereich, in dem die Seite liegt, ist markiert."""
+    wissen = any(pfad.startswith(p) for p, *_ in WISSEN_SEITEN)
+
     def aktiv(h):
+        if h == '/wissen/' and wissen:
+            return ' aria-current="true"'
         if not pfad.startswith(h):
             return ''
         return ' aria-current="page"' if pfad == h else ' aria-current="true"'
     links = ''.join(f'<a href="{h}"{aktiv(h)}>{e(t)}</a>' for h, t in HAUPTMENUE)
     return f'<nav class="kopfnav" aria-label="Hauptmenü">{links}</nav>'
+
+
+LUPE = ('<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" '
+        'stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>')
+
+
+def kopfsuche():
+    """Lupe im Kopf: klappt die Suche nach Rad oder Teil auf, auf jeder Seite."""
+    return (f'<details class="kopfsuche"><summary aria-label="Rad oder Teil suchen">{LUPE}</summary>'
+            f'<div class="kopfsuche-feld">{suchfeld("alles", "suche-kopf")}</div></details>')
+
+
+def kopfzeile(pfad):
+    """Kopf aller Seiten: Logo, Hauptmenü, Suche und Knopf. bauen.py setzt ihn auch in die Handseiten ein."""
+    return f'''  <header>
+    <a href="/" class="logo">Radgarage</a>
+    {kopfnav(pfad)}
+    {kopfsuche()}
+    <!--kopf-knopf-->{kopf_knopf()}<!--/kopf-knopf-->
+  </header>
+'''
 
 
 def kopf_knopf():
@@ -519,40 +566,48 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <a href="/" class="logo">Radgarage</a>
-    {kopfnav(pfad)}
-    {kopf_knopf()}
-  </header>
-'''
+{kopfzeile(pfad)}'''
 
 
 # Symbol für Browser-Tab, Lesezeichen und Handy-Startbildschirm (aus dem App-Icon, erzeugt von bauen.py)
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 8  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 9  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
 # Eine Fußzeile für alle öffentlichen Seiten. bauen.py setzt sie auch in die von Hand gepflegten Seiten
 # (Startseite, Danke, Impressum, Datenschutz, Konto löschen, Abmelden) ein.
-FUSS_INHALT = f'''  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="{UMFRAGE}" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+FUSS_INHALT = f'''  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="{UMFRAGE}" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 '''
@@ -580,7 +635,16 @@ def suchfeld(art, kennung=None):
             f'role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="{kennung}-liste">'
             f'<ul class="treffer" id="{kennung}-liste" role="listbox" aria-label="Vorschläge" hidden></ul>'
             f'<p class="suche-info" role="status" aria-live="polite"></p>'
-            f'</form><script src="/js/suche.js?v=1" defer></script>')
+            f'</form><script src="/js/suche.js?v=2" defer></script>')
+
+
+def passend(*varianten, grenze=65):
+    """Erste Variante, die in die Grenze passt (Titel 65, Beschreibung 165 Zeichen), sonst die kürzeste.
+    Längere Texte schneidet Google in den Suchergebnissen ab."""
+    for v in varianten:
+        if len(v) <= grenze:
+            return v
+    return min(varianten, key=len)
 
 
 def krumen(teile):
@@ -761,14 +825,8 @@ def uebersicht(alle):
   </section>
   <section aria-labelledby="wissen-titel" style="margin-top:14px">
     <h2 id="wissen-titel" class="zwischen">Rechner und Wissen</h2>
-    <div class="karten">
-      <a class="t k1 karte" href="/verschleissrechner/"><span class="eyebrow">Rechner</span><h3>Verschleißrechner</h3><span class="meta">Wann Kette, Beläge und Reifen fällig sind</span></a>
-      <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Rechner</span><h3>Reifengrößen</h3><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
-      <a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Wissen</span><h3>Schaltgruppen</h3><span class="meta">Welche Kette und Kassette zu deiner Gruppe passen</span></a>
-      <a class="t k3 karte" href="/unterhaltskosten/"><span class="eyebrow">Auswertung</span><h3>Unterhaltskosten</h3><span class="meta">Was ein Fahrrad je 1.000 km kostet, nach Radtyp</span></a>
-      <a class="t k4 karte" href="/einbetten/"><span class="eyebrow">Für deine Website</span><h3>Rechner einbetten</h3><span class="meta">Kostenlos, ohne Cookies</span></a>
-      <a class="t k5 karte" href="/e-bike-systeme/"><span class="eyebrow">Wissen</span><h3>E-Bike-Systeme</h3><span class="meta">Welcher Motor, welcher Akku</span></a>
-    </div>
+    <div class="karten">{wissen_karten()}</div>
+    <p class="mehr-link"><a class="pfeil" href="/wissen/">Alles unter Wissen</a></p>
   </section>
   <div class="bento anl" style="margin-top:14px">
     <aside class="t k4 app">

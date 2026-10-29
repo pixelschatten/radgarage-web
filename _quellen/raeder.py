@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 from statistics import median
 from urllib.parse import quote_plus
 
-from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, suchfeld
+from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, passend, suchfeld
 
 GRUPPEN = [
     ('Antrieb', ['Kette', 'Kassette', 'Riemen', 'Schaltwerk', 'Umwerfer', 'Schalthebel', 'Kurbel', 'Motor', 'Akku']),
@@ -36,6 +36,14 @@ SHOPS = [
     ('ROSE Bikes', 'https://www.rosebikes.de/search?q={q}'),
 ]
 FARBEN = ['k1', 'k2', 'k3', 'k4', 'k5']
+
+
+def art_farbe(kategorie):
+    """Farbe einer Radkarte nach Radart, damit die Farbe etwas bedeutet: Rennrad gelb, Gravel apricot, MTB grün,
+    E-Bikes blau, alles andere lila."""
+    if kategorie.startswith('E-'):
+        return 'k5'
+    return {'Rennrad': 'k3', 'Gravel': 'k1', 'MTB': 'k4'}.get(kategorie, 'k2')
 # Radversicherung als Anzeige auf den Radseiten, wie in der App (src/data/versicherung.ts).
 # Ohne Partnerlink erscheint der Kasten nicht. Richtwert aus denselben Beispielbeiträgen wie in der App.
 VERSICHERUNG = {
@@ -418,12 +426,16 @@ def rad_seite(r, alle):
     vers = [t for t in teile if t['kategorie'] in VERSCHLEISS]
     vers.sort(key=lambda t: VERSCHLEISS.index(t['kategorie']))
     titel_name = f'{r["name"]} ({r["baujahr"]})'
-    titel = f'{titel_name}: Ersatzteile und verbaute Teile'
+    titel = passend(f'{titel_name}: Ersatzteile und verbaute Teile', f'{titel_name}: Ersatzteile und Teile',
+                    f'{titel_name}: Ersatzteile', titel_name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     kurz = [NAMEN.get(k, k) for k in ['Kette', 'Bremsbelag', 'Reifen'] if any(t['kategorie'] == k for t in teile)]
-    beschr = (f'Welche {", ".join(kurz[:-1]) + " und " + kurz[-1] if len(kurz) > 1 else "Teile"} hat das {titel_name}? '
-              f'Alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.')
+    frage = f'Welche {", ".join(kurz[:-1]) + " und " + kurz[-1] if len(kurz) > 1 else "Teile"} hat das {titel_name}?'
+    beschr = passend(f'{frage} Alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.',
+                     f'{frage} Alle {len(teile)} Teile mit Richtpreis und Ersatz.',
+                     f'{titel_name}: alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.',
+                     f'{titel_name}: {len(teile)} Teile mit Richtpreis und Ersatz.', grenze=165)
     # Als Liste der verbauten Teile, nicht als „Product“: Google erwartet bei Produkten ein Angebot mit
     # festem Preis oder Bewertungen, und unsere Richtpreise sind nur Anhaltswerte.
     teileliste = {
@@ -444,7 +456,7 @@ def rad_seite(r, alle):
     elif vers:
         zahlen.append(('Verschleißteile', str(len(vers))))
     kacheln = ''.join(f'<div class="t s2"><span class="eyebrow">{e(k)}</span><div class="wert">{v}</div></div>' for k, v in zahlen)
-    out.append(f'''    <div class="t k5 kopf">
+    out.append(f'''    <div class="t {art_farbe(r["kategorie"])} kopf">
       <span class="eyebrow">{e(r["kategorie"])} · Modelljahr {r["baujahr"]}</span>
       <h1>{e(titel_name)}</h1>
       <p class="lead">Alle {len(teile)} verbauten Teile, was als Ersatz passt und was der Unterhalt kostet.</p>
@@ -713,12 +725,11 @@ RAD_ANLEITUNGEN = [
 def anleitungen_fuers_rad(r):
     kats = {t['kategorie'] for t in r['teile']}
     da = {a['slug']: a for a in ANLEITUNGEN}
-    passend = [da[s] for s, wenn in RAD_ANLEITUNGEN if s in da and wenn(r, kats)]
-    if not passend:
+    liste = [da[s] for s, wenn in RAD_ANLEITUNGEN if s in da and wenn(r, kats)]
+    if not liste:
         return ''
-    links = ''.join(f'<a href="/anleitungen/{a["slug"]}/">{e(a["h1"])}</a>' for a in passend[:6])
-    if len(passend) > 6:
-        links += f'<a class="alle-link" href="/anleitungen/">Alle Anleitungen</a>'
+    links = ''.join(f'<a href="/anleitungen/{a["slug"]}/">{e(a["h1"])}</a>' for a in liste)
+    links += '<a class="alle-link" href="/anleitungen/">Alle Anleitungen</a>'
     return f'''      <nav class="t s2 rad-anleitungen" aria-label="Anleitungen für dieses Rad">
         <span class="eyebrow">Selbst machen</span>
         <h2>Anleitungen für dein {e(r["modell"])}</h2>
@@ -765,7 +776,7 @@ def radkarte(r, i=0, ebene='h3', zeige_marke=False, mit_jahr=False):
     name = r['name'] if zeige_marke else r['modell']
     if mit_jahr:
         name += f' ({r["baujahr"]})'
-    return (f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{r["pfad"]}">'
+    return (f'<a class="t {art_farbe(r["kategorie"])} karte" href="{r["pfad"]}">'
             f'<span class="eyebrow">{e(r["hersteller"])} · {r["baujahr"]}</span><{ebene}>{e(name)}</{ebene}>'
             f'<span class="meta">{e(r["kategorie"])} · {len(r["teile"])} Teile</span></a>')
 
@@ -899,12 +910,15 @@ def reihe_seite(pfad, rs):
     spanne = f'{jahre[0]}' if len(jahre) == 1 else f'{jahre[0]} bis {jahre[-1]}'
     nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r0['hersteller'], f'/raeder/{r0["marke_slug"]}/'),
                         (r0['reihe'], pfad)])
-    titel = f'{name}: alle Ausstattungen und Teile im Vergleich'
+    titel = passend(f'{name}: alle Ausstattungen und Teile im Vergleich', f'{name}: Ausstattungen im Vergleich',
+                    f'{name}: alle Ausstattungen', name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     mit_uvp = any(r['uvp_eur'] for r in rs)
-    beschr = (f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
-              f'{"UVP und " if mit_uvp else ""}was jede Version im Unterhalt kostet.')
+    beschr = passend(f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
+                     f'{"UVP und " if mit_uvp else ""}was jede Version im Unterhalt kostet.',
+                     f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen und Unterhalt.',
+                     f'{len(rs)} Ausstattungen des {name} im Vergleich: Teile und Unterhalt.', grenze=165)
     liste = {'@context': 'https://schema.org', '@type': 'ItemList', 'name': name,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + r['pfad'],
                                   'name': f'{r["name"]} ({r["baujahr"]})'} for i, r in enumerate(rs)]}

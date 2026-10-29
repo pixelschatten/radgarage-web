@@ -138,7 +138,21 @@
     document.addEventListener('click', function (ev) { if (!form.contains(ev.target)) schliessen(); });
   }
 
-  function start() { document.querySelectorAll('form.suche').forEach(einrichten); }
+  // Lupe im Kopf: beim Öffnen gleich ins Feld, Escape oder Klick daneben schließt wieder
+  function kopfsuche(d) {
+    d.addEventListener('toggle', function () {
+      if (d.open) { var f = d.querySelector('input'); if (f) f.focus(); }
+    });
+    d.addEventListener('keydown', function (ev) {
+      if (ev.key === 'Escape' && d.open) { d.open = false; d.querySelector('summary').focus(); }
+    });
+    document.addEventListener('click', function (ev) { if (d.open && !d.contains(ev.target)) d.open = false; });
+  }
+
+  function start() {
+    document.querySelectorAll('form.suche').forEach(einrichten);
+    document.querySelectorAll('details.kopfsuche').forEach(kopfsuche);
+  }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
   else start();
 })();

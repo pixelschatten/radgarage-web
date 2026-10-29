@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Räder", "item": "https://radgarage.app/raeder/"}, {"@type": "ListItem", "position": 3, "name": "Cervélo", "item": "https://radgarage.app/raeder/cervelo/"}]}</script>
 </head>
@@ -27,8 +27,9 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/raeder/">Räder</a></li><li><span aria-current="page">Cervélo</span></li></ol></nav>
   <main>
@@ -39,30 +40,39 @@
       <p class="lead">20 Modelle im Katalog. Wähle dein Rad und sieh, welche Kette, Bremsbeläge, Reifen und anderen Teile verbaut sind.</p>
     </div>
   </div>
-  <section class="reihe-abschnitt" aria-label="Caledonia"><h2 class="zwischen"><a href="/raeder/cervelo/caledonia/">Caledonia</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-caledonia-105/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia 105</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2026-caledonia-105-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia 105 Di2</h3><span class="meta">Rennrad · 14 Teile</span></a><a class="t k3 karte" href="/raeder/cervelo/2026-caledonia-force-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia Force AXS</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k4 karte" href="/raeder/cervelo/2026-caledonia-rival-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia Rival AXS</h3><span class="meta">Rennrad · 13 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Caledonia-5"><h2 class="zwischen"><a href="/raeder/cervelo/caledonia-5/">Caledonia-5</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-caledonia-5-red-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia-5 Red AXS</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2026-caledonia-5-rival-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia-5 Rival AXS</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k3 karte" href="/raeder/cervelo/2026-caledonia-5-ultegra-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>Caledonia-5 Ultegra Di2</h3><span class="meta">Rennrad · 14 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="R5"><h2 class="zwischen"><a href="/raeder/cervelo/r5/">R5</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-r5-dura-ace-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>R5 Dura-Ace Di2</h3><span class="meta">Rennrad · 14 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2026-r5-force-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>R5 Force AXS</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k3 karte" href="/raeder/cervelo/2026-r5-ultegra-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>R5 Ultegra Di2</h3><span class="meta">Rennrad · 14 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="S5"><h2 class="zwischen">S5</h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-s5-red-xplr-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>S5 Red XPLR AXS</h3><span class="meta">Rennrad · 12 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Soloist"><h2 class="zwischen"><a href="/raeder/cervelo/soloist/">Soloist</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2025-soloist-105-di2/"><span class="eyebrow">Cervélo · 2025</span><h3>Soloist 105 Di2</h3><span class="meta">Rennrad · 14 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2025-soloist-rival-axs/"><span class="eyebrow">Cervélo · 2025</span><h3>Soloist Rival AXS</h3><span class="meta">Rennrad · 13 Teile</span></a><a class="t k3 karte" href="/raeder/cervelo/2025-soloist-ultegra-di2/"><span class="eyebrow">Cervélo · 2025</span><h3>Soloist Ultegra Di2</h3><span class="meta">Rennrad · 14 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Áspero"><h2 class="zwischen"><a href="/raeder/cervelo/spero/">Áspero</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-aspero-apex-xplr-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero Apex XPLR AXS</h3><span class="meta">Gravel · 12 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2026-aspero-grx-rx610/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero GRX RX610</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k3 karte" href="/raeder/cervelo/2026-aspero-grx-rx820/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero GRX RX820</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k4 karte" href="/raeder/cervelo/2026-aspero-grx-rx825-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero GRX RX825 Di2</h3><span class="meta">Gravel · 13 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Áspero-5"><h2 class="zwischen"><a href="/raeder/cervelo/spero-5/">Áspero-5</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/cervelo/2026-aspero-5-force-axs/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero-5 Force AXS</h3><span class="meta">Gravel · 12 Teile</span></a><a class="t k2 karte" href="/raeder/cervelo/2026-aspero-5-grx-rx825-di2/"><span class="eyebrow">Cervélo · 2026</span><h3>Áspero-5 GRX RX825 Di2</h3><span class="meta">Gravel · 13 Teile</span></a></div></section>
+  <nav class="chips reihen-sprung" aria-label="Reihen"><a href="#reihe-caledonia">Caledonia</a><a href="#reihe-caledonia-5">Caledonia-5</a><a href="#reihe-r5">R5</a><a href="#reihe-s5">S5</a><a href="#reihe-soloist">Soloist</a><a href="#reihe-spero">Áspero</a><a href="#reihe-spero-5">Áspero-5</a></nav>
+  <div class="reihen-raster"><section class="t s1 reihe-kachel" id="reihe-caledonia" aria-label="Caledonia"><h2><a href="/raeder/cervelo/caledonia/">Caledonia</a><span>4 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-caledonia-105/"><b>Caledonia 105</b><span>2026 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-caledonia-105-di2/"><b>Caledonia 105 Di2</b><span>2026 · Rennrad · 14 Teile</span></a></li><li><a href="/raeder/cervelo/2026-caledonia-force-axs/"><b>Caledonia Force AXS</b><span>2026 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-caledonia-rival-axs/"><b>Caledonia Rival AXS</b><span>2026 · Rennrad · 13 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-caledonia-5" aria-label="Caledonia-5"><h2><a href="/raeder/cervelo/caledonia-5/">Caledonia-5</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-caledonia-5-red-axs/"><b>Caledonia-5 Red AXS</b><span>2026 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-caledonia-5-rival-axs/"><b>Caledonia-5 Rival AXS</b><span>2026 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-caledonia-5-ultegra-di2/"><b>Caledonia-5 Ultegra Di2</b><span>2026 · Rennrad · 14 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-r5" aria-label="R5"><h2><a href="/raeder/cervelo/r5/">R5</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-r5-dura-ace-di2/"><b>R5 Dura-Ace Di2</b><span>2026 · Rennrad · 14 Teile</span></a></li><li><a href="/raeder/cervelo/2026-r5-force-axs/"><b>R5 Force AXS</b><span>2026 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-r5-ultegra-di2/"><b>R5 Ultegra Di2</b><span>2026 · Rennrad · 14 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-s5" aria-label="S5"><h2>S5<span>1 Rad</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-s5-red-xplr-axs/"><b>S5 Red XPLR AXS</b><span>2026 · Rennrad · 12 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-soloist" aria-label="Soloist"><h2><a href="/raeder/cervelo/soloist/">Soloist</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2025-soloist-105-di2/"><b>Soloist 105 Di2</b><span>2025 · Rennrad · 14 Teile</span></a></li><li><a href="/raeder/cervelo/2025-soloist-rival-axs/"><b>Soloist Rival AXS</b><span>2025 · Rennrad · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2025-soloist-ultegra-di2/"><b>Soloist Ultegra Di2</b><span>2025 · Rennrad · 14 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-spero" aria-label="Áspero"><h2><a href="/raeder/cervelo/spero/">Áspero</a><span>4 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-aspero-apex-xplr-axs/"><b>Áspero Apex XPLR AXS</b><span>2026 · Gravel · 12 Teile</span></a></li><li><a href="/raeder/cervelo/2026-aspero-grx-rx610/"><b>Áspero GRX RX610</b><span>2026 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-aspero-grx-rx820/"><b>Áspero GRX RX820</b><span>2026 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/cervelo/2026-aspero-grx-rx825-di2/"><b>Áspero GRX RX825 Di2</b><span>2026 · Gravel · 13 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-spero-5" aria-label="Áspero-5"><h2><a href="/raeder/cervelo/spero-5/">Áspero-5</a><span>2 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/cervelo/2026-aspero-5-force-axs/"><b>Áspero-5 Force AXS</b><span>2026 · Gravel · 12 Teile</span></a></li><li><a href="/raeder/cervelo/2026-aspero-5-grx-rx825-di2/"><b>Áspero-5 GRX RX825 Di2</b><span>2026 · Gravel · 13 Teile</span></a></li></ul></section></div>
+
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

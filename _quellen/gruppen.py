@@ -7,8 +7,8 @@ Gebaut wird über python3 _quellen/bauen.py.
 import re
 from collections import Counter, OrderedDict
 
-from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen
-from raeder import FARBEN, MIN_GRUPPE, NAMEN, alternativen, preis, teil_link, tsd
+from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, passend
+from raeder import MIN_GRUPPE, NAMEN, alternativen, preis, teil_link, tsd
 from teile import antrieb_paare, paar_liste, radliste
 
 ELEKTRONISCH = re.compile(r'Di2|AXS|eTap')
@@ -78,6 +78,9 @@ def nach_feld(alle, feld):
 
 # ---------------------------------------------------------------- Schaltgruppen
 
+ART_FARBE = {'mechanisch': 'k3', 'elektronisch': 'k5', 'Nabenschaltung': 'k4'}  # Farbe der Karten auf /schaltgruppen/
+
+
 def art(name):
     if 'Gang' in name or 'Speedhub' in name or 'enviolo' in name:
         return 'Nabenschaltung'
@@ -89,8 +92,8 @@ def gruppe_seite(pfad, raeder, alle_gruppen):
     marke = name.split()[0]
     a = art(name)
     fach = re.search(r'(\d+)-(fach|Gang)', name)
-    nav, brot = krumen([('Radgarage', '/'), ('Schaltgruppen', '/schaltgruppen/'), (name, pfad)])
-    titel = f'{name}: Kette, Kassette und Ersatzteile'
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Schaltgruppen', '/schaltgruppen/'), (name, pfad)])
+    titel = passend(f'{name}: Kette, Kassette und Ersatzteile', f'{name}: Ersatzteile', name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     beschr = (f'Welche Kette, Kassette und Bremsbeläge sind an Rädern mit {name} verbaut? '
@@ -164,7 +167,7 @@ def gruppe_seite(pfad, raeder, alle_gruppen):
 
 def gruppen_uebersicht(gruppen, ohne_seite):
     pfad = '/schaltgruppen/'
-    nav, brot = krumen([('Radgarage', '/'), ('Schaltgruppen', pfad)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Schaltgruppen', pfad)])
     titel = 'Schaltgruppen am Fahrrad: Shimano, SRAM & Co. | Radgarage'
     beschr = ('Shimano XT, 105 Di2, GRX, SRAM Eagle Transmission und mehr: welche Kette, Kassette und Beläge an Rädern '
               'mit welcher Schaltgruppe verbaut sind.')
@@ -173,7 +176,7 @@ def gruppen_uebersicht(gruppen, ohne_seite):
         nach_marke.setdefault(rs[0]['gruppe'].split()[0], []).append((p, rs))
     abschnitte = ''.join(
         f'  <section class="reihe-abschnitt" aria-label="{e(m)}"><h2 class="zwischen">{e(m)}</h2><div class="karten">'
-        + ''.join(f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{p}"><span class="eyebrow">{e(art(rs[0]["gruppe"]))}</span>'
+        + ''.join(f'<a class="t {ART_FARBE[art(rs[0]["gruppe"])]} karte" href="{p}"><span class="eyebrow">{e(art(rs[0]["gruppe"]))}</span>'
                   f'<h3>{e(rs[0]["gruppe"])}</h3><span class="meta">{len(rs)} Räder · {_jahre(rs)}</span></a>'
                   for i, (p, rs) in enumerate(eintraege))
         + '</div></section>\n' for m, eintraege in nach_marke.items())
@@ -223,8 +226,8 @@ def _paar_tabelle(raeder, kat):
 
 def system_seite(pfad, raeder):
     name = raeder[0]['system']
-    nav, brot = krumen([('Radgarage', '/'), ('E-Bike-Systeme', '/e-bike-systeme/'), (name, pfad)])
-    titel = f'{name}: Motor, Akku und E-Bikes im Überblick'
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('E-Bike-Systeme', '/e-bike-systeme/'), (name, pfad)])
+    titel = passend(f'{name}: Motor, Akku und E-Bikes im Überblick', f'{name}: Motor und Akku', name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     motoren = _haeufigste(raeder, 'Motor', 12)
@@ -248,20 +251,26 @@ def system_seite(pfad, raeder):
       <div class="t s2"><span class="eyebrow">Modelljahre</span><div class="wert">{_jahre(raeder)}</div></div>
     </div>
 ''')
-    out.append(f'''    <section class="t s1 voll" aria-labelledby="motor-titel">
+    # Beide Tabellen stehen im HTML, der Umschalter blendet nur eine aus (ohne :has-Unterstützung sind beide zu sehen)
+    out.append(f'''    <section class="t s1 voll paar-umschalter" aria-labelledby="motor-titel">
       <span class="eyebrow">Motor und Akku</span>
       <h2 id="motor-titel" style="font-size:30px;margin:6px 0 4px">Welcher Akku zu welchem Motor?</h2>
-      <p>Jeder Motor von {e(name)} im Katalog mit den Akkus, die an denselben Rädern verbaut sind. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
-      <p>{e(SYSTEM_TEXT.get(name, AKKU_TEXT))}</p>
-      {_paar_tabelle(raeder, 'Motor')}
-    </section>
-    <section class="t k5 voll" aria-labelledby="akku-titel">
-      <span class="eyebrow">Akku und Motor</span>
-      <h2 id="akku-titel" style="font-size:30px;margin:6px 0 4px">Akkus an diesen E-Bikes und ihre Motoren</h2>
-      <p>Andersherum: Du kennst deinen Akku und suchst den Motor dazu.</p>
-      {_paar_tabelle(raeder, 'Akku')}
+      <p>Jeder Motor von {e(name)} im Katalog mit den Akkus, die an denselben Rädern verbaut sind, und andersherum. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
+      <div class="umschalter" role="radiogroup" aria-label="Wovon gehst du aus?">
+        <input type="radio" name="paar" id="von-motor" checked><label for="von-motor">Ich kenne meinen Motor</label>
+        <input type="radio" name="paar" id="von-akku"><label for="von-akku">Ich kenne meinen Akku</label>
+      </div>
+      <div class="paar-motor">
+        <p>{e(SYSTEM_TEXT.get(name, AKKU_TEXT))}</p>
+        {_paar_tabelle(raeder, 'Motor')}
+      </div>
+      <div class="paar-akku">
+        <h3 id="akku-titel">Akkus an diesen E-Bikes und ihre Motoren</h3>
+        {_paar_tabelle(raeder, 'Akku')}
+      </div>
     </section>
 ''')
+
     out.append(f'''    <section class="t s1 voll" aria-labelledby="raeder-titel">
       <span class="eyebrow">E-Bikes</span>
       <h2 id="raeder-titel" style="font-size:30px;margin:6px 0 4px">E-Bikes mit {e(name)}</h2>
@@ -277,13 +286,13 @@ def system_seite(pfad, raeder):
 
 def systeme_uebersicht(systeme, alle):
     pfad = '/e-bike-systeme/'
-    nav, brot = krumen([('Radgarage', '/'), ('E-Bike-Systeme', pfad)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('E-Bike-Systeme', pfad)])
     titel = 'E-Bike-Motoren und Akkus nach System | Radgarage'
     ebikes = [r for r in alle if r['system']]
     beschr = (f'Bosch Smart System, Shimano, Yamaha, TQ und mehr: welche Motoren und Akkus an {len(ebikes)} E-Bikes '
               f'im Katalog verbaut sind.')
     karten = ''.join(
-        f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{p}"><span class="eyebrow">E-Bike-System</span>'
+        f'<a class="t s1 karte" href="{p}"><span class="eyebrow">E-Bike-System</span>'
         f'<h2>{e(rs[0]["system"])}</h2><span class="meta">{len(rs)} E-Bikes · {_jahre(rs)}</span></a>'
         for i, (p, rs) in enumerate(sorted(systeme.items(), key=lambda x: -len(x[1]))))
     out = [kopf(titel, beschr, pfad, [brot]), nav, f'''  <main>

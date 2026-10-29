@@ -1,0 +1,54 @@
+/* Rahmen aller Seiten: Kopf mit Hauptmenü und Suche, Fußzeile in Spalten. Steckt in css/seiten.css und als
+   css/rahmen.css in den von Hand gepflegten Seiten (Startseite, Rechtstexte), die ihr eigenes CSS mitbringen. */
+header { position: relative; }
+.kopfsuche { order: 1; }
+.kopfsuche > summary { list-style: none; cursor: pointer; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--surface); }
+.kopfsuche > summary::-webkit-details-marker { display: none; }
+.kopfsuche > summary:hover, .kopfsuche[open] > summary { background: var(--accent); color: var(--on-accent); }
+.kopfsuche > summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.kopfsuche-feld { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% - 4px); padding: 12px; border-radius: 28px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 18px 40px var(--shadow); }
+.kopfsuche-feld .suche { margin: 0; max-width: none; }
+header .kopfnav { order: 0; }
+header > .pill { order: 2; }
+@media (max-width: 760px) {
+  .kopfsuche { margin-left: auto; }
+  header > .pill { margin-left: 0; }
+  .kopfnav a { font-size: 14px; padding: 9px 2px; }
+  .kopfsuche > summary { width: 42px; height: 42px; }
+  /* Am Handy: Logo, Lupe und Knopf in einer Zeile, das Menü darunter */
+  header .kopfnav { order: 3; flex-basis: 100%; }
+  header > .pill { font-size: 14px; padding: 11px 15px; }
+}
+footer.fuss { display: flex; flex-direction: column; gap: 22px; border-top: 2px solid var(--line); padding-block: 28px 40px; font-size: 15px; color: var(--muted); }
+.fuss-spalten { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 28px; }
+.fuss-spalten nav { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.fuss-spalten b { font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+footer.fuss a { color: var(--text); font-weight: 600; text-decoration: none; }
+footer.fuss a:hover { text-decoration: underline; }
+footer.fuss p { margin: 0; font-size: 14px; }
+@media (max-width: 760px) { .fuss-spalten { grid-template-columns: 1fr 1fr; } }
+/* Suche nach Rad oder Teil (Übersichten, Startseite, Fehlerseite), Vorschläge per /js/suche.js */
+.t:has(> .suche) { overflow: visible; z-index: 2; }
+.suche { position: relative; margin-top: 18px; max-width: 640px; display: block; }
+.suche input[type=search] { width: 100%; font: inherit; font-size: 18px; font-weight: 600; padding: 16px 20px 16px 52px; border-radius: 999px; border: 2px solid transparent; background: var(--surface2) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23554D41' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E") no-repeat 20px 50%; color: var(--text); box-shadow: 0 6px 18px var(--shadow); -webkit-appearance: none; appearance: none; }
+:root[data-theme="dark"] .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .suche input[type=search] { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%23B9BFC6' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-3.5-3.5'/%3E%3C/svg%3E"); } }
+.suche input[type=search]:focus-visible { outline: none; border-color: var(--accent); }
+.suche input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.suche .treffer { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% + 8px); margin: 0; padding: 6px; list-style: none; background: var(--surface2); border: 1px solid var(--line); border-radius: 22px; box-shadow: 0 18px 40px var(--shadow); max-height: min(60vh, 440px); overflow-y: auto; }
+.suche .treffer a { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; padding: 11px 14px; border-radius: 14px; text-decoration: none; color: var(--text); }
+.suche .treffer b { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.suche .treffer span { font-size: 14px; color: var(--muted); white-space: nowrap; }
+.suche .treffer [aria-selected=true] a, .suche .treffer a:hover { background: var(--surface); }
+.suche .treffer .leer { padding: 12px 14px; color: var(--muted); font-size: 15px; }
+.suche-info { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@media (max-width: 600px) { .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; } }
+/* Rechtstexte: Überschrift als H1, Inhaltsverzeichnis der Datenschutzerklärung */
+.legal-page h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.05; margin: 8px 0 16px; }
+.inhaltsliste { background: var(--surface); border-radius: 22px; padding: 18px 22px; margin: 0 0 22px; }
+.inhaltsliste b { display: block; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.inhaltsliste ol { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 28px; font-size: 15px; }
+.inhaltsliste li { break-inside: avoid; padding: 3px 0; }
+.inhaltsliste a { color: var(--text); font-weight: 600; }
+.legal-page h3[id] { scroll-margin-top: 16px; }

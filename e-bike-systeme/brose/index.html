@@ -19,19 +19,20 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "E-Bikes mit Brose", "numberOfItems": 6, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://radgarage.app/raeder/bulls/2023-lacuba-evo-10/", "name": "Bulls Lacuba EVO 10 (2023)"}, {"@type": "ListItem", "position": 2, "url": "https://radgarage.app/raeder/decathlon/2024-rockrider-e-expl-500-s/", "name": "Decathlon Rockrider E-EXPL 500 S (2024)"}, {"@type": "ListItem", "position": 3, "url": "https://radgarage.app/raeder/decathlon/2024-rockrider-e-expl-520-s/", "name": "Decathlon Rockrider E-EXPL 520 S (2024)"}, {"@type": "ListItem", "position": 4, "url": "https://radgarage.app/raeder/decathlon/2024-rockrider-e-expl-700-s/", "name": "Decathlon Rockrider E-EXPL 700 S (2024)"}, {"@type": "ListItem", "position": 5, "url": "https://radgarage.app/raeder/decathlon/2024-rockrider-e-st-500/", "name": "Decathlon Rockrider E-ST 500 (2024)"}, {"@type": "ListItem", "position": 6, "url": "https://radgarage.app/raeder/fischer/2025-viator-6.8i-ultimate/", "name": "Fischer Viator 6.8i Ultimate (2025)"}]}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "E-Bike-Systeme", "item": "https://radgarage.app/e-bike-systeme/"}, {"@type": "ListItem", "position": 3, "name": "Brose", "item": "https://radgarage.app/e-bike-systeme/brose/"}]}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Wissen", "item": "https://radgarage.app/wissen/"}, {"@type": "ListItem", "position": 3, "name": "E-Bike-Systeme", "item": "https://radgarage.app/e-bike-systeme/"}, {"@type": "ListItem", "position": 4, "name": "Brose", "item": "https://radgarage.app/e-bike-systeme/brose/"}]}</script>
 </head>
 <body>
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/" aria-current="true">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
-  <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/e-bike-systeme/">E-Bike-Systeme</a></li><li><span aria-current="page">Brose</span></li></ol></nav>
+  <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/wissen/">Wissen</a></li><li><a href="/e-bike-systeme/">E-Bike-Systeme</a></li><li><span aria-current="page">Brose</span></li></ol></nav>
   <main>
   <article class="bento anl rad">
     <div class="t k4 kopf">
@@ -44,18 +45,22 @@
       <div class="t s2"><span class="eyebrow">Motoren</span><div class="wert">4</div></div>
       <div class="t s2"><span class="eyebrow">Modelljahre</span><div class="wert">2023 bis 2025</div></div>
     </div>
-    <section class="t s1 voll" aria-labelledby="motor-titel">
+    <section class="t s1 voll paar-umschalter" aria-labelledby="motor-titel">
       <span class="eyebrow">Motor und Akku</span>
       <h2 id="motor-titel" style="font-size:30px;margin:6px 0 4px">Welcher Akku zu welchem Motor?</h2>
-      <p>Jeder Motor von Brose im Katalog mit den Akkus, die an denselben Rädern verbaut sind. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
-      <p>Akkus sind oft auf Rahmen und Motorsystem zugeschnitten. Ein Ersatzakku sollte dieselbe Bezeichnung tragen wie der verbaute oder vom Radhersteller ausdrücklich freigegeben sein.</p>
-      <table class="teiltabelle paar-tabelle"><tbody><tr><th scope="row"><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a><span>50 Nm</span><span>2 Räder</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/rockrider-akku-500/">Rockrider Akku 500 Wh (E-EXPL 500)</a> <small>1 Rad</small></li><li><a href="/teile/rockrider-dk-11-420/">Rockrider Rahmenakku DK-11 420 Wh</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a><span>70 Nm</span><span>2 Räder</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/rockrider-akku-500-integriert/">Rockrider Integrierter Akku 500 Wh (E-EXPL 520)</a> <small>1 Rad</small></li><li><a href="/teile/rockrider-akku-630/">Rockrider Integrierter Akku 630 Wh (E-EXPL 700)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-s-mag-75/">Brose Drive S Mag (FIT, 75 Nm)</a><span>75 Nm, Bulls FIT System</span><span>1 Rad</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/bulls-fit-ultracore-555/">Bulls FIT UltraCore 555</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-drive-s-mag-90/">Brose Drive S Mag (90 Nm)</a><span>90 Nm</span><span>1 Rad</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/fischer-akku-711/">Fischer Rahmenakku 711 Wh</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr></tbody></table>
-    </section>
-    <section class="t k5 voll" aria-labelledby="akku-titel">
-      <span class="eyebrow">Akku und Motor</span>
-      <h2 id="akku-titel" style="font-size:30px;margin:6px 0 4px">Akkus an diesen E-Bikes und ihre Motoren</h2>
-      <p>Andersherum: Du kennst deinen Akku und suchst den Motor dazu.</p>
-      <table class="teiltabelle paar-tabelle"><tbody><tr><th scope="row"><a href="/teile/bulls-fit-ultracore-555/">Bulls FIT UltraCore 555</a><span>555 Wh</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-s-mag-75/">Brose Drive S Mag (FIT, 75 Nm)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-500/">Rockrider Akku 500 Wh (E-EXPL 500)</a><span>500 Wh</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-500-integriert/">Rockrider Integrierter Akku 500 Wh (E-EXPL 520)</a><span>500 Wh, im Rahmen</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-630/">Rockrider Integrierter Akku 630 Wh (E-EXPL 700)</a><span>630 Wh, im Rahmen</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-dk-11-420/">Rockrider Rahmenakku DK-11 420 Wh</a><span>36 V, 11,6 Ah</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis">ca. 375 €</td></tr><tr><th scope="row"><a href="/teile/fischer-akku-711/">Fischer Rahmenakku 711 Wh</a><span>711 Wh, 36 V</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-s-mag-90/">Brose Drive S Mag (90 Nm)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr></tbody></table>
+      <p>Jeder Motor von Brose im Katalog mit den Akkus, die an denselben Rädern verbaut sind, und andersherum. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
+      <div class="umschalter" role="radiogroup" aria-label="Wovon gehst du aus?">
+        <input type="radio" name="paar" id="von-motor" checked><label for="von-motor">Ich kenne meinen Motor</label>
+        <input type="radio" name="paar" id="von-akku"><label for="von-akku">Ich kenne meinen Akku</label>
+      </div>
+      <div class="paar-motor">
+        <p>Akkus sind oft auf Rahmen und Motorsystem zugeschnitten. Ein Ersatzakku sollte dieselbe Bezeichnung tragen wie der verbaute oder vom Radhersteller ausdrücklich freigegeben sein.</p>
+        <table class="teiltabelle paar-tabelle"><tbody><tr><th scope="row"><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a><span>50 Nm</span><span>2 Räder</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/rockrider-akku-500/">Rockrider Akku 500 Wh (E-EXPL 500)</a> <small>1 Rad</small></li><li><a href="/teile/rockrider-dk-11-420/">Rockrider Rahmenakku DK-11 420 Wh</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a><span>70 Nm</span><span>2 Räder</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/rockrider-akku-500-integriert/">Rockrider Integrierter Akku 500 Wh (E-EXPL 520)</a> <small>1 Rad</small></li><li><a href="/teile/rockrider-akku-630/">Rockrider Integrierter Akku 630 Wh (E-EXPL 700)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-s-mag-75/">Brose Drive S Mag (FIT, 75 Nm)</a><span>75 Nm, Bulls FIT System</span><span>1 Rad</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/bulls-fit-ultracore-555/">Bulls FIT UltraCore 555</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/brose-drive-s-mag-90/">Brose Drive S Mag (90 Nm)</a><span>90 Nm</span><span>1 Rad</span></th><td><span class=paar-kopf>Akkus dazu:</span><ul class="paare"><li><a href="/teile/fischer-akku-711/">Fischer Rahmenakku 711 Wh</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr></tbody></table>
+      </div>
+      <div class="paar-akku">
+        <h3 id="akku-titel">Akkus an diesen E-Bikes und ihre Motoren</h3>
+        <table class="teiltabelle paar-tabelle"><tbody><tr><th scope="row"><a href="/teile/bulls-fit-ultracore-555/">Bulls FIT UltraCore 555</a><span>555 Wh</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-s-mag-75/">Brose Drive S Mag (FIT, 75 Nm)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-500/">Rockrider Akku 500 Wh (E-EXPL 500)</a><span>500 Wh</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-500-integriert/">Rockrider Integrierter Akku 500 Wh (E-EXPL 520)</a><span>500 Wh, im Rahmen</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-akku-630/">Rockrider Integrierter Akku 630 Wh (E-EXPL 700)</a><span>630 Wh, im Rahmen</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-t/">Brose Drive T Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr><tr><th scope="row"><a href="/teile/rockrider-dk-11-420/">Rockrider Rahmenakku DK-11 420 Wh</a><span>36 V, 11,6 Ah</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-c/">Brose Drive C Aluminium</a> <small>1 Rad</small></li></ul></td><td class="preis">ca. 375 €</td></tr><tr><th scope="row"><a href="/teile/fischer-akku-711/">Fischer Rahmenakku 711 Wh</a><span>711 Wh, 36 V</span><span>1 Rad</span></th><td><span class=paar-kopf>Motoren dazu:</span><ul class="paare"><li><a href="/teile/brose-drive-s-mag-90/">Brose Drive S Mag (90 Nm)</a> <small>1 Rad</small></li></ul></td><td class="preis"></td></tr></tbody></table>
+      </div>
     </section>
     <section class="t s1 voll" aria-labelledby="raeder-titel">
       <span class="eyebrow">E-Bikes</span>
@@ -65,22 +70,35 @@
   </article>
   <p class="hinweis">Zugeordnet nach dem Motor, der laut Katalog verbaut ist. Akku-Angaben nach Herstellerdaten, prüf vor dem Kauf die Freigabe für dein Rad. <a href="/so-pruefen-wir/">So prüfen wir</a></p>
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

@@ -7,12 +7,14 @@ import json
 import os
 import re
 
-from anleitungen import FUSS, FUSS_INHALT, ICONS, WURZEL, app_schema, e, kopf, kopf_knopf, store_meta, suchfeld
+from anleitungen import (CSS_VERSION, FUSS, FUSS_INHALT, ICONS, WURZEL, app_schema, e, kopf, kopf_knopf, kopfzeile, store_meta,
+                         suchfeld)
 from raeder import FARBEN, teilname, tsd, wartungskosten, euro_genau
 from teile import KATEGORIEN
 
 # Seiten, die nicht aus dem Generator kommen. bauen.py setzt dort Fußzeile und Symbole ein.
 HANDSEITEN = ['index.html', 'danke.html', 'datenschutz.html', 'impressum.html', 'konto-loeschen.html', 'abmelden/index.html']
+OHNE_KNOPF = {'danke.html', 'abmelden/index.html'}  # Seiten nach der Anmeldung: kein „Testzugang sichern“ im Kopf
 
 
 def _norm(s):
@@ -60,6 +62,40 @@ def fuss_angleichen(html):
     return neu
 
 
+def kopf_angleichen(html, pfad):
+    """Kopf (Menü, Suche, Knopf) wie auf den generierten Seiten, dazu das gemeinsame Rahmen-CSS."""
+    url = '/' if pfad == 'index.html' else '/' + pfad.replace('index.html', '')
+    kopfteil = kopfzeile(url)
+    if pfad in OHNE_KNOPF:
+        kopfteil = re.sub(r'\n\s*<!--kopf-knopf-->.*?<!--/kopf-knopf-->', '', kopfteil, flags=re.S)
+    neu = re.sub(r'[ \t]*<header>.*?</header>\n', lambda m: kopfteil, html, count=1, flags=re.S)
+    neu = re.sub(r'<link rel="stylesheet" href="/css/rahmen\.css[^"]*">\n?', '', neu)
+    if '/css/seiten.css' not in neu:
+        neu = neu.replace('</head>', f'<link rel="stylesheet" href="/css/rahmen.css?v={CSS_VERSION}">\n</head>', 1)
+    return neu
+
+
+def inhalt_angleichen(html):
+    """Inhaltsverzeichnis der Datenschutzerklärung aus ihren Zwischenüberschriften (zwischen <!--inhalt--> und <!--/inhalt-->)."""
+    if '<!--inhalt-->' not in html:
+        return html
+    vergeben = set(re.findall(r'<h3 id="([^"]+)"', html))
+
+    def anker(m):
+        text = re.sub(r'<[^>]+>', '', m.group(1))
+        k = re.sub(r'[^a-z0-9]+', '-', _norm(text)).strip('-')
+        while k in vergeben:
+            k += '-2'
+        vergeben.add(k)
+        return f'<h3 id="{k}">{m.group(1)}</h3>'
+    neu = re.sub(r'<h3>(.*?)</h3>', anker, html)
+    eintraege = re.findall(r'<h3 id="([^"]+)">(.*?)</h3>', neu)
+    links = ''.join(f'<li><a href="#{k}">{t}</a></li>' for k, t in eintraege)
+    return re.sub(r'<!--inhalt-->.*?<!--/inhalt-->',
+                  lambda m: f'<!--inhalt--><nav class="inhaltsliste" aria-label="Inhalt"><b>Inhalt</b><ol>{links}</ol></nav><!--/inhalt-->',
+                  neu, flags=re.S)
+
+
 def store_angleichen(html):
     """Store-Start (STORE_LIVE in anleitungen.py): Smart App Banner, App-Markup und Kopf-Knopf in den Handseiten."""
     neu = re.sub(r'<meta name="apple-itunes-app"[^>]*>\n?', '', html)
@@ -91,7 +127,8 @@ def beliebt(alle, anzahl=8):
 def handseiten(werte, alle, lesen, schreiben):
     for pfad in HANDSEITEN:
         alt = lesen(pfad)
-        neu = zahlen_einsetzen(store_angleichen(fuss_angleichen(alt)), werte)
+        neu = zahlen_einsetzen(store_angleichen(kopf_angleichen(fuss_angleichen(alt), pfad)), werte)
+        neu = inhalt_angleichen(neu)
         neu = re.sub(r'<!--beliebt-->.*?<!--/beliebt-->', lambda m: beliebt(alle), neu, flags=re.S)
         if neu != alt:
             schreiben(pfad, neu)

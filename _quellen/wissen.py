@@ -8,7 +8,7 @@ import json
 import re
 from collections import Counter, OrderedDict
 
-from anleitungen import ANLEITUNGEN, CSS_VERSION, FUSS, ICONS, SEITE, STAND, e, kopf, krumen
+from anleitungen import ANLEITUNGEN, CSS_VERSION, FUSS, ICONS, SEITE, STAND, WISSEN_SEITEN, e, kopf, krumen, wissen_karten
 from raeder import FELGEN, RICHTWERT_KM, TEILE, reifen_groesse, teil_link, tsd
 
 STAND_WISSEN = '2026-10-28'
@@ -97,7 +97,7 @@ def reifen_rechner(js_daten, farbe='k5'):
 
 def reifen_seite(alle):
     pfad = '/reifengroessen/'
-    nav, brot = krumen([('Radgarage', '/'), ('Anleitungen', '/anleitungen/'), ('Reifengrößen', pfad)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Reifengrößen', pfad)])
     titel = 'Fahrrad-Reifengrößen: ETRTO, Zoll und 700C umrechnen'
     beschr = ('Reifengröße am Fahrrad verstehen und umrechnen: ETRTO (z. B. 55-622), Zoll (28 x 2.15) und 700 x 35C. '
               'Mit Tabelle der gängigen Größen und passendem Schlauch.')
@@ -220,7 +220,7 @@ def verschleiss_rechner():
 
 def verschleiss_seite():
     pfad = '/verschleissrechner/'
-    nav, brot = krumen([('Radgarage', '/'), ('Anleitungen', '/anleitungen/'), ('Verschleißrechner', pfad)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Verschleißrechner', pfad)])
     titel = 'Verschleißrechner: wann Kette, Beläge und Reifen fällig sind'
     beschr = ('Wann muss die Fahrradkette gewechselt werden, wie lange halten Bremsbeläge und Reifen? Der Rechner schätzt '
               'es aus deinen Kilometern, Wetter und Gelände.')
@@ -316,7 +316,7 @@ def schnipsel(ordner, titel, ziel, hoehe):
 
 def einbetten_uebersicht():
     pfad = '/einbetten/'
-    nav, brot = krumen([('Radgarage', '/'), ('Rechner einbetten', pfad)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Rechner einbetten', pfad)])
     titel = 'Fahrrad-Rechner für deine Website: kostenlos einbetten | Radgarage'
     beschr = ('Verschleißrechner und Reifengrößen-Rechner der Radgarage kostenlos auf Blog, Vereins- oder Werkstattseite '
               'einbinden. Ohne Anmeldung, ohne Cookies, ohne Werbung.')
@@ -373,6 +373,41 @@ def einbetten_uebersicht():
 ''')
     out.append(FUSS)
     return ''.join(out)
+
+
+def wissen_seite():
+    """/wissen/: Einstieg zu Rechnern, Auswertungen und Übersichten, im Kopfmenü unter „Wissen“."""
+    pfad = '/wissen/'
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', pfad)])
+    liste = {
+        '@context': 'https://schema.org', '@type': 'ItemList', 'name': 'Fahrrad-Wissen und Rechner',
+        'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + p, 'name': n}
+                            for i, (p, n, *_) in enumerate(WISSEN_SEITEN)],
+    }
+    titel = 'Fahrrad-Wissen: Rechner, Größen und Kosten | Radgarage'
+    beschr = ('Reifengrößen umrechnen, Verschleiß berechnen, Unterhaltskosten vergleichen, Schaltgruppen und E-Bike-Systeme '
+              'verstehen. Kostenlos, aus dem Radgarage-Katalog.')
+    return f'''{kopf(titel, beschr, pfad, [liste, brot])}{nav}  <main>
+  <div class="bento uebersicht">
+    <div class="t k1 kopf">
+      <span class="eyebrow">Wissen</span>
+      <h1>Rechner und Wissen rund ums Rad</h1>
+      <p class="lead">Was die Zahlen auf dem Reifen bedeuten, wann die Kette fällig ist, was ein Rad im Jahr kostet und welche Teile zu deiner Schaltgruppe oder deinem E-Bike passen. Alles aus dem Katalog der Radgarage.</p>
+    </div>
+  </div>
+  <section aria-label="Rechner und Übersichten" style="margin-top:14px">
+    <div class="karten">{wissen_karten('h2')}</div>
+  </section>
+  <section aria-labelledby="anl-titel" style="margin-top:14px">
+    <h2 id="anl-titel" class="zwischen">Selbst schrauben</h2>
+    <div class="karten">
+      <a class="t karte" href="/anleitungen/"><span class="eyebrow">Anleitungen</span><h3>Alle Anleitungen</h3><span class="meta">{len(ANLEITUNGEN)} Arbeiten Schritt für Schritt, mit Werkzeug und Dauer</span></a>
+      <a class="t karte" href="/teile/"><span class="eyebrow">Ersatzteile</span><h3>Alle Ersatzteile</h3><span class="meta">Was wo verbaut ist und was als Ersatz passt</span></a>
+      <a class="t karte" href="/raeder/"><span class="eyebrow">Räder</span><h3>Alle Räder</h3><span class="meta">Verbaute Teile je Modell und Jahr</span></a>
+    </div>
+  </section>
+  </main>
+''' + FUSS
 
 
 def bauen(alle, schreiben, lesen):
