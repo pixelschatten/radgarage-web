@@ -453,7 +453,7 @@ async function ladeBetrieb() {
 $('#be-neu').addEventListener('click', ladeBetrieb);
 
 // ----- App steuern (app_steuerung_lesen / _setzen, nur Super-Admin) -----
-// Fünf Unterkacheln: Mitteilung, Wartung, Pflicht-Update, Premium, Partner-Kachel. Jede speichert nur ihre eigenen Felder.
+// Fünf Unterkacheln: Mitteilung, Wartung, Pflicht-Update, Premium, Partner-Kachel (mehrere Partner im Wechsel). Jede speichert nur ihre eigenen Felder.
 
 const WARTUNG_STANDARD = 'Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen.';
 const ST_ICONS = {
@@ -504,39 +504,123 @@ function steuerungZeigen() {
 
   stStatus('#st-s-premium', st.premium_aktiv ? 'Nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
 
-  const fp = $('#f-st-partner').elements;
-  const pBis = st.partner_bis ? new Date(st.partner_bis) : null;
-  if (!st.partner_name) stStatus('#st-s-partner', 'Kein Partner');
-  else if (!st.partner_aktiv) stStatus('#st-s-partner', 'Aus');
-  else if (pBis && pBis < new Date()) stStatus('#st-s-partner', 'Abgelaufen', 'warn');
-  else stStatus('#st-s-partner', pBis ? `Sichtbar bis ${pBis.toLocaleDateString('de-DE')}` : 'Sichtbar', 'an');
-  $('#st-partner-weg').hidden = !st.partner_name;
-  $('#st-partner-klicks').textContent = st.partner_name
-    ? `${zahlDe(st.partner_klicks || 0)} ${st.partner_klicks === 1 ? 'Tipp' : 'Tipps'} seit ${new Date(st.partner_seit || st.geaendert).toLocaleDateString('de-DE')}.` : '';
-  partnerVorschau(fp);
+  partnerVorschau();
 }
 
-// Vorschau der Partner-Kachel; ein neu gewähltes Logo zeigt sie schon vor dem Speichern
+// ----- Partner-Kachel (app_partner_*): mehrere Partner im Wechsel -----
+
 const PARTNER_LOGOS = 'https://axiirnfgtbmmjlfwlyfe.supabase.co/storage/v1/object/public/partner/';
+let partnerListe = [];
 let partnerLogoNeu = '';
-function partnerVorschau(fp) {
+const tagDe = (d) => new Date(d).toLocaleDateString('de-DE');
+
+function partnerStatus(p) {
+  const jetzt = new Date();
+  if (!p.aktiv) return ['Aus', ''];
+  if (p.von && new Date(p.von) > jetzt) return [`Ab ${tagDe(p.von)}`, ''];
+  if (p.bis && new Date(p.bis) <= jetzt) return ['Abgelaufen', 'warn'];
+  return [p.bis ? `Sichtbar bis ${tagDe(p.bis)}` : 'Sichtbar', 'an'];
+}
+function partnerBearbeitet() {
+  const id = $('#f-st-partner').elements.id.value;
+  return id ? partnerListe.find((p) => String(p.id) === id) : null;
+}
+
+// Vorschau aus den Feldern; ein neu gewähltes Logo zeigt sie schon vor dem Speichern
+function partnerVorschau() {
+  const fp = $('#f-st-partner').elements;
   const el = $('#st-v-partner');
-  const name = fp.partner_name.value.trim();
-  $('#st-v-partner').parentElement.classList.toggle('aus', !fp.partner_aktiv.checked);
-  $('#st-ve-partner').textContent = fp.partner_aktiv.checked ? 'So sieht es in der App aus' : 'Vorschau, erscheint erst eingeschaltet';
-  if (!name) { el.className = 'st-partner leer'; el.textContent = 'Noch kein Partner eingetragen.'; return; }
+  const name = fp.name.value.trim();
+  el.parentElement.classList.toggle('aus', !fp.aktiv.checked);
+  $('#st-ve-partner').textContent = fp.aktiv.checked ? 'So sieht er in der App aus' : 'Vorschau, erscheint erst eingeschaltet';
+  if (!name) { el.className = 'st-partner leer'; el.textContent = 'Name eintragen, dann erscheint hier die Vorschau.'; return; }
   el.className = 'st-partner';
   el.textContent = '';
   const logo = Object.assign(document.createElement('div'), { className: 'st-logo' });
-  const src = partnerLogoNeu || (steuerung.partner_logo ? PARTNER_LOGOS + steuerung.partner_logo : '');
+  const alt = partnerBearbeitet()?.logo;
+  const src = partnerLogoNeu || (alt ? PARTNER_LOGOS + alt : '');
   if (src) logo.append(Object.assign(document.createElement('img'), { src, alt: '' }));
   else logo.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">${ST_ICONS.neu}</svg>`;
   const kopf = document.createElement('div');
   kopf.append(Object.assign(document.createElement('small'), { textContent: 'Partner' }), Object.assign(document.createElement('b'), { textContent: name }));
-  const pfeil = Object.assign(document.createElement('span'), { textContent: '›', ariaHidden: 'true' });
-  el.append(logo, kopf, pfeil);
-  const text = fp.partner_text.value.trim();
+  el.append(logo, kopf, Object.assign(document.createElement('span'), { textContent: '›', ariaHidden: 'true' }));
+  const text = fp.text.value.trim();
   if (text) el.append(Object.assign(document.createElement('p'), { textContent: text }));
+}
+
+function partnerFormular(p) {
+  const f = $('#f-st-partner').elements;
+  f.id.value = p ? p.id : '';
+  f.aktiv.checked = p ? p.aktiv : true;
+  f.name.value = p?.name || '';
+  f.link.value = p?.link || '';
+  f.text.value = p?.text || '';
+  f.von.value = p?.von ? new Date(p.von).toLocaleDateString('sv-SE') : '';
+  f.bis.value = p?.bis ? new Date(p.bis).toLocaleDateString('sv-SE') : '';
+  f.logo.value = '';
+  if (partnerLogoNeu) URL.revokeObjectURL(partnerLogoNeu);
+  partnerLogoNeu = '';
+  $('#pa-formtitel').textContent = p ? `${p.name} bearbeiten` : 'Neuer Partner';
+  $('#pa-abbrechen').hidden = !p;
+  meldung($('#f-st-partner .msg'), '');
+  partnerVorschau();
+}
+
+function partnerListeZeigen(liste) {
+  partnerListe = liste || [];
+  const sichtbar = partnerListe.filter((p) => partnerStatus(p)[1] === 'an').length;
+  stStatus('#st-s-partner', sichtbar ? `${sichtbar} sichtbar` : 'Kein Partner sichtbar', sichtbar ? 'an' : '');
+  const ul = $('#pa-liste');
+  ul.textContent = '';
+  if (!partnerListe.length) {
+    ul.append(Object.assign(document.createElement('li'), { className: 'leer', textContent: 'Noch kein Partner. Unten den ersten anlegen.' }));
+    return;
+  }
+  partnerListe.forEach((p, i) => {
+    const li = document.createElement('li');
+    li.className = 'pa-zeile';
+    const logo = Object.assign(document.createElement('div'), { className: 'st-logo' });
+    if (p.logo) logo.append(Object.assign(document.createElement('img'), { src: PARTNER_LOGOS + p.logo, alt: '' }));
+    const info = document.createElement('div');
+    const [status, art] = partnerStatus(p);
+    const kopf = document.createElement('div');
+    kopf.append(Object.assign(document.createElement('b'), { textContent: p.name }), ' ',
+      Object.assign(document.createElement('span'), { className: `chip${art === 'warn' ? ' warn' : ''}`, textContent: status }));
+    info.append(kopf, Object.assign(document.createElement('div'), { className: 'fine',
+      textContent: `${zahlDe(p.ansichten)}× gezeigt · ${zahlDe(p.klicks)} ${p.klicks === 1 ? 'Tipp' : 'Tipps'} · seit ${tagDe(p.angelegt)}` }));
+    const knoepfe = Object.assign(document.createElement('div'), { className: 'pa-knoepfe' });
+    const knopf = (text, label, fn, aus = false) => {
+      const b = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: text, disabled: aus });
+      b.setAttribute('aria-label', label);
+      b.addEventListener('click', fn);
+      knoepfe.append(b);
+    };
+    knopf('↑', `${p.name} nach vorne`, () => partnerVerschieben(i, -1), i === 0);
+    knopf('↓', `${p.name} nach hinten`, () => partnerVerschieben(i, 1), i === partnerListe.length - 1);
+    knopf('Bearbeiten', `${p.name} bearbeiten`, () => { partnerFormular(p); $('#f-st-partner').scrollIntoView({ block: 'nearest', behavior: 'smooth' }); });
+    knopf('Entfernen', `${p.name} entfernen`, () => {
+      if (!window.confirm(`${p.name} entfernen? Die Zahlen zu diesem Partner gehen dabei verloren.`)) return;
+      mitKnopf($('#f-st-partner'), async (msg) => {
+        partnerListeZeigen(await rpc('app_partner_loeschen', { p_id: p.id }));
+        if (partnerBearbeitet() === undefined) partnerFormular(null);
+        meldung(msg, `${p.name} entfernt.`);
+      });
+    });
+    li.append(logo, info, knoepfe);
+    ul.append(li);
+  });
+}
+function partnerVerschieben(i, um) {
+  const ids = partnerListe.map((p) => p.id);
+  [ids[i], ids[i + um]] = [ids[i + um], ids[i]];
+  mitKnopf($('#f-st-partner'), async () => partnerListeZeigen(await rpc('app_partner_reihenfolge', { p_ids: ids })));
+}
+async function ladePartner() {
+  try {
+    partnerListeZeigen(await rpc('app_partner_liste'));
+  } catch (e) {
+    meldung($('#f-st-partner .msg'), fehlerText(e), true);
+  }
 }
 
 function steuerungFuellen(st) {
@@ -553,14 +637,7 @@ function steuerungFuellen(st) {
   fu.mindest_version.value = st.mindest_version || '';
   fu.update_text.value = st.update_text || '';
   $('#f-st-premium').elements.premium_aktiv.value = st.premium_aktiv ? 'an' : 'aus';
-  const fp = $('#f-st-partner').elements;
-  fp.partner_aktiv.checked = !!st.partner_aktiv;
-  fp.partner_name.value = st.partner_name || '';
-  fp.partner_link.value = st.partner_link || '';
-  fp.partner_text.value = st.partner_text || '';
-  fp.partner_bis.value = st.partner_bis ? new Date(st.partner_bis).toLocaleDateString('sv-SE') : '';
-  fp.partner_logo.value = '';
-  partnerLogoNeu = '';
+  $('#f-st-takt').elements.partner_takt.value = String(st.partner_takt || 8);
   $('#st-geaendert').textContent = st.von
     ? `Zuletzt geändert ${new Date(st.geaendert).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' })} von ${st.von}.` : '';
   steuerungZeigen();
@@ -569,6 +646,7 @@ async function ladeSteuerung() {
   for (const m of $$('#steuer .msg')) meldung(m, '');
   try {
     steuerungFuellen(await rpc('app_steuerung_lesen'));
+    await ladePartner();
   } catch (e) {
     meldung($('#f-st-banner .msg'), fehlerText(e), true);
   }
@@ -619,40 +697,41 @@ $('#f-st-premium').addEventListener('submit', (ev) => {
   mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Premium gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
 });
 
-$('#f-st-partner').elements.partner_logo.addEventListener('change', (ev) => {
+$('#f-st-takt').addEventListener('submit', (ev) => {
+  ev.preventDefault();
+  const takt = Number(ev.target.elements.partner_takt.value);
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { partner_takt: takt }, `Gespeichert. Die Partner wechseln alle ${takt} Sekunden.`));
+});
+$('#f-st-partner').elements.logo.addEventListener('change', (ev) => {
   const datei = ev.target.files[0];
   if (partnerLogoNeu) URL.revokeObjectURL(partnerLogoNeu);
   partnerLogoNeu = datei ? URL.createObjectURL(datei) : '';
-  steuerungZeigen();
+  partnerVorschau();
 });
+$('#pa-abbrechen').addEventListener('click', () => partnerFormular(null));
 $('#f-st-partner').addEventListener('submit', (ev) => {
   ev.preventDefault();
   const f = ev.target.elements;
-  const an = f.partner_aktiv.checked;
-  const name = f.partner_name.value.trim();
-  if (name && steuerung.partner_name && name !== steuerung.partner_name
-      && !window.confirm(`Neuer Partner „${name}“: Der Zähler für Tipps beginnt wieder bei null. Weiter?`)) return;
   mitKnopf(ev.target, async (msg) => {
     const p = {
-      partner_aktiv: an, partner_name: name, partner_link: f.partner_link.value.trim(), partner_text: f.partner_text.value.trim(),
-      partner_bis: f.partner_bis.value ? bisDatum(f.partner_bis.value).toISOString() : '',
+      id: f.id.value, aktiv: f.aktiv.checked, name: f.name.value.trim(), link: f.link.value.trim(), text: f.text.value.trim(),
+      // „Ab“ gilt ab Tagesbeginn, „Bis“ bis zum Ende des Tages
+      von: f.von.value ? new Date(`${f.von.value}T00:00:00`).toISOString() : '',
+      bis: f.bis.value ? bisDatum(f.bis.value).toISOString() : '',
     };
-    const datei = f.partner_logo.files[0];
+    const datei = f.logo.files[0];
     if (datei) {
       if (datei.size > 524288) throw new Error('Das Logo ist größer als 500 KB.');
       // Neuer Dateiname bei jedem Hochladen, damit die App kein altes Bild aus dem Zwischenspeicher zeigt
       const pfad = `${Date.now().toString(36)}.${(datei.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`;
       const { error } = await sb.storage.from('partner').upload(pfad, datei, { contentType: datei.type, cacheControl: '86400' });
       if (error) throw error;
-      p.partner_logo = pfad;
+      p.logo = pfad;
     }
-    await steuerungSetzen(msg, p, an ? 'Gespeichert. Die Partner-Kachel erscheint beim nächsten Öffnen der App.' : 'Gespeichert. Die Partner-Kachel ist aus.');
+    partnerListeZeigen(await rpc('app_partner_speichern', { p }));
+    partnerFormular(null);
+    meldung(msg, p.aktiv ? `${p.name} gespeichert. Erscheint beim nächsten Öffnen der App.` : `${p.name} gespeichert, ist aber aus.`);
   });
-});
-$('#st-partner-weg').addEventListener('click', () => {
-  if (!window.confirm('Partner entfernen? Die Kachel verschwindet aus der App und der Zähler beginnt beim nächsten Partner neu.')) return;
-  mitKnopf($('#f-st-partner'), (msg) => steuerungSetzen(msg,
-    { partner_aktiv: false, partner_name: '', partner_link: '', partner_text: '', partner_logo: '', partner_bis: '' }, 'Partner entfernt.'));
 });
 
 // ----- Gesucht, aber nicht im Katalog (katalog_nachfrage_liste) -----
