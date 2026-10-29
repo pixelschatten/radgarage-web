@@ -52,7 +52,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage zählt die Kilometer deiner Kette mit und erinnert dich, wenn es Zeit zum Messen ist. Welche Kette an dein Modell passt, weiß sie auch.',
         'suche': 'fahrradkette wechseln',
-        'video': '',
+        'video': '-hbAvh92c54',
         'verwandt': ['kassette-wechseln', 'innenlager-wechseln', 'reifen-wechseln'],
     },
     {
@@ -82,7 +82,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt die Bremse an deinem Rad und damit die passenden Beläge. Sie behält im Blick, wie viele Kilometer die Beläge schon gefahren sind.',
         'suche': 'bremsbeläge wechseln scheibenbremse fahrrad',
-        'video': '',
+        'video': 'bL6NM-lA7zM',
         'verwandt': ['bremsscheibe-wechseln', 'reifen-wechseln', 'kette-wechseln'],
     },
     {
@@ -111,7 +111,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage merkt sich, wie viele Ketten deine Kassette schon gesehen hat, und zeigt dir die passende Kassette mit Preisen aus mehreren Shops.',
         'suche': 'kassette wechseln fahrrad',
-        'video': '',
+        'video': 'TNYoZ7Ev4Qw',
         'verwandt': ['kette-wechseln', 'reifen-wechseln', 'innenlager-wechseln'],
     },
     {
@@ -140,7 +140,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt die Reifengröße deines Modells und zeigt passende Reifen mit Preisen aus mehreren Shops. Die Kilometer zählt sie automatisch mit.',
         'suche': 'fahrradreifen wechseln',
-        'video': '',
+        'video': 'u-Ew__6Jr-g',
         'verwandt': ['schlauch-wechseln', 'bremsbelaege-wechseln', 'kette-wechseln'],
     },
     {
@@ -169,7 +169,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Reifengröße und Felge deines Modells. So findest du den passenden Schlauch mit der richtigen Ventillänge ohne Rätselraten.',
         'suche': 'fahrradschlauch wechseln',
-        'video': '',
+        'video': 'tOfyby4tGzQ',
         'verwandt': ['reifen-wechseln', 'bremsbelaege-wechseln', 'kette-wechseln'],
     },
     {
@@ -198,7 +198,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Durchmesser und Aufnahme der Scheiben an deinem Rad und zeigt dir passende Ersatzscheiben.',
         'suche': 'bremsscheibe wechseln fahrrad',
-        'video': '',
+        'video': 'GnADpYq96jk',
         'verwandt': ['bremsbelaege-wechseln', 'reifen-wechseln', 'kassette-wechseln'],
     },
     {
@@ -226,7 +226,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage führt dein Wartungsheft, damit du weißt, wann du was zuletzt getauscht hast, und zeigt passendes Lenkerband aus mehreren Shops.',
         'suche': 'lenkerband wickeln rennrad',
-        'video': '',
+        'video': 'lc0wH_-S-uQ',
         'verwandt': ['kette-wechseln', 'bremsbelaege-wechseln', 'reifen-wechseln'],
     },
     {
@@ -254,7 +254,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Rahmenstandard und Kurbel deines Modells und zeigt dir das passende Innenlager. So kaufst du nicht auf Verdacht.',
         'suche': 'innenlager wechseln fahrrad',
-        'video': '',
+        'video': 'aPaP_MLAq0I', 'video_start': 538,  # Video beginnt beim Innenlager-Teil
         'verwandt': ['kette-wechseln', 'kassette-wechseln', 'lenkerband-wickeln'],
     },
     {
@@ -283,7 +283,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage zählt die Kilometer deiner Kette mit und erinnert dich ab etwa 80 % des Richtwerts ans Messen. Danach rechnet sie mit deinem eigenen Messwert weiter.',
         'suche': 'kettenverschleiß messen fahrrad',
-        'video': '',
+        'video': 's1qwU_VtojA',
         'verwandt': ['kette-wechseln', 'kette-reinigen-oelen', 'kassette-wechseln'],
     },
     {
@@ -312,7 +312,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage merkt sich, wann du die Kette zuletzt gepflegt hast, und zählt die Kilometer bis zum nächsten Messen.',
         'suche': 'fahrradkette reinigen ölen',
-        'video': '',
+        'video': '-TZ5X52EOEI',
         'verwandt': ['kettenverschleiss-messen', 'kette-wechseln', 'fahrrad-einwintern'],
     },
     {
@@ -341,7 +341,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Schaltwerk und Schalthebel deines Rads und führt im Wartungsheft, wann du zuletzt Züge oder Kette getauscht hast.',
         'suche': 'schaltung einstellen fahrrad schaltwerk',
-        'video': '',
+        'video': 'UN1jJ3A5Gmw',
         'verwandt': ['kette-wechseln', 'kassette-wechseln', 'kettenverschleiss-messen'],
     },
     {
@@ -370,11 +370,11 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Bremse, Scheiben und Beläge deines Rads und zeigt dir passenden Ersatz, wenn ein Tausch nötig ist.',
         'suche': 'scheibenbremse schleift fahrrad',
-        'video': '',
+        'video': 'omr2Q-Z22iU',
         'verwandt': ['bremsbelaege-wechseln', 'bremsscheibe-wechseln', 'fruehjahrscheck'],
     },
     {
-        'slug': 'fahrrad-einwintern', 'farbe': 'k2', 'teil': 'Pflege', 'stand': '2026-10-28',
+        'slug': 'fahrrad-einwintern', 'farbe': 'k2', 'teil': 'Pflege', 'stand': '2026-10-29',
         'h1': 'Fahrrad einwintern',
         'titel': 'Fahrrad einwintern und lagern: so übersteht es den Winter',
         'beschreibung': 'Fahrrad und E-Bike richtig einwintern: reinigen, Kette pflegen, Reifen und Akku richtig lagern. Damit im Frühjahr alles startklar ist.',
@@ -395,10 +395,13 @@ ANLEITUNGEN = [
         'fragen': [
             ('Darf das Rad im Winter draußen stehen?', 'Mit einer Abdeckung geht das, aber Feuchtigkeit und Salz setzen Kette und Schrauben zu. Ein trockener Keller oder eine Garage ist besser.'),
             ('Soll der Akku im E-Bike bleiben?', 'Besser nicht. Kälte schadet dem Akku, und ganz leer gelagert kann er Schaden nehmen. Drinnen bei mittlerer Ladung ist er am besten aufgehoben.'),
+            ('Und wenn ich im Winter weiterfahre?', 'Dann braucht das Rad mehr Pflege statt einer Pause: nach Fahrten auf gesalzenen Straßen mit klarem Wasser abspülen und trocknen, die Kette öfter und mit einem Öl für nasse Bedingungen schmieren, Bremsen und Licht regelmäßig prüfen. Schutzbleche halten viel Dreck und Salz fern. Den E-Bike-Akku zwischen den Fahrten drinnen aufbewahren und erst kurz vor der Fahrt einsetzen.'),
         ],
         'app': 'Die Radgarage führt dein Wartungsheft und erinnert dich im Frühjahr daran, Kette, Beläge und Reifen zu prüfen.',
         'suche': 'fahrrad einwintern',
-        'video': '',
+        'video': 'phDwNIl3Grc',
+        'video_titel': 'Du fährst im Winter weiter?',
+        'video_text': 'Dann hilft dieses Video: So pflegst du dein Rad bei Kälte, Nässe und Streusalz.',
         'verwandt': ['fruehjahrscheck', 'kette-reinigen-oelen', 'reifen-wechseln'],
     },
     {
@@ -426,7 +429,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt alle Teile an deinem Rad und zeigt dir, welche nach Kilometern als Nächstes dran sind.',
         'suche': 'fahrrad frühjahrscheck',
-        'video': '',
+        'video': 'oIfAQUdwd8Q',
         'verwandt': ['kettenverschleiss-messen', 'bremsbelaege-wechseln', 'schaltung-einstellen'],
     },
 ]
@@ -609,17 +612,19 @@ def youtube_suche(a):
 def video_kachel(a):
     titel = f'Video: {a["h1"]}'
     if a['video']:
-        player = (f'<div class="player" data-video="{e(a["video"])}" data-titel="{e(titel)}">'
+        start = a.get('video_start')  # Sekunde, ab der das Video startet (optional)
+        player = (f'<div class="player" data-video="{e(a["video"])}" data-titel="{e(titel)}"{f' data-start="{start}"' if start else ''}>'
                   f'<div class="zustimmen"><button class="play" type="button" aria-label="Video laden und abspielen">{PLAY}</button>'
                   '<p>Erst mit dem Klick lädt das Video von YouTube. Dabei erhält Google unter anderem deine IP-Adresse. '
                   'Mehr dazu in der <a href="/datenschutz.html#videos">Datenschutzerklärung</a>.</p></div></div>'
-                  f'<p class="klein"><a href="https://www.youtube.com/watch?v={e(a["video"])}" target="_blank" rel="noopener">Auf YouTube ansehen</a></p>')
+                  f'<p class="klein"><a href="https://www.youtube.com/watch?v={e(a["video"])}{f"&amp;t={start}s" if start else ""}" target="_blank" rel="noopener">Auf YouTube ansehen</a></p>')
     else:
         # Ohne Video-ID keine Kachel, die Seite verlinkt dann nur die YouTube-Suche unter den Schritten.
         return ''
     return f'''    <div class="t s1 video">
       <span class="eyebrow">Video</span>
-      <h2 style="font-size:26px;margin:6px 0 0">Lieber zuschauen?</h2>
+      <h2 style="font-size:26px;margin:6px 0 0">{e(a.get('video_titel', 'Lieber zuschauen?'))}</h2>
+      {f'<p style="margin-top:6px">{e(a["video_text"])}</p>' if a.get('video_text') else ''}
       {player}
     </div>
 '''
@@ -725,7 +730,7 @@ def anleitung_seite(a, alle):
   </main>
 ''')
     if a['video']:
-        out.append('<script src="/anleitungen/video.js?v=1" defer></script>\n')
+        out.append('<script src="/anleitungen/video.js?v=2" defer></script>\n')
     out.append(FUSS)
     return ''.join(out)
 
