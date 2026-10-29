@@ -522,6 +522,7 @@ function tab(name) {
   if (name === 'katalog') katalogLaden();
   if (name === 'uebersicht') ladeUebersicht();
   if (name === 'statistik') ladeStatistik();
+  if (name === 'steuern') { asReiterSetzen(asTeil); ladeAppSteuern(); }
   if (name === 'feedback') ladeFeedback();
   if (name === 'konten') ladeKonten();
   if (name === 'crm') crmZeigen(crmAnsicht);
@@ -537,6 +538,7 @@ function tabAusAdresse() {
   if (name === 'freigaben') fgAnsichtSetzen(['app', 'web'].includes(unter) ? unter : 'helfer');
   if (name === 'katalog') katAnsichtSetzen(unter);
   if (name === 'statistik') stReiterSetzen(unter);
+  if (name === 'steuern' && unter) asReiterSetzen(unter);
 }
 window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
 for (const b of $$('[data-neu-laden]')) b.addEventListener('click', () => ladeOffen());

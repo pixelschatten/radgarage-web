@@ -62,13 +62,11 @@ async function ladeUebersicht() {
     meldung($('#msg-uebersicht'), fehlerText(e), true);
   }
   ladeBetrieb();
-  if (darf('system')) { ladeSteuerung(); ladeTester(); }
   ladeFuellrunde();
   ladeNachfrage();
   ladeQualitaet();
   ladePapierkorb();
   ladeVerlauf();
-  ladeShops();
   await ladeBaustellen();
   ladeAufgaben();
 }
@@ -288,6 +286,12 @@ $('#vl-auf').addEventListener('click', () => {
   zeichneVerlauf();
   if (!vlOffen) $('#verlauf').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
+// Verlauf und Papierkorb teilen sich eine Kachel
+function vlAnsichtSetzen(a) {
+  for (const b of $$('#vl-ansicht button')) b.setAttribute('aria-selected', String(b.dataset.vl === a));
+  for (const d of $$('#verlauf .vl-teil')) d.hidden = d.dataset.vl !== a;
+}
+for (const b of $$('#vl-ansicht button')) b.addEventListener('click', () => vlAnsichtSetzen(b.dataset.vl));
 $('#vl-mehr').addEventListener('click', () => { vlLimit = Math.min(500, vlLimit + 100); ladeVerlauf(); });
 
 // „rueckgaengig“ trägt die ursprüngliche Art vorn im Text (rad_geloescht: Cube …)
@@ -656,6 +660,23 @@ async function steuerungSetzen(msg, p, text) {
   meldung(msg, text);
 }
 $('#steuer-neu').addEventListener('click', ladeSteuerung);
+
+// Reiter „App steuern“: Hinweise und Premium, Partner, Store-Start (nur Super-Admin) und Shops (alle Admins)
+let asTeil = 'hinweise';
+function asReiterSetzen(t) {
+  const erlaubt = $$('#as-reiter button').filter((b) => !b.hidden).map((b) => b.dataset.as);
+  asTeil = erlaubt.includes(t) ? t : (erlaubt.includes(asTeil) ? asTeil : erlaubt[0]);
+  $('#as-reiter').hidden = erlaubt.length < 2;
+  for (const b of $$('#as-reiter button')) b.setAttribute('aria-selected', String(b.dataset.as === asTeil));
+  for (const d of $$('.as-teil')) d.hidden = d.dataset.as !== asTeil;
+  const soll = asTeil === erlaubt[0] ? '#steuern' : `#steuern/${asTeil}`;
+  if (location.hash.split('/')[0] === '#steuern' && location.hash !== soll) history.replaceState(null, '', soll);
+}
+for (const b of $$('#as-reiter button')) b.addEventListener('click', () => asReiterSetzen(b.dataset.as));
+function ladeAppSteuern() {
+  if (darf('system')) { ladeSteuerung(); ladeTester(); }
+  ladeShops();
+}
 for (const f of $$('#steuer form')) f.addEventListener('input', steuerungZeigen);
 
 $('#f-st-banner').addEventListener('submit', (ev) => {
