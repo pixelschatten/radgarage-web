@@ -68,11 +68,13 @@ async function appNamenLaden(gruppen) {
 const teilName = (id) => { const t = appNamen.get(id); return t ? `${t.marke} ${t.name}` : `unbekanntes Teil (${id})`; };
 const refName = (x) => (x && x.katalog_id ? teilName(x.katalog_id) : `${(x && x.name) || '?'} (eigenes Teil)`);
 
-async function ladeApp() {
-  const liste = (await rpc('app_vorschlaege_offen')) || [];
-  appGruppen = appGruppieren(liste);
-  await appNamenLaden(appGruppen);
-  return appGruppen.length;
+function ladeApp(frisch = false) {
+  return geteilt('app', async () => {
+    const liste = (await rpc('app_vorschlaege_offen')) || [];
+    appGruppen = appGruppieren(liste);
+    await appNamenLaden(appGruppen);
+    return appGruppen.length;
+  }, frisch);
 }
 
 function zeichneApp() {

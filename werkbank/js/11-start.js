@@ -225,6 +225,7 @@ const HW_SYMBOL = {
 let hwBetrieb = null;
 let hwRueck = [];
 let hwToastZeit = null;
+let hwZuletzt = 0;
 
 function rueckGesehen() {
   try { return localStorage.getItem('werkbank-rueck-gesehen') || ''; } catch { return ''; }
@@ -315,10 +316,11 @@ async function hinweiseLaden(alles = false, melden = false) {
     hinweiseZeichnen();
     return;
   }
+  hwZuletzt = Date.now();
   const vorher = Object.fromEntries(hinweisListe().map(([s, n]) => [s, n]));
   const auftraege = [
     neuDabei(),
-    (darf('katalog_pflegen') || darf('system')) ? rpc('werkbank_betrieb').then((b) => { hwBetrieb = b; }, () => {}) : null,
+    (darf('katalog_pflegen') || darf('system')) ? betriebLaden().then((b) => { hwBetrieb = b; }, () => {}) : null,
     darf('katalog_erfassen') && !darf('katalog_pflegen') ? rpc('katalog_meine_rueckmeldungen').then((r) => {
       hwRueck = (r || []).slice().sort((a, b) => String(b.wann).localeCompare(String(a.wann)));
     }, () => {}) : null,
@@ -326,8 +328,8 @@ async function hinweiseLaden(alles = false, melden = false) {
   if (alles) {
     if (darf('feedback')) auftraege.push(feedbackZahl());
     if (darf('konten_betreuen')) auftraege.push(postfachZahl());
-    // Die offene Freigaben-Liste nicht unter den Händen neu zeichnen
-    if (darf('katalog_pflegen') && $('[data-panel="freigaben"]').hidden) auftraege.push(ladeOffen());
+    // Nur die Zahlen; die offene Freigaben-Liste nicht unter den Händen neu zeichnen
+    if (darf('katalog_pflegen') && $('[data-panel="freigaben"]').hidden) auftraege.push(freigabenZahlen());
   }
   await Promise.all(auftraege.filter(Boolean));
   const alle = hinweiseZeichnen() || [];
@@ -367,8 +369,16 @@ $('#hw-gesehen').addEventListener('click', async () => {
 });
 $('#neu-toast-auf').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); $('#neu-glocke').click(); });
 $('#neu-toast-zu').addEventListener('click', () => { $('#neu-toast').hidden = true; });
-setInterval(() => { if (document.visibilityState === 'visible') hinweiseLaden(true, true); }, 120000);
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !$('#s-werkbank').hidden) hinweiseLaden(true, true); });
+// Nur fragen, wenn der Tab sichtbar und eine Verbindung da ist. Beim Zurückkommen höchstens einmal je Minute.
+function hinweiseNachfragen(mindestens) {
+  if (document.visibilityState !== 'visible' || navigator.onLine === false || $('#s-werkbank').hidden) return;
+  if (Date.now() - hwZuletzt < mindestens) return;
+  hwZuletzt = Date.now();
+  hinweiseLaden(true, true);
+}
+setInterval(() => hinweiseNachfragen(100000), 120000);
+document.addEventListener('visibilitychange', () => hinweiseNachfragen(60000));
+window.addEventListener('online', () => hinweiseNachfragen(60000));
 
 // ---------- Start ----------
 

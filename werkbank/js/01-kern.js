@@ -203,9 +203,45 @@ async function mitKnopf(form, fn) {
 }
 
 async function rpc(name, args) {
+  // Alles außer reinen Lese-Abfragen kann etwas geändert haben: Reiter dann beim nächsten Öffnen frisch laden
+  if (!NUR_LESEN.has(name)) { reiterStand.clear(); LAUFEND.clear(); }
   const { data, error } = await sb.rpc(name, args);
   if (error) throw error;
   return data;
+}
+
+// ---------- Sparsam laden ----------
+// Fragen zwei Stellen kurz nacheinander dasselbe (etwa die Freigaben für die Glocke und für „Heute zu tun“), bekommt
+// die zweite die Antwort der ersten, solange sie läuft oder höchstens 15 Sekunden alt ist. Änderungen leeren das.
+const GETEILT_MS = 15000;
+const LAUFEND = new Map(); // schluessel -> { p, ab }
+function geteilt(schluessel, fn, frisch = false) {
+  const x = LAUFEND.get(schluessel);
+  if (x && (x.ab === 0 || (!frisch && Date.now() - x.ab < GETEILT_MS))) return x.p;
+  const neu = { p: null, ab: 0 };
+  neu.p = Promise.resolve().then(fn).then(
+    (wert) => { neu.ab = Date.now(); return wert; },
+    (e) => { if (LAUFEND.get(schluessel) === neu) LAUFEND.delete(schluessel); throw e; });
+  LAUFEND.set(schluessel, neu);
+  return neu.p;
+}
+
+// Wer zwischen den Reitern hin und her springt, bekommt eine Minute lang den Stand von eben, ohne alles neu zu holen.
+// Speichern, Löschen und alle anderen Änderungen (jede Abfrage, die nicht hier steht) machen den Stand sofort ungültig.
+const REITER_FRISCH_MS = 60000;
+const reiterStand = new Map();
+const NUR_LESEN = new Set(['meine_rolle', 'helfer_rolle', 'werkbank_name', 'meine_signatur', 'wiederherstellung_status', 'neu_dabei',
+  'werkbank_betrieb', 'feedback_anzahl', 'postfach_anzahl', 'katalog_offen', 'katalog_ergaenzungen_offen', 'app_vorschlaege_offen',
+  'katalog_helfer_ueberblick', 'katalog_meine_rueckmeldungen', 'katalog_uebersicht', 'werkbank_fuellrunde', 'katalog_nachfrage_liste',
+  'katalog_qualitaet', 'katalog_papierkorb', 'katalog_verlauf', 'katalog_baustellen', 'werkbank_statistik', 'werkbank_klicks',
+  'werkbank_web', 'werkbank_system', 'konten_liste', 'helfer_liste', 'crm_schlagwort_karte', 'crm_schlagwort_liste', 'rad_details',
+  'katalog_aehnliche', 'feedback_liste', 'postfach_liste', 'crm_kennzahlen', 'crm_kontakte_liste', 'crm_ordner_liste', 'crm_team',
+  'crm_bausteine', 'crm_warteliste', 'werkbank_tester', 'app_steuerung_lesen', 'app_partner_liste', 'meine_sitzungen']);
+function reiterFrisch(name) {
+  const t = reiterStand.get(name);
+  if (t && Date.now() - t < REITER_FRISCH_MS) return true;
+  reiterStand.set(name, Date.now());
+  return false;
 }
 
 // ---------- Anmeldung ----------
@@ -316,7 +352,7 @@ async function weiter() {
 
   const { data: aal, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
   if (error) throw error;
-  if (aal.currentLevel === 'aal2') return werkbank();
+  if (aal.currentLevel === 'aal2') return werkbank(true);
 
   const { data: faktoren, error: e2 } = await sb.auth.mfa.listFactors();
   if (e2) throw e2;
@@ -388,6 +424,7 @@ $('#f-notfall').addEventListener('submit', (ev) => {
 });
 
 $('#abmelden').addEventListener('click', async () => {
+  try { localStorage.removeItem('werkbank-katalog'); } catch { /* egal */ }
   await sb.auth.signOut({ scope: 'local' });
   rolle = null;
   rechte = new Set();
@@ -455,9 +492,9 @@ $('#erinnerung-an').addEventListener('change', async (ev) => {
   }
 });
 
-async function werkbank() {
-  // Nach dem zweiten Faktor neu fragen, erst dann gelten Konten-Rechte
-  try { await rolleLaden(); } catch { /* Stand vom Login behalten */ }
+async function werkbank(rolleFrisch = false) {
+  // Nach dem zweiten Faktor neu fragen, erst dann gelten Konten-Rechte (war der Faktor schon bestätigt, ist sie frisch)
+  if (!rolleFrisch) try { await rolleLaden(); } catch { /* Stand vom Login behalten */ }
   for (const el of $$('[data-recht]')) el.hidden = !el.dataset.recht.split(' ').some(darf);
   for (const el of $$('[data-nur-rolle]')) el.hidden = el.dataset.nurRolle !== rolle;
   $('#wer-rolle').textContent = ROLLEN[rolle] || '';
@@ -469,8 +506,8 @@ async function werkbank() {
   $('#f-rad').baujahr.max = new Date().getFullYear() + 1;
   $('#f-passwort').email.value = email;
   zeige('s-werkbank');
+  reiterStand.clear();
   tabAusAdresse();
-  ladeMarken();
   if (darf('konten_betreuen')) ladeSignatur();
   // Lädt auch die Zahlen für Freigaben, Feedback und Postfach
   hinweiseLaden(true);
@@ -523,14 +560,14 @@ function tab(name) {
   for (const p of $$('[data-panel]')) p.hidden = p.dataset.panel !== name;
   if (name === 'freigaben') ladeOffen();
   if (name === 'eigene') ladeEigene();
-  if (name === 'erfassen') entwurfAnbieten();
+  if (name === 'erfassen') { entwurfAnbieten(); ladeMarken(); }
   if (name === 'teile' && !$('#tl-liste').children.length) ladeTeileliste(true);
   if (name === 'katalog') katalogLaden();
-  if (name === 'uebersicht') ladeUebersicht();
-  if (name === 'statistik') ladeStatistik();
+  if (name === 'uebersicht' && !reiterFrisch('uebersicht')) ladeUebersicht();
+  if (name === 'statistik' && !reiterFrisch('statistik')) ladeStatistik();
   if (name === 'steuern') { asReiterSetzen(asTeil); ladeAppSteuern(); }
   if (name === 'feedback') ladeFeedback();
-  if (name === 'konten') ladeKonten();
+  if (name === 'konten' && !reiterFrisch('konten')) ladeKonten();
   if (name === 'crm') crmZeigen(crmAnsicht);
   if (name === 'konto') ladeSicherheit();
 }
@@ -547,10 +584,15 @@ function tabAusAdresse() {
   if (name === 'steuern' && unter) asReiterSetzen(unter);
 }
 window.addEventListener('popstate', () => { if (!$('#s-werkbank').hidden) tabAusAdresse(); });
-for (const b of $$('[data-neu-laden]')) b.addEventListener('click', () => ladeOffen());
+for (const b of $$('[data-neu-laden]')) b.addEventListener('click', () => ladeOffen(true));
 
+// Vorschläge fürs Markenfeld beim Rad erfassen: erst, wenn der Reiter offen ist, und nur einmal
+let markenDa = false;
 async function ladeMarken() {
-  const { data } = await sb.from('raeder').select('hersteller').limit(5000);
+  if (markenDa) return;
+  markenDa = true;
+  const { data, error } = await sb.from('raeder').select('hersteller').limit(5000);
+  if (error) { markenDa = false; return; }
   const marken = [...new Set((data || []).map((r) => r.hersteller))].sort((a, b) => a.localeCompare(b, 'de'));
   const dl = $('#marken');
   dl.replaceChildren(...marken.map((m) => Object.assign(document.createElement('option'), { value: m })));

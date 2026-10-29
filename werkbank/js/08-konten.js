@@ -614,6 +614,7 @@ setInterval(async () => {
   if (!warnung.hidden) $('#ab-text').textContent = `In ${Math.ceil(rest / 1000)} Sekunden wirst du automatisch abgemeldet.`;
   if (rest > 0) return;
   warnung.hidden = true;
+  try { localStorage.removeItem('werkbank-katalog'); } catch { /* egal */ }
   await sb.auth.signOut({ scope: 'local' });
   rolle = null;
   rechte = new Set();
