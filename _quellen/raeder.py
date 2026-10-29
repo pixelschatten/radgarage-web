@@ -364,7 +364,8 @@ def verschleiss_kachel(t, farbe):
 
 
 def ist_ebike(r):
-    return r['kategorie'].startswith('E-') or any(t['kategorie'] in ('Motor', 'Akku') for t in r['teile'])
+    # Nur am Motor erkennen: einen Akku haben auch Räder mit elektronischer Schaltung (Di2, AXS)
+    return r['kategorie'].startswith('E-') or any(t['kategorie'] == 'Motor' for t in r['teile'])
 
 
 def versicherung_link(art):
@@ -373,21 +374,30 @@ def versicherung_link(art):
 
 
 def versicherung_kasten(r):
-    """Kasten „Rad versichern“: nur mit Partnerlink und UVP, klar als Anzeige gekennzeichnet."""
+    """Kasten „Rad versichern“ auf jeder Radseite mit Partnerlink, klar als Anzeige gekennzeichnet.
+    Richtwert im Monat nur, wenn der Katalog eine UVP kennt."""
     art = 'ebike' if ist_ebike(r) else 'rad'
     link = versicherung_link(art)
-    if not link or not r['uvp_eur']:
+    if not link:
         return ''
     v = VERSICHERUNG
-    monat = max(v['mindestens'], round(float(r['uvp_eur']) * v['anteil_monat'][art] * 2) / 2)
-    betrag = f'{monat:.2f}'.replace('.', ',').replace(',00', '')
     wort = 'E-Bike' if art == 'ebike' else 'Rad'
-    return f'''    <aside class="t k3 voll versichern" aria-labelledby="vs-titel">
+    if r['uvp_eur']:
+        monat = max(v['mindestens'], round(float(r['uvp_eur']) * v['anteil_monat'][art] * 2) / 2)
+        betrag = f'{monat:.2f}'.replace('.', ',').replace(',00', '')
+        text = (f'Bei einem Neupreis von {tsd(round(r["uvp_eur"]))} € kostet eine Versicherung gegen Diebstahl, Unfall und '
+                f'Vandalismus grob <b>{betrag} € im Monat</b>. Deinen genauen Beitrag rechnest du bei {e(v["name"])} aus.')
+        richtwert = f'Grober Richtwert aus Beispielbeiträgen ({v["stand"]}), kein Angebot. '
+    else:
+        text = (f'Schutz gegen Diebstahl, Unfall und Vandalismus für dein {wort}. Mit Kaufpreis und Kaufdatum '
+                f'rechnest du deinen Beitrag bei {e(v["name"])} in ein paar Minuten aus.')
+        richtwert = 'Kein Angebot. '
+    return f'''    <aside class="t k3 voll versichern" aria-labelledby="versichern-titel">
       <span class="eyebrow">Anzeige</span>
-      <h2 id="vs-titel" style="font-size:26px;margin:6px 0 4px">{wort} versichern</h2>
-      <p>Bei einem Neupreis von {tsd(round(r["uvp_eur"]))} € kostet eine Versicherung gegen Diebstahl, Unfall und Vandalismus grob <b>{betrag} € im Monat</b>. Deinen genauen Beitrag rechnest du bei {e(v["name"])} aus.</p>
+      <h2 id="versichern-titel" style="font-size:26px;margin:6px 0 4px">{wort} versichern</h2>
+      <p>{text}</p>
       <div class="actions"><a class="pill" href="{e(link)}" target="_blank" rel="sponsored noopener">Beitrag bei {e(v["name"])} berechnen</a><span class="eyebrow">Anzeige</span></div>
-      <p class="klein">Grober Richtwert aus Beispielbeiträgen ({v["stand"]}), kein Angebot. Wir vergleichen keine Tarife und beraten nicht. Schließt du über den Link ab, bekommen wir eine Provision, dein Beitrag ändert sich dadurch nicht. <a href="/datenschutz.html#partnerlinks">Datenschutz</a></p>
+      <p class="klein">{richtwert}Wir vergleichen keine Tarife und beraten nicht. Schließt du über den Link ab, bekommen wir eine Provision, dein Beitrag ändert sich dadurch nicht. <a href="/datenschutz.html#partnerlinks">Datenschutz</a></p>
     </aside>
 '''
 
