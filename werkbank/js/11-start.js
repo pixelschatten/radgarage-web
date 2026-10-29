@@ -335,3 +335,44 @@ document.addEventListener('visibilitychange', () => { if (document.visibilitySta
     meldung($('#s-mail .msg'), fehlerText(e), true);
   }
 })();
+
+// ----- Kopfleiste: Kontomenü (Konto, Design, Abmelden) und Burger-Menü für die Reiter am Handy -----
+function kontoMenueZu() {
+  $('#konto-menue').hidden = true;
+  $('#konto-knopf').setAttribute('aria-expanded', 'false');
+}
+function reiterZu() {
+  $('#reiter').classList.remove('offen');
+  $('#burger').setAttribute('aria-expanded', 'false');
+}
+$('#konto-knopf').addEventListener('click', () => {
+  if (!$('#konto-menue').hidden) { kontoMenueZu(); return; }
+  reiterZu();
+  $('#konto-menue').hidden = false;
+  $('#konto-knopf').setAttribute('aria-expanded', 'true');
+  $('#konto-auf').focus();
+});
+$('#konto-auf').addEventListener('click', kontoMenueZu);
+$('#abmelden').addEventListener('click', kontoMenueZu);
+$('#burger').addEventListener('click', () => {
+  const reiter = $('#reiter');
+  if (reiter.classList.contains('offen')) { reiterZu(); return; }
+  kontoMenueZu();
+  // Das Menü liegt fest direkt unter der Leiste, auch wenn weiter unten gescrollt ist
+  document.documentElement.style.setProperty('--reiter-oben', `${$('header.leiste').getBoundingClientRect().bottom + 8}px`);
+  reiter.classList.add('offen');
+  $('#burger').setAttribute('aria-expanded', 'true');
+  const aktiv = $('button[aria-selected="true"]', reiter) || $('button:not([hidden])', reiter);
+  if (aktiv) aktiv.focus();
+});
+for (const b of $$('#reiter button')) b.addEventListener('click', reiterZu);
+document.addEventListener('click', (ev) => {
+  if (!$('#konto-menue').hidden && !ev.target.closest('#konto-menue, #konto-knopf')) kontoMenueZu();
+  if ($('#reiter').classList.contains('offen') && !ev.target.closest('#reiter, #burger')) reiterZu();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Escape') return;
+  if (!$('#konto-menue').hidden) { kontoMenueZu(); $('#konto-knopf').focus(); }
+  if ($('#reiter').classList.contains('offen')) { reiterZu(); $('#burger').focus(); }
+});
+matchMedia('(max-width: 760px)').addEventListener('change', reiterZu);

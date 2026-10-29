@@ -305,6 +305,8 @@ async function weiter() {
   email = session.user.email || email;
   $('#wer-mail').textContent = email;
   $('#wer-mail').title = '';
+  $('#km-name').textContent = email;
+  $('#km-mail').textContent = '';
 
   await rolleLaden();
   if (!rechte.size) {
@@ -419,6 +421,8 @@ let meinName = null;
 function nameZeigen() {
   $('#wer-mail').textContent = meinName || email;
   $('#wer-mail').title = meinName ? email : '';
+  $('#km-name').textContent = meinName || email;
+  $('#km-mail').textContent = meinName ? email : '';
   $('#f-name').name.value = meinName || '';
 }
 async function nameLaden() {
@@ -457,6 +461,7 @@ async function werkbank() {
   for (const el of $$('[data-recht]')) el.hidden = !el.dataset.recht.split(' ').some(darf);
   for (const el of $$('[data-nur-rolle]')) el.hidden = el.dataset.nurRolle !== rolle;
   $('#wer-rolle').textContent = ROLLEN[rolle] || '';
+  $('#km-rolle').textContent = ROLLEN[rolle] || '';
   $('#hinweis-rolle').textContent = darf('katalog_pflegen')
     ? `Du bist ${ROLLEN[rolle]}: Was du speicherst, ist sofort im Katalog.`
     : 'Was du speicherst, sieht in der App erst jemand, wenn es freigegeben ist.';
@@ -508,7 +513,7 @@ async function ladeEigenesBild() {
 }
 
 function tab(name) {
-  // Konto steckt im Zahnrad oben rechts, alle anderen Bereiche sind Reiter
+  // Konto steckt im Kontomenü oben rechts, alle anderen Bereiche sind Reiter
   const knopf = name === 'konto' ? $('#konto-auf') : $(`nav.tabs button[data-tab="${name}"]`);
   if (!knopf || knopf.hidden) name = ['uebersicht', 'erfassen', 'konten', 'statistik', 'teile'].find((t) => !$(`nav.tabs button[data-tab="${t}"]`).hidden) || (darf('feedback') ? 'feedback' : 'konto');
   // Jeder Tab hat eine eigene Adresse (#statistik), damit Neuladen und Zurück funktionieren
