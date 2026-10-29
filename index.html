@@ -97,6 +97,14 @@ h1 { font-size: clamp(40px, 5.6vw, 70px); line-height: 1; margin: 12px 0 16px; t
 .hero .plaetze { grid-column: span 4; }
 .hero .katalog { grid-column: span 3; }
 .phone { width: 100%; max-width: 290px; height: auto; display: block; border-radius: 34px 34px 0 0; border: 6px solid var(--nav); border-bottom: 0; box-shadow: 0 18px 40px var(--shadow); }
+/* Auf breiten Schirmen füllt das Handy die Kachel in der Höhe, statt unten in viel Leerraum zu hängen */
+@media (min-width: 901px) {
+  @supports (container-type: size) {
+    .hero .shot { container-type: size; position: relative; padding: 0; }
+    .hero .shot .phone { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); max-width: none; height: auto;
+      width: min(calc(100cqw - 56px), calc((100cqh - 40px) * 585 / 1266)); }
+  }
+}
 .phone.full { border-radius: 30px; border-bottom: 6px solid var(--nav); }
 
 /* Anmeldung */
