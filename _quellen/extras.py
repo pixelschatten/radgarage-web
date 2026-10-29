@@ -41,6 +41,7 @@ def zahlen(alle, teile):
         'raeder-ueber': tsd(hundert),
         'marken': str(marken),
         'teile-ueber': tsd(teile_rund),
+        'teile': tsd(len(teile)),
     }
 
 

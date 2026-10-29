@@ -528,7 +528,7 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 7  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 8  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 

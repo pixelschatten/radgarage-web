@@ -386,6 +386,7 @@ body.eingebettet { padding: 8px; }
 .vergleichstabelle thead th { border-top: 0; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .vergleichstabelle .zahl { text-align: right; white-space: nowrap; }
 .vergleichstabelle tbody th a { font-weight: 800; }
+.vergleichstabelle .offen { font-size: 13px; color: var(--muted); white-space: normal; }
 
 /* Teileseiten */
 .radliste { columns: 3 240px; column-gap: 28px; margin: 6px 0 0; padding: 0; list-style: none; }
