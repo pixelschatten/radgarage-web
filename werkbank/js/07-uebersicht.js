@@ -540,7 +540,7 @@ function steuerungZeigen() {
   stStatus('#st-s-update', st.mindest_version ? `Ab ${st.mindest_version}` : 'Aus', st.mindest_version ? 'warn' : '');
   $('#st-update-weg').hidden = !st.mindest_version;
 
-  stStatus('#st-s-premium', st.premium_aktiv ? 'Nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
+  stStatus('#st-s-premium', st.premium_aktiv ? 'PDF nur nach Kauf' : 'Alles frei', st.premium_aktiv ? 'an' : '');
 
   partnerVorschau();
 }
@@ -748,8 +748,8 @@ $('#f-st-premium').addEventListener('submit', (ev) => {
   ev.preventDefault();
   const an = ev.target.elements.premium_aktiv.value === 'an';
   if (an && !steuerung.premium_aktiv
-      && !window.confirm('Premium-Funktionen sind dann nur noch nach Kauf nutzbar (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
-  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Premium gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
+      && !window.confirm('Das Wartungsheft-PDF kostet dann einzeln 1,49 € (in App-Versionen mit eingebautem Kauf). Wirklich einschalten?')) return;
+  mitKnopf(ev.target, (msg) => steuerungSetzen(msg, { premium_aktiv: an }, an ? 'Gespeichert. Das PDF gibt es nur noch nach Kauf.' : 'Gespeichert. Alles ist frei.'));
 });
 
 $('#f-st-takt').addEventListener('submit', (ev) => {
