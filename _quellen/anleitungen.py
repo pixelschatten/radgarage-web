@@ -254,7 +254,7 @@ ANLEITUNGEN = [
         ],
         'app': 'Die Radgarage kennt Rahmenstandard und Kurbel deines Modells und zeigt dir das passende Innenlager. So kaufst du nicht auf Verdacht.',
         'suche': 'innenlager wechseln fahrrad',
-        'video': 'aPaP_MLAq0I', 'video_start': 538,  # Video beginnt beim Innenlager-Teil
+        'video': 'aPaP_MLAq0I',
         'verwandt': ['kette-wechseln', 'kassette-wechseln', 'lenkerband-wickeln'],
     },
     {
