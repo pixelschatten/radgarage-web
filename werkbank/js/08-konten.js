@@ -261,7 +261,7 @@ function kontoVerwalten(k) {
       }));
     }).catch(() => {});
   }
-  // Tägliche Erinnerung: Der Super-Admin schaltet sie für Admins an und aus, jeder selbst über das Zahnrad (Konto)
+  // Tägliche Erinnerung: Der Super-Admin schaltet sie für Admins an und aus, jeder selbst über das Kontomenü (Konto)
   const hEintrag = helfer.find((x) => x.email.toLowerCase() === (k.email || '').toLowerCase());
   if (!ich && rolle === 'superadmin' && hEintrag && (RECHTE_JE_ROLLE[hEintrag.rolle] || []).some((r) => r === 'katalog_pflegen' || r === 'konten_betreuen')) {
     const an = hEintrag.erinnerung !== false;
@@ -498,7 +498,7 @@ $('#codes-fertig').addEventListener('click', () => {
 async function pruefeCodes() {
   const st = await rpc('wiederherstellung_status').catch(() => null);
   if (st && st.offen === 0) {
-    meldung($('#hinweis-rolle'), `${$('#hinweis-rolle').textContent} Tipp: Lege über das Zahnrad oben rechts Wiederherstellungscodes an, falls dein Handy einmal weg ist.`);
+    meldung($('#hinweis-rolle'), `${$('#hinweis-rolle').textContent} Tipp: Lege über dein Kontomenü oben rechts (Dein Konto) Wiederherstellungscodes an, falls dein Handy einmal weg ist.`);
   }
 }
 
