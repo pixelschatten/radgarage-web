@@ -127,9 +127,13 @@ async function ladeAufgaben() {
   if (!punkte.length) box.innerHTML = bsGeladen ? '<p class="fine">Nichts offen. Zeit für neue Räder.</p>' : '<p class="fine">Lade …</p>';
 }
 
+// Ohne „Kleinigkeiten“ nur die Räder mit Lücke (gut 40 statt 300 KB); die Kleinigkeiten erst, wenn man sie auswählt
+let bsMitKlein = false;
 async function ladeBaustellen() {
+  const klein = $('#bs-filter').value === 'klein';
   try {
-    baustellen = (await rpc('katalog_baustellen', { p_marke: $('#bs-marke').value || null })) || [];
+    baustellen = (await rpc('katalog_baustellen', { p_marke: $('#bs-marke').value || null, p_klein: klein })) || [];
+    bsMitKlein = klein;
   } catch (e) {
     baustellen = [];
     meldung($('#msg-uebersicht'), fehlerText(e), true);
@@ -252,7 +256,11 @@ $('#bs-auf').addEventListener('click', () => {
   if (!bsOffen) $('#bs-liste').closest('.t').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 });
 $('#bs-marke').addEventListener('change', ladeBaustellen);
-$('#bs-filter').addEventListener('change', () => { bsZeige = 30; zeichneBaustellen(); });
+$('#bs-filter').addEventListener('change', () => {
+  bsZeige = 30;
+  if ($('#bs-filter').value === 'klein' && !bsMitKlein) ladeBaustellen();
+  else zeichneBaustellen();
+});
 $('#bs-mehr').addEventListener('click', () => { bsZeige += 30; zeichneBaustellen(); });
 
 let verlauf = [];
