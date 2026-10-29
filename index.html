@@ -224,16 +224,6 @@ footer a { color: var(--text); font-weight: 600; }
 @media (max-width: 420px) { .logo span { display: none; } }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .dock { transition: none; } }
 body { padding-top: env(safe-area-inset-top, 0px); }
-/* Hauptmenü im Kopf, auf dem Handy als eigene Zeile unter Logo und Knopf */
-.kopfnav { display: flex; gap: 4px; margin: 0 auto 0 20px; }
-.kopfnav a { text-decoration: none; font-weight: 700; font-size: 16px; padding: 10px 14px; border-radius: 999px; color: var(--text); white-space: nowrap; }
-.kopfnav a:hover, .kopfnav a[aria-current] { background: var(--surface); }
-@media (max-width: 760px) {
-  header { flex-wrap: wrap; }
-  .kopfnav { order: 3; width: 100%; margin: 0; background: var(--surface); border-radius: 999px; padding: 4px; gap: 2px; }
-  .kopfnav a { flex: 1; text-align: center; padding: 9px 4px; font-size: 15px; }
-  .kopfnav a:hover, .kopfnav a[aria-current] { background: var(--bg); }
-}
 /* Katalog-Band mit Suche, häufige Fragen */
 .katalogband { padding-block: 0 14px; }
 .katalogband .such { overflow: visible; z-index: 2; }
@@ -301,16 +291,20 @@ body { padding-top: env(safe-area-inset-top, 0px); }
 .designs .note { margin-top: 18px !important; text-align: center; color: var(--ink2); }
 @media (max-width: 600px) { .reihe.drei { grid-template-columns: 1fr; gap: 28px; } .paar .duo { max-width: 260px; } }
 </style>
-<link rel="stylesheet" href="/css/rahmen.css?v=10">
+<link rel="stylesheet" href="/css/rahmen.css?v=11">
 </head>
 <body>
 
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <div class="kopfmenue" id="kopfmenue">
+      <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+      <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
+    </div>
     <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
     <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
+    <button class="burger" type="button" aria-expanded="false" aria-controls="kopfmenue" aria-label="Menü öffnen"><span></span><span></span><span></span></button><script src="/js/kopf.js?v=1" defer></script>
   </header>
 
   <main>

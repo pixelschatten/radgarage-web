@@ -1,24 +1,53 @@
 /* Rahmen aller Seiten: Kopf mit Hauptmenü und Suche, Fußzeile in Spalten. Steckt in css/seiten.css und als
    css/rahmen.css in den von Hand gepflegten Seiten (Startseite, Rechtstexte), die ihr eigenes CSS mitbringen. */
 header { position: relative; }
+.kopfmenue { display: contents; }
+.kopfmenue > .pill { display: none; }
+header .kopfnav { order: 0; display: flex; gap: 4px; margin: 0 auto 0 20px; }
+.kopfnav a { text-decoration: none; font-weight: 700; font-size: 16px; padding: 10px 14px; border-radius: 999px; color: var(--text); white-space: nowrap; }
+.kopfnav a:hover, .kopfnav a[aria-current] { background: var(--surface); }
 .kopfsuche { order: 1; }
-.kopfsuche > summary { list-style: none; cursor: pointer; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--surface); }
+.kopfsuche > summary, .burger { cursor: pointer; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: var(--text); background: var(--surface); }
+.kopfsuche > summary { list-style: none; }
 .kopfsuche > summary::-webkit-details-marker { display: none; }
 .kopfsuche > summary:hover, .kopfsuche[open] > summary { background: var(--accent); color: var(--on-accent); }
-.kopfsuche > summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.kopfsuche > summary:focus-visible, .burger:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .kopfsuche-feld { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% - 4px); padding: 12px; border-radius: 28px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 18px 40px var(--shadow); }
 .kopfsuche-feld .suche { margin: 0; max-width: none; }
-header .kopfnav { order: 0; }
 header > .pill { order: 2; }
-@media (max-width: 760px) {
-  .kopfsuche { margin-left: auto; }
-  header > .pill { margin-left: 0; }
-  .kopfnav a { font-size: 14px; padding: 9px 2px; }
-  .kopfsuche > summary { width: 42px; height: 42px; }
-  /* Am Handy: Logo, Lupe und Knopf in einer Zeile, das Menü darunter */
-  header .kopfnav { order: 3; flex-basis: 100%; }
-  header > .pill { font-size: 14px; padding: 11px 15px; }
+/* Burger: drei Striche, offen ein Kreuz */
+.burger { display: none; order: 3; border: 0; padding: 0; font: inherit; flex: none; position: relative; }
+.burger span { position: absolute; left: 13px; width: 20px; height: 2.5px; border-radius: 2px; background: currentColor; transition: transform .2s ease, opacity .2s ease; }
+.burger span:nth-child(1) { top: 16px; } .burger span:nth-child(2) { top: 22px; } .burger span:nth-child(3) { top: 28px; }
+header.offen .burger { background: var(--accent); color: var(--on-accent); }
+header.offen .burger span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+header.offen .burger span:nth-child(2) { opacity: 0; }
+header.offen .burger span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+/* Bis 900 px: Logo links, rechts Lupe, Knopf und Burger. Das Menü klappt als Karte unter dem Kopf auf. */
+@media (max-width: 900px) {
+  header { gap: 10px; }
+  header .logo { margin-right: auto; }
+  .burger { display: block; }
+  .kopfmenue { display: block; position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% - 4px); padding: 10px; border-radius: 28px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 18px 40px var(--shadow); visibility: hidden; opacity: 0; transform: translateY(-8px); transition: opacity .18s ease, transform .18s ease, visibility 0s linear .18s; }
+  header.offen .kopfmenue { visibility: visible; opacity: 1; transform: none; transition: opacity .18s ease, transform .18s ease; }
+  header .kopfnav { flex-direction: column; margin: 0; gap: 2px; }
+  .kopfnav a { display: flex; justify-content: space-between; align-items: center; font-family: var(--display); font-weight: 800; letter-spacing: -0.01em; font-size: 22px; padding: 14px 18px; border-radius: 20px; white-space: normal; }
+  .kopfnav a::after { content: ""; width: 9px; height: 9px; border: solid var(--muted); border-width: 2.5px 2.5px 0 0; transform: rotate(45deg); margin-right: 4px; }
+  .kopfnav a:hover { background: var(--surface); }
+  .kopfnav a[aria-current] { background: var(--accent); color: var(--on-accent); }
+  .kopfnav a[aria-current]::after { border-color: currentColor; }
 }
+@media (max-width: 600px) {
+  header .logo { font-size: 24px; }
+  .kopfsuche > summary, .burger { width: 44px; height: 44px; }
+  .burger span { left: 12px; } .burger span:nth-child(1) { top: 15px; } .burger span:nth-child(2) { top: 21px; } .burger span:nth-child(3) { top: 27px; }
+}
+/* Am Handy wandert der Knopf aus der Kopfleiste ins Menü */
+@media (max-width: 520px) {
+  header > .pill { display: none; }
+  .kopfmenue > .pill { display: flex; width: 100%; margin-top: 8px; font-size: 17px; padding: 16px 22px; }
+}
+@media (prefers-reduced-motion: reduce) { .kopfmenue, header.offen .kopfmenue, .burger span { transition: none; } }
 footer.fuss { display: flex; flex-direction: column; gap: 22px; border-top: 2px solid var(--line); padding-block: 28px 40px; font-size: 15px; color: var(--muted); }
 .fuss-spalten { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px 28px; }
 .fuss-spalten nav { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
@@ -52,3 +81,5 @@ footer.fuss p { margin: 0; font-size: 14px; }
 .inhaltsliste li { break-inside: avoid; padding: 3px 0; }
 .inhaltsliste a { color: var(--text); font-weight: 600; }
 .legal-page h3[id] { scroll-margin-top: 16px; }
+/* Lange Wörter (Datenschutzerklärung, Verschleißrechner) in großen Überschriften am Handy trennen statt überlaufen lassen */
+@media (max-width: 600px) { h1, h2 { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 12 5 5; overflow-wrap: break-word; } }

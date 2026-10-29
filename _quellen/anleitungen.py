@@ -502,13 +502,23 @@ def kopfsuche():
             f'<div class="kopfsuche-feld">{suchfeld("alles", "suche-kopf")}</div></details>')
 
 
+BURGER = ('<button class="burger" type="button" aria-expanded="false" aria-controls="kopfmenue" aria-label="Menü öffnen">'
+          '<span></span><span></span><span></span></button>')
+
+
 def kopfzeile(pfad):
-    """Kopf aller Seiten: Logo, Hauptmenü, Suche und Knopf. bauen.py setzt ihn auch in die Handseiten ein."""
+    """Kopf aller Seiten: Logo, Hauptmenü, Suche und Knopf. bauen.py setzt ihn auch in die Handseiten ein.
+    Bis 900 px Breite klappt das Menü hinter dem Burger auf (js/kopf.js). Der Knopf steht zweimal drin:
+    in der Kopfleiste und im aufgeklappten Menü, das am Handy ihn statt der Kopfleiste zeigt."""
     return f'''  <header>
     <a href="/" class="logo">Radgarage</a>
-    {kopfnav(pfad)}
+    <div class="kopfmenue" id="kopfmenue">
+      {kopfnav(pfad)}
+      <!--kopf-knopf-->{kopf_knopf()}<!--/kopf-knopf-->
+    </div>
     {kopfsuche()}
     <!--kopf-knopf-->{kopf_knopf()}<!--/kopf-knopf-->
+    {BURGER}<script src="/js/kopf.js?v={KOPF_JS}" defer></script>
   </header>
 '''
 
@@ -573,7 +583,8 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
          '<link rel="manifest" href="/site.webmanifest">')
-CSS_VERSION = 10  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+KOPF_JS = 1  # hochzählen, wenn sich _quellen/kopf.js ändert
+CSS_VERSION = 11  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
