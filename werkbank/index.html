@@ -850,9 +850,24 @@ header.leiste { position: sticky; top: max(10px, env(safe-area-inset-top, 0px));
 .leiste-design button[aria-checked="true"] { background: #F2EDE2; color: #28241E; }
 header.leiste:has(> .wer:not([hidden])) > .leiste-design { display: none; }
 .wer { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.knopf-weich.leiste-suche { flex: 1; max-width: 420px; height: 44px; padding: 0 16px; margin-right: 6px; background: rgba(255, 255, 255, .09); color: var(--nav-fg); font-weight: 600; }
-.knopf-weich.leiste-suche:hover, .knopf-weich.leiste-suche:focus-visible { background: rgba(255, 255, 255, .16); color: #F2EDE2; }
-.leiste-suche kbd { margin-left: auto; font: 700 11px/1 var(--font); padding: 4px 6px; border-radius: 6px; background: rgba(255, 255, 255, .1); color: var(--nav-fg); }
+/* Suche direkt in der Leiste: tippen, Treffer klappen darunter auf */
+.leiste-suche { position: relative; flex: 1; max-width: 460px; height: 44px; display: flex; align-items: center; gap: 8px; margin-right: 6px; padding: 0 6px 0 14px; border-radius: 999px; background: rgba(255, 255, 255, .09); color: var(--nav-fg); transition: background .15s, color .15s; }
+.leiste-suche:hover { background: rgba(255, 255, 255, .14); }
+.leiste-suche:focus-within { background: #F2EDE2; color: #28241E; }
+.leiste-suche > svg, .suche-zu svg { width: 17px; height: 17px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.leiste-suche input { flex: 1; width: auto; min-width: 0; height: 100%; padding: 0; border: 0; border-radius: 0; background: transparent; color: inherit; font: 600 16px var(--font); outline: none; -webkit-appearance: none; appearance: none; }
+.leiste-suche input:focus { border: 0; outline: none; }
+.leiste-suche input::placeholder { color: inherit; opacity: .8; }
+.leiste-suche input::-webkit-search-cancel-button { display: none; }
+.leiste-suche kbd { margin: 0 8px 0 auto; font: 700 11px/1 var(--font); padding: 4px 6px; border-radius: 6px; background: rgba(255, 255, 255, .1); color: var(--nav-fg); white-space: nowrap; }
+.leiste-suche:focus-within kbd, .leiste-suche.hat-text kbd { display: none; }
+.suche-zu { display: none; width: 34px; height: 34px; flex: none; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer; }
+.suche-zu:hover { background: rgba(0, 0, 0, .08); }
+.leiste-suche.hat-text .suche-zu { display: grid; }
+.suche-ergebnis { position: absolute; left: 0; top: calc(100% + 12px); z-index: 55; width: max(100%, 380px); max-height: min(70vh, 560px); overflow: auto; padding: 2px 12px 12px; border-radius: 22px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 16px 40px var(--shadow); color: var(--text); font-size: 15px; }
+.suche-ergebnis .treffer { max-height: none; }
+.suche-ergebnis > .fine { margin: 12px 4px 0; }
+#suche-auf { display: none; }
 .leiste-knopf { position: relative; width: 44px; height: 44px; flex: none; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .09); color: #F2EDE2; cursor: pointer; }
 .leiste-knopf:hover { background: rgba(255, 255, 255, .16); }
 .leiste-knopf svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
@@ -896,8 +911,16 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
   .logo { font-size: 20px; }
   .logo span { display: none; }
   .wer { flex: none; gap: 6px; }
-  .knopf-weich.leiste-suche { flex: none; width: 44px; padding: 0; margin-right: 0; justify-content: center; }
-  .leiste-suche span, .leiste-suche kbd { display: none; }
+  #suche-auf { display: grid; }
+  .leiste-suche { display: none; }
+  /* Lupe tippen: Suchfeld füllt die Leiste, Treffer liegen fest darunter */
+  header.leiste.sucht { padding-left: 6px; }
+  header.leiste.sucht .logo, header.leiste.sucht #suche-auf, header.leiste.sucht .glocke, header.leiste.sucht .konto-knopf, header.leiste.sucht .burger { display: none; }
+  header.leiste.sucht .wer { flex: 1; }
+  header.leiste.sucht .leiste-suche { display: flex; max-width: none; margin: 0; }
+  header.leiste.sucht .suche-zu { display: grid; }
+  header.leiste.sucht .leiste-suche kbd { display: none; }
+  .suche-ergebnis { position: fixed; top: var(--suche-oben, 80px); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); width: auto; max-height: calc(100dvh - var(--suche-oben, 80px) - 16px); }
   .burger { display: grid; }
   nav.tabs { display: none; }
   nav.tabs.offen { position: fixed; z-index: 49; top: var(--reiter-oben, 80px); left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; flex-wrap: nowrap; gap: 2px; max-height: calc(100dvh - var(--reiter-oben, 80px) - 16px); overflow: auto; margin: 0; padding: 8px; border-radius: 22px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 16px 40px var(--shadow); }
@@ -908,7 +931,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
   header.leiste { padding-left: 12px; }
   .logo { font-size: 18px; }
   .wer { gap: 4px; }
-  .leiste-knopf, .knopf-weich.leiste-suche, .konto-knopf { width: 40px; height: 40px; }
+  .leiste-knopf, .konto-knopf { width: 40px; height: 40px; }
   .konto-knopf .ava { width: 32px; height: 32px; }
 }
 </style>
@@ -922,7 +945,12 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
         <button type="button" role="radio" data-design="dark" title="Dark" aria-label="Dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
       </div>
     <div class="wer" id="wer" hidden>
-      <button class="knopf-weich leiste-suche" type="button" id="suche-auf" title="Suchen (Strg+K oder /)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Suchen</span><kbd>Strg K</kbd></button>
+      <button class="leiste-knopf" type="button" id="suche-auf" title="Suchen" aria-label="Suchen"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <div class="leiste-suche" id="suche-box" role="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" id="suche-feld" placeholder="Suchen" autocomplete="off" spellcheck="false" enterkeyhint="search" aria-label="Rad, Teil, Barcode oder E-Mail suchen" aria-controls="suche-ergebnis" aria-expanded="false" title="Suchen (Strg+K oder /)"><kbd>Strg K</kbd>
+        <button class="suche-zu" type="button" id="suche-zu" title="Suche leeren und schließen" aria-label="Suche leeren und schließen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div class="suche-ergebnis" id="suche-ergebnis" aria-label="Suchergebnisse" hidden></div>
+      </div>
       <button class="leiste-knopf glocke" type="button" id="neu-glocke" title="Hinweise" aria-label="Hinweise" aria-haspopup="true" aria-expanded="false" aria-controls="glocke-feld"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="glocke-zahl" id="neu-zahl" hidden></span></button>
       <button class="konto-knopf" type="button" id="konto-knopf" aria-haspopup="true" aria-expanded="false" aria-controls="konto-menue" title="Dein Konto, Design und Abmelden"><span class="ava" id="wer-bild" aria-hidden="true"></span><span class="konto-text"><span id="wer-mail"></span><span class="rolle-chip" id="wer-rolle"></span></span><svg class="pfeil" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       <button class="leiste-knopf burger" type="button" id="burger" aria-label="Bereiche" title="Bereiche" aria-expanded="false" aria-controls="reiter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -1920,17 +1948,17 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 <div class="toast oben" id="neu-toast" role="status" hidden><span id="neu-toast-text"></span><button class="pill klein" type="button" id="neu-toast-auf">Ansehen</button><button class="pill klein" type="button" id="neu-toast-zu" aria-label="Hinweis schließen">×</button></div>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-29-leiste"></script>
-<script src="js/02-erfassen.js?v=2026-10-29-leiste"></script>
-<script src="js/03-freigaben.js?v=2026-10-29-leiste"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-29-leiste"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-29-leiste"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-29-leiste"></script>
-<script src="js/07-uebersicht.js?v=2026-10-29-leiste"></script>
-<script src="js/08-konten.js?v=2026-10-29-leiste"></script>
-<script src="js/09-katalog.js?v=2026-10-29-leiste"></script>
-<script src="js/10-statistik.js?v=2026-10-29-leiste"></script>
-<script src="js/11-start.js?v=2026-10-29-leiste"></script>
+<script src="js/01-kern.js?v=2026-10-29-suche"></script>
+<script src="js/02-erfassen.js?v=2026-10-29-suche"></script>
+<script src="js/03-freigaben.js?v=2026-10-29-suche"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-29-suche"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-29-suche"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-29-suche"></script>
+<script src="js/07-uebersicht.js?v=2026-10-29-suche"></script>
+<script src="js/08-konten.js?v=2026-10-29-suche"></script>
+<script src="js/09-katalog.js?v=2026-10-29-suche"></script>
+<script src="js/10-statistik.js?v=2026-10-29-suche"></script>
+<script src="js/11-start.js?v=2026-10-29-suche"></script>
 <script src="js/12-wischen.js?v=1"></script>
 </body>
 </html>
