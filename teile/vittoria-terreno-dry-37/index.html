@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=10">
+<link rel="stylesheet" href="/css/seiten.css?v=11">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "Räder mit Vittoria Terreno Dry 700 x 37C", "numberOfItems": 10, "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://radgarage.app/raeder/cannondale/2022-topstone-2/", "name": "Cannondale Topstone 2 (2022)"}, {"@type": "ListItem", "position": 2, "url": "https://radgarage.app/raeder/cannondale/2023-topstone-2/", "name": "Cannondale Topstone 2 (2023)"}, {"@type": "ListItem", "position": 3, "url": "https://radgarage.app/raeder/cannondale/2024-topstone-2/", "name": "Cannondale Topstone 2 (2024)"}, {"@type": "ListItem", "position": 4, "url": "https://radgarage.app/raeder/cannondale/2022-topstone-3/", "name": "Cannondale Topstone 3 (2022)"}, {"@type": "ListItem", "position": 5, "url": "https://radgarage.app/raeder/cannondale/2023-topstone-3/", "name": "Cannondale Topstone 3 (2023)"}, {"@type": "ListItem", "position": 6, "url": "https://radgarage.app/raeder/cannondale/2024-topstone-3/", "name": "Cannondale Topstone 3 (2024)"}, {"@type": "ListItem", "position": 7, "url": "https://radgarage.app/raeder/cannondale/2022-topstone-4/", "name": "Cannondale Topstone 4 (2022)"}, {"@type": "ListItem", "position": 8, "url": "https://radgarage.app/raeder/cannondale/2023-topstone-4/", "name": "Cannondale Topstone 4 (2023)"}, {"@type": "ListItem", "position": 9, "url": "https://radgarage.app/raeder/cannondale/2024-topstone-4/", "name": "Cannondale Topstone 4 (2024)"}, {"@type": "ListItem", "position": 10, "url": "https://radgarage.app/raeder/cannondale/2025-topstone-4/", "name": "Cannondale Topstone 4 (2025)"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Teile", "item": "https://radgarage.app/teile/"}, {"@type": "ListItem", "position": 3, "name": "Reifen", "item": "https://radgarage.app/teile/reifen/"}, {"@type": "ListItem", "position": 4, "name": "Vittoria Terreno Dry 700 x 37C", "item": "https://radgarage.app/teile/vittoria-terreno-dry-37/"}]}</script>
@@ -28,9 +28,13 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/" aria-current="true">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <div class="kopfmenue" id="kopfmenue">
+      <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/" aria-current="true">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+      <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
+    </div>
     <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
     <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
+    <button class="burger" type="button" aria-expanded="false" aria-controls="kopfmenue" aria-label="Menü öffnen"><span></span><span></span><span></span></button><script src="/js/kopf.js?v=1" defer></script>
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/teile/">Teile</a></li><li><a href="/teile/reifen/">Reifen</a></li><li><span aria-current="page">Vittoria Terreno Dry 700 x 37C</span></li></ol></nav>
   <main>

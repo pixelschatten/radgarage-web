@@ -86,6 +86,7 @@ if __name__ == '__main__':
     schreiben('raeder/vorschlag.js', lesen('_quellen/vorschlag.js'))
     schreiben('raeder/rechner.js', lesen('_quellen/rechner.js'))
     schreiben('js/suche.js', lesen('_quellen/suche.js'))
+    schreiben('js/kopf.js', lesen('_quellen/kopf.js'))
     schreiben('raeder/index.html', ra.uebersicht_seite(alle, len(alle)))
     for slug, rs in ra.marken(alle).items():
         schreiben(f'raeder/{slug}/index.html', ra.marken_seite(slug, rs))
