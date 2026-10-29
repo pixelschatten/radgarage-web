@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Räder", "item": "https://radgarage.app/raeder/"}, {"@type": "ListItem", "position": 3, "name": "Colnago", "item": "https://radgarage.app/raeder/colnago/"}]}</script>
 </head>
@@ -27,8 +27,9 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/raeder/">Räder</a></li><li><span aria-current="page">Colnago</span></li></ol></nav>
   <main>
@@ -39,29 +40,39 @@
       <p class="lead">20 Modelle im Katalog. Wähle dein Rad und sieh, welche Kette, Bremsbeläge, Reifen und anderen Teile verbaut sind.</p>
     </div>
   </div>
-  <section class="reihe-abschnitt" aria-label="C68 Allroad"><h2 class="zwischen"><a href="/raeder/colnago/c68-allroad/">C68 Allroad</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-c68-allroad-dura-ace-di2/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Allroad Dura-Ace Di2</h3><span class="meta">Rennrad · 16 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-c68-allroad-force-axs/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Allroad Force AXS</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k3 karte" href="/raeder/colnago/2025-c68-allroad-red-axs/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Allroad Red AXS</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k4 karte" href="/raeder/colnago/2025-c68-allroad-super-record-wrl/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Allroad Super Record WRL</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k5 karte" href="/raeder/colnago/2025-c68-allroad-ultegra-di2/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Allroad Ultegra Di2</h3><span class="meta">Rennrad · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="C68 Gravel"><h2 class="zwischen"><a href="/raeder/colnago/c68-gravel/">C68 Gravel</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-c68-gravel-force-xplr-axs/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Gravel Force XPLR AXS</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-c68-gravel-grx-822-1x/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Gravel GRX 822 1x</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k3 karte" href="/raeder/colnago/2025-c68-gravel-red-xplr-axs/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Gravel Red XPLR AXS</h3><span class="meta">Gravel · 12 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="C68 Road"><h2 class="zwischen"><a href="/raeder/colnago/c68-road/">C68 Road</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-c68-road-dura-ace-di2/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Road Dura-Ace Di2</h3><span class="meta">Rennrad · 16 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-c68-road-red-axs/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Road Red AXS</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k3 karte" href="/raeder/colnago/2025-c68-road-ultegra-di2/"><span class="eyebrow">Colnago · 2025</span><h3>C68 Road Ultegra Di2</h3><span class="meta">Rennrad · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="G4-X"><h2 class="zwischen"><a href="/raeder/colnago/g4-x/">G4-X</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-g4-x-force-xplr-axs/"><span class="eyebrow">Colnago · 2025</span><h3>G4-X Force XPLR AXS</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-g4-x-grx-820-2x/"><span class="eyebrow">Colnago · 2025</span><h3>G4-X GRX 820 2x</h3><span class="meta">Gravel · 14 Teile</span></a><a class="t k3 karte" href="/raeder/colnago/2025-g4-x-grx-822-1x/"><span class="eyebrow">Colnago · 2025</span><h3>G4-X GRX 822 1x</h3><span class="meta">Gravel · 13 Teile</span></a><a class="t k4 karte" href="/raeder/colnago/2025-g4-x-grx-825-di2-2x/"><span class="eyebrow">Colnago · 2025</span><h3>G4-X GRX 825 Di2 2x</h3><span class="meta">Gravel · 15 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="V4"><h2 class="zwischen"><a href="/raeder/colnago/v4/">V4</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-v4-105-di2/"><span class="eyebrow">Colnago · 2025</span><h3>V4 105 Di2</h3><span class="meta">Rennrad · 16 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-v4-rival-axs/"><span class="eyebrow">Colnago · 2025</span><h3>V4 Rival AXS</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k3 karte" href="/raeder/colnago/2025-v4-ultegra-di2/"><span class="eyebrow">Colnago · 2025</span><h3>V4 Ultegra Di2</h3><span class="meta">Rennrad · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="V4Rs"><h2 class="zwischen"><a href="/raeder/colnago/v4rs/">V4Rs</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/colnago/2025-v4rs-force-axs/"><span class="eyebrow">Colnago · 2025</span><h3>V4Rs Force AXS</h3><span class="meta">Rennrad · 15 Teile</span></a><a class="t k2 karte" href="/raeder/colnago/2025-v4rs-ultegra-di2/"><span class="eyebrow">Colnago · 2025</span><h3>V4Rs Ultegra Di2</h3><span class="meta">Rennrad · 16 Teile</span></a></div></section>
+  <nav class="chips reihen-sprung" aria-label="Reihen"><a href="#reihe-c68-allroad">C68 Allroad</a><a href="#reihe-c68-gravel">C68 Gravel</a><a href="#reihe-c68-road">C68 Road</a><a href="#reihe-g4-x">G4-X</a><a href="#reihe-v4">V4</a><a href="#reihe-v4rs">V4Rs</a></nav>
+  <div class="reihen-raster"><section class="t s1 reihe-kachel" id="reihe-c68-allroad" aria-label="C68 Allroad"><h2><a href="/raeder/colnago/c68-allroad/">C68 Allroad</a><span>5 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-c68-allroad-dura-ace-di2/"><b>C68 Allroad Dura-Ace Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-allroad-force-axs/"><b>C68 Allroad Force AXS</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-allroad-red-axs/"><b>C68 Allroad Red AXS</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-allroad-super-record-wrl/"><b>C68 Allroad Super Record WRL</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-allroad-ultegra-di2/"><b>C68 Allroad Ultegra Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-c68-gravel" aria-label="C68 Gravel"><h2><a href="/raeder/colnago/c68-gravel/">C68 Gravel</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-c68-gravel-force-xplr-axs/"><b>C68 Gravel Force XPLR AXS</b><span>2025 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-gravel-grx-822-1x/"><b>C68 Gravel GRX 822 1x</b><span>2025 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-gravel-red-xplr-axs/"><b>C68 Gravel Red XPLR AXS</b><span>2025 · Gravel · 12 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-c68-road" aria-label="C68 Road"><h2><a href="/raeder/colnago/c68-road/">C68 Road</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-c68-road-dura-ace-di2/"><b>C68 Road Dura-Ace Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-road-red-axs/"><b>C68 Road Red AXS</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-c68-road-ultegra-di2/"><b>C68 Road Ultegra Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-g4-x" aria-label="G4-X"><h2><a href="/raeder/colnago/g4-x/">G4-X</a><span>4 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-g4-x-force-xplr-axs/"><b>G4-X Force XPLR AXS</b><span>2025 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/colnago/2025-g4-x-grx-820-2x/"><b>G4-X GRX 820 2x</b><span>2025 · Gravel · 14 Teile</span></a></li><li><a href="/raeder/colnago/2025-g4-x-grx-822-1x/"><b>G4-X GRX 822 1x</b><span>2025 · Gravel · 13 Teile</span></a></li><li><a href="/raeder/colnago/2025-g4-x-grx-825-di2-2x/"><b>G4-X GRX 825 Di2 2x</b><span>2025 · Gravel · 15 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-v4" aria-label="V4"><h2><a href="/raeder/colnago/v4/">V4</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-v4-105-di2/"><b>V4 105 Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li><li><a href="/raeder/colnago/2025-v4-rival-axs/"><b>V4 Rival AXS</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-v4-ultegra-di2/"><b>V4 Ultegra Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-v4rs" aria-label="V4Rs"><h2><a href="/raeder/colnago/v4rs/">V4Rs</a><span>2 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/colnago/2025-v4rs-force-axs/"><b>V4Rs Force AXS</b><span>2025 · Rennrad · 15 Teile</span></a></li><li><a href="/raeder/colnago/2025-v4rs-ultegra-di2/"><b>V4Rs Ultegra Di2</b><span>2025 · Rennrad · 16 Teile</span></a></li></ul></section></div>
+
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

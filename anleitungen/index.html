@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "ItemList", "name": "Fahrrad-Anleitungen", "itemListElement": [{"@type": "ListItem", "position": 1, "url": "https://radgarage.app/anleitungen/kette-wechseln/", "name": "Fahrradkette wechseln"}, {"@type": "ListItem", "position": 2, "url": "https://radgarage.app/anleitungen/bremsbelaege-wechseln/", "name": "Bremsbeläge wechseln (Scheibenbremse)"}, {"@type": "ListItem", "position": 3, "url": "https://radgarage.app/anleitungen/kassette-wechseln/", "name": "Kassette wechseln"}, {"@type": "ListItem", "position": 4, "url": "https://radgarage.app/anleitungen/reifen-wechseln/", "name": "Fahrradreifen wechseln"}, {"@type": "ListItem", "position": 5, "url": "https://radgarage.app/anleitungen/schlauch-wechseln/", "name": "Fahrradschlauch wechseln"}, {"@type": "ListItem", "position": 6, "url": "https://radgarage.app/anleitungen/bremsscheibe-wechseln/", "name": "Bremsscheibe wechseln"}, {"@type": "ListItem", "position": 7, "url": "https://radgarage.app/anleitungen/lenkerband-wickeln/", "name": "Lenkerband wickeln"}, {"@type": "ListItem", "position": 8, "url": "https://radgarage.app/anleitungen/innenlager-wechseln/", "name": "Innenlager wechseln"}, {"@type": "ListItem", "position": 9, "url": "https://radgarage.app/anleitungen/kettenverschleiss-messen/", "name": "Kettenverschleiß messen"}, {"@type": "ListItem", "position": 10, "url": "https://radgarage.app/anleitungen/kette-reinigen-oelen/", "name": "Fahrradkette reinigen und ölen"}, {"@type": "ListItem", "position": 11, "url": "https://radgarage.app/anleitungen/schaltung-einstellen/", "name": "Kettenschaltung einstellen"}, {"@type": "ListItem", "position": 12, "url": "https://radgarage.app/anleitungen/scheibenbremse-schleift/", "name": "Scheibenbremse schleift oder quietscht"}, {"@type": "ListItem", "position": 13, "url": "https://radgarage.app/anleitungen/fahrrad-einwintern/", "name": "Fahrrad einwintern"}, {"@type": "ListItem", "position": 14, "url": "https://radgarage.app/anleitungen/fruehjahrscheck/", "name": "Frühjahrscheck am Fahrrad"}]}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Anleitungen", "item": "https://radgarage.app/anleitungen/"}]}</script>
@@ -28,8 +28,9 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/" aria-current="page">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/" aria-current="page">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><span aria-current="page">Anleitungen</span></li></ol></nav>
   <main>
@@ -41,18 +42,12 @@
     </div>
   </div>
   <section aria-label="Alle Anleitungen" style="margin-top:14px">
-    <div class="karten"><a class="t k1 karte" href="/anleitungen/kette-wechseln/"><span class="eyebrow">Kette</span><h2>Fahrradkette wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k2 karte" href="/anleitungen/bremsbelaege-wechseln/"><span class="eyebrow">Bremsbeläge</span><h2>Bremsbeläge wechseln (Scheibenbremse)</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k3 karte" href="/anleitungen/kassette-wechseln/"><span class="eyebrow">Kassette</span><h2>Kassette wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k4 karte" href="/anleitungen/reifen-wechseln/"><span class="eyebrow">Reifen</span><h2>Fahrradreifen wechseln</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k5 karte" href="/anleitungen/schlauch-wechseln/"><span class="eyebrow">Schlauch</span><h2>Fahrradschlauch wechseln</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k1 karte" href="/anleitungen/bremsscheibe-wechseln/"><span class="eyebrow">Bremsscheibe</span><h2>Bremsscheibe wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k2 karte" href="/anleitungen/lenkerband-wickeln/"><span class="eyebrow">Lenkerband</span><h2>Lenkerband wickeln</h2><span class="meta">Mittel · ca. 30 Min.</span></a><a class="t k3 karte" href="/anleitungen/innenlager-wechseln/"><span class="eyebrow">Innenlager</span><h2>Innenlager wechseln</h2><span class="meta">Schwer · ca. 45 Min.</span></a><a class="t k4 karte" href="/anleitungen/kettenverschleiss-messen/"><span class="eyebrow">Kette</span><h2>Kettenverschleiß messen</h2><span class="meta">Leicht · ca. 5 Min.</span></a><a class="t k5 karte" href="/anleitungen/kette-reinigen-oelen/"><span class="eyebrow">Kette</span><h2>Fahrradkette reinigen und ölen</h2><span class="meta">Leicht · ca. 10 Min.</span></a><a class="t k3 karte" href="/anleitungen/schaltung-einstellen/"><span class="eyebrow">Schaltung</span><h2>Kettenschaltung einstellen</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k1 karte" href="/anleitungen/scheibenbremse-schleift/"><span class="eyebrow">Bremse</span><h2>Scheibenbremse schleift oder quietscht</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k2 karte" href="/anleitungen/fahrrad-einwintern/"><span class="eyebrow">Pflege</span><h2>Fahrrad einwintern</h2><span class="meta">Leicht · ca. 30 Min.</span></a><a class="t k4 karte" href="/anleitungen/fruehjahrscheck/"><span class="eyebrow">Pflege</span><h2>Frühjahrscheck am Fahrrad</h2><span class="meta">Leicht · ca. 30 Min.</span></a></div>
+    <div class="karten"><a class="t k1 karte" href="/anleitungen/kette-wechseln/"><span class="eyebrow">Kette</span><h2>Fahrradkette wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k2 karte" href="/anleitungen/bremsbelaege-wechseln/"><span class="eyebrow">Bremsbeläge</span><h2>Bremsbeläge wechseln (Scheibenbremse)</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k1 karte" href="/anleitungen/kassette-wechseln/"><span class="eyebrow">Kassette</span><h2>Kassette wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k5 karte" href="/anleitungen/reifen-wechseln/"><span class="eyebrow">Reifen</span><h2>Fahrradreifen wechseln</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k5 karte" href="/anleitungen/schlauch-wechseln/"><span class="eyebrow">Schlauch</span><h2>Fahrradschlauch wechseln</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k2 karte" href="/anleitungen/bremsscheibe-wechseln/"><span class="eyebrow">Bremsscheibe</span><h2>Bremsscheibe wechseln</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k3 karte" href="/anleitungen/lenkerband-wickeln/"><span class="eyebrow">Lenkerband</span><h2>Lenkerband wickeln</h2><span class="meta">Mittel · ca. 30 Min.</span></a><a class="t k3 karte" href="/anleitungen/innenlager-wechseln/"><span class="eyebrow">Innenlager</span><h2>Innenlager wechseln</h2><span class="meta">Schwer · ca. 45 Min.</span></a><a class="t k1 karte" href="/anleitungen/kettenverschleiss-messen/"><span class="eyebrow">Kette</span><h2>Kettenverschleiß messen</h2><span class="meta">Leicht · ca. 5 Min.</span></a><a class="t k1 karte" href="/anleitungen/kette-reinigen-oelen/"><span class="eyebrow">Kette</span><h2>Fahrradkette reinigen und ölen</h2><span class="meta">Leicht · ca. 10 Min.</span></a><a class="t k1 karte" href="/anleitungen/schaltung-einstellen/"><span class="eyebrow">Schaltung</span><h2>Kettenschaltung einstellen</h2><span class="meta">Mittel · ca. 20 Min.</span></a><a class="t k2 karte" href="/anleitungen/scheibenbremse-schleift/"><span class="eyebrow">Bremse</span><h2>Scheibenbremse schleift oder quietscht</h2><span class="meta">Leicht · ca. 15 Min.</span></a><a class="t k4 karte" href="/anleitungen/fahrrad-einwintern/"><span class="eyebrow">Pflege</span><h2>Fahrrad einwintern</h2><span class="meta">Leicht · ca. 30 Min.</span></a><a class="t k4 karte" href="/anleitungen/fruehjahrscheck/"><span class="eyebrow">Pflege</span><h2>Frühjahrscheck am Fahrrad</h2><span class="meta">Leicht · ca. 30 Min.</span></a></div>
   </section>
   <section aria-labelledby="wissen-titel" style="margin-top:14px">
     <h2 id="wissen-titel" class="zwischen">Rechner und Wissen</h2>
-    <div class="karten">
-      <a class="t k1 karte" href="/verschleissrechner/"><span class="eyebrow">Rechner</span><h3>Verschleißrechner</h3><span class="meta">Wann Kette, Beläge und Reifen fällig sind</span></a>
-      <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Rechner</span><h3>Reifengrößen</h3><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
-      <a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Wissen</span><h3>Schaltgruppen</h3><span class="meta">Welche Kette und Kassette zu deiner Gruppe passen</span></a>
-      <a class="t k3 karte" href="/unterhaltskosten/"><span class="eyebrow">Auswertung</span><h3>Unterhaltskosten</h3><span class="meta">Was ein Fahrrad je 1.000 km kostet, nach Radtyp</span></a>
-      <a class="t k4 karte" href="/einbetten/"><span class="eyebrow">Für deine Website</span><h3>Rechner einbetten</h3><span class="meta">Kostenlos, ohne Cookies</span></a>
-      <a class="t k5 karte" href="/e-bike-systeme/"><span class="eyebrow">Wissen</span><h3>E-Bike-Systeme</h3><span class="meta">Welcher Motor, welcher Akku</span></a>
-    </div>
+    <div class="karten"><a class="t k1 karte" href="/reifengroessen/"><span class="eyebrow">Rechner</span><h3>Reifengrößen</h3><span class="meta">ETRTO, Zoll und 700C umrechnen, mit passendem Schlauch</span></a><a class="t k1 karte" href="/verschleissrechner/"><span class="eyebrow">Rechner</span><h3>Verschleißrechner</h3><span class="meta">Wann Kette, Beläge, Reifen und Kassette fällig sind</span></a><a class="t k3 karte" href="/unterhaltskosten/"><span class="eyebrow">Auswertung</span><h3>Unterhaltskosten</h3><span class="meta">Was ein Fahrrad je 1.000 km kostet, nach Radtyp</span></a><a class="t k2 karte" href="/schaltgruppen/"><span class="eyebrow">Übersicht</span><h3>Schaltgruppen</h3><span class="meta">Welche Kette und Kassette zu deiner Gruppe passen</span></a><a class="t k2 karte" href="/e-bike-systeme/"><span class="eyebrow">Übersicht</span><h3>E-Bike-Systeme</h3><span class="meta">Welcher Motor, welcher Akku, was zusammenpasst</span></a><a class="t k4 karte" href="/einbetten/"><span class="eyebrow">Für deine Website</span><h3>Rechner einbetten</h3><span class="meta">Unsere Rechner kostenlos und ohne Cookies einbinden</span></a></div>
+    <p class="mehr-link"><a class="pfeil" href="/wissen/">Alles unter Wissen</a></p>
   </section>
   <div class="bento anl" style="margin-top:14px">
     <aside class="t k4 app">
@@ -66,22 +61,35 @@
   </div>
   <p class="hinweis">Die Anleitungen ersetzen nicht die Anleitung des Herstellers. Arbeiten an Bremsen und Lenkung sind sicherheitsrelevant: Wenn du unsicher bist, lass sie von einer Fachwerkstatt machen.</p>
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

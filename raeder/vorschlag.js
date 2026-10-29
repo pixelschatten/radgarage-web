@@ -15,6 +15,17 @@
   const kennung = 'web-' + Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, '0')).join('');
   const geladen = Date.now();
 
+  // Das Formular ist eingeklappt: Links auf #verbessern (Inhaltsspalte, Unterhalt) klappen es auf
+  const oeffnen = () => {
+    const d = document.getElementById('verbessern');
+    if (d && location.hash === '#verbessern' && d.tagName === 'DETAILS') { d.open = true; d.scrollIntoView(); }
+  };
+  window.addEventListener('hashchange', oeffnen);
+  for (const a of document.querySelectorAll('a[href="#verbessern"]')) {
+    a.addEventListener('click', () => { const d = document.getElementById('verbessern'); if (d) d.open = true; });
+  }
+  oeffnen();
+
   for (const f of document.querySelectorAll('.vs-form')) {
     const msg = f.querySelector('.msg');
     const teilFeld = f.querySelector('.vs-teil');

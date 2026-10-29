@@ -103,7 +103,7 @@ def _balken(zeilen, kopfzeile):
 
 def seite(alle, stand):
     d = daten(alle)
-    nav, brot = krumen([('Radgarage', '/'), ('Anleitungen', '/anleitungen/'), ('Unterhaltskosten', PFAD)])
+    nav, brot = krumen([('Radgarage', '/'), ('Wissen', '/wissen/'), ('Unterhaltskosten', PFAD)])
     jahr = d['median'] * JAHRES_KM / 1000
     teuer, guenstig = d['typen'][-1], d['typen'][0]
     reifen_anteil = round(100 * d['anteile'][0][1])

@@ -10,7 +10,7 @@ from collections import OrderedDict, defaultdict
 from statistics import median
 from urllib.parse import quote_plus
 
-from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, suchfeld
+from anleitungen import ANLEITUNGEN, SEITE, FUSS, WURZEL, e, kopf, krumen, passend, suchfeld
 
 GRUPPEN = [
     ('Antrieb', ['Kette', 'Kassette', 'Riemen', 'Schaltwerk', 'Umwerfer', 'Schalthebel', 'Kurbel', 'Motor', 'Akku']),
@@ -36,6 +36,14 @@ SHOPS = [
     ('ROSE Bikes', 'https://www.rosebikes.de/search?q={q}'),
 ]
 FARBEN = ['k1', 'k2', 'k3', 'k4', 'k5']
+
+
+def art_farbe(kategorie):
+    """Farbe einer Radkarte nach Radart, damit die Farbe etwas bedeutet: Rennrad gelb, Gravel apricot, MTB grün,
+    E-Bikes blau, alles andere lila."""
+    if kategorie.startswith('E-'):
+        return 'k5'
+    return {'Rennrad': 'k3', 'Gravel': 'k1', 'MTB': 'k4'}.get(kategorie, 'k2')
 # Radversicherung als Anzeige auf den Radseiten, wie in der App (src/data/versicherung.ts).
 # Ohne Partnerlink erscheint der Kasten nicht. Richtwert aus denselben Beispielbeiträgen wie in der App.
 VERSICHERUNG = {
@@ -314,15 +322,17 @@ def wartung_kasten(r, w, alle):
         <input type="range" id="km-jahr" min="500" max="20000" step="500" value="{JAHRES_KM}">
         <p>Teilekosten etwa <b class="rechner-euro">{tsd(jahr)} €</b> im Jahr.</p>
       </div>'''
-    return f'''    <section class="t k2 voll wartung" aria-labelledby="wk-titel">
-      <span class="eyebrow">Unterhalt</span>
-      <h2 id="wk-titel" style="font-size:30px;margin:6px 0 4px">Was kostet das {e(r["modell"])} im Unterhalt?</h2>
-      <p>Rund <b>{euro_genau(w["summe"])} pro 1.000 km</b> für {liste(w)}. Schieb den Regler auf deine Kilometer im Jahr.</p>
-      {rechner}
-      <table class="teiltabelle"><tbody>{zeilen}</tbody></table>
-      <p class="klein">Nur Teile, ohne Werkstatt. Gerechnet mit Richtpreisen und typischen Wechselabständen, die je nach Fahrweise, Wetter und Pflege stark schwanken. {" ".join(zusatz)} In der App rechnet die Radgarage mit deinen eigenen Kilometern.</p>
-      {vergleich}
-    </section>
+    return f'''      <section class="t k2 wartung" id="unterhalt" aria-labelledby="wk-titel">
+        <span class="eyebrow">Unterhalt</span>
+        <h2 id="wk-titel">Was kostet das {e(r["modell"])} im Unterhalt?</h2>
+        <p>Rund <b>{euro_genau(w["summe"])} pro 1.000 km</b> für {liste(w)}. Schieb den Regler auf deine Kilometer im Jahr.</p>
+        {rechner}
+        <details class="aufklapp"><summary>So setzt sich das zusammen</summary>
+        <table class="teiltabelle"><tbody>{zeilen}</tbody></table>
+        <p class="klein">Nur Teile, ohne Werkstatt. Gerechnet mit Richtpreisen und typischen Wechselabständen, die je nach Fahrweise, Wetter und Pflege stark schwanken. {" ".join(zusatz)} In der App rechnet die Radgarage mit deinen eigenen Kilometern.</p>
+        </details>
+        {vergleich}
+      </section>
 '''
 
 
@@ -336,31 +346,37 @@ def shoplinks(t):
     return ' · '.join(f'<a href="{e(u.replace("{q}", q))}" target="_blank" rel="nofollow noopener">{e(n)}</a>' for n, u in SHOPS)
 
 
-def verschleiss_kachel(t, farbe):
+def verschleiss_zeile(t):
+    """Ein Verschleißteil als Zeile: Name, Richtpreis und Wechselabstand sofort, Ersatz und Shops zum Aufklappen."""
     kat = t['kategorie']
-    zeilen = [f'<span class="eyebrow">{e(NAMEN.get(kat, kat))}</span>',
-              f'<h3>{teil_link(t)}</h3>']
-    info = ', '.join(x for x in [t['merkmale'], hinweis(t)] if x)
-    if info:
-        zeilen.append(f'<p>{e(info)}</p>')
     fakten = []
     if t['preis']:
-        fakten.append(f'<span><b>{preis(t["preis"])}</b> Richtpreis</span>')
+        fakten.append(f'{preis(t["preis"])}')
     if kat in RICHTWERT_KM:
-        fakten.append(f'<span>Wechsel etwa alle <b>{RICHTWERT_KM[kat]:,} km</b></span>'.replace(',', '.'))
-    if fakten:
-        zeilen.append(f'<p class="fakten">{"".join(fakten)}</p>')
+        fakten.append(f'alle {tsd(RICHTWERT_KM[kat])} km')
+    mehr = []
+    info = ', '.join(x for x in [t['merkmale'], hinweis(t)] if x)
+    if info:
+        mehr.append(f'<p>{e(info)}</p>')
     if t['abgeleitet']:
-        zeilen.append('<p class="pruefen">Aus den übrigen Teilen erschlossen, bitte am Rad prüfen.</p>')
+        mehr.append('<p class="pruefen">Aus den übrigen Teilen erschlossen, bitte am Rad prüfen.</p>')
     alt = [a for a in alternativen(t['id']) if a['marke'] != 'Universal'][:3]
     if alt:
-        namen = ', '.join(teil_link(a) for a in alt)
-        zeilen.append(f'<p class="klein"><b>Passt auch:</b> {namen}</p>')
-    zeilen.append(f'<p class="klein">Suchen bei {shoplinks(t)}</p>')
+        mehr.append(f'<p><b>Passt auch:</b> {", ".join(teil_link(a) for a in alt)}</p>')
+    mehr.append(f'<p>Suchen bei {shoplinks(t)}</p>')
     if kat in ANLEITUNG:
         a = next(x for x in ANLEITUNGEN if x['slug'] == ANLEITUNG[kat])
-        zeilen.append(f'<a class="pill ghost klein-pill" href="/anleitungen/{a["slug"]}/">Anleitung: {e(a["h1"])}</a>')
-    return f'<div class="t {farbe} teilkarte">{"".join(zeilen)}</div>'
+        mehr.append(f'<p><a class="pfeil" href="/anleitungen/{a["slug"]}/">Anleitung: {e(a["h1"])}</a></p>')
+    return (f'<li><details><summary><span class="vk">{e(NAMEN.get(kat, kat))}</span>'
+            f'<span class="vn">{teil_link(t)}{"<sup>*</sup>" if t["abgeleitet"] else ""}</span>'
+            f'<span class="vf">{" · ".join(fakten)}</span></summary>'
+            f'<div class="vmehr">{"".join(mehr)}</div></details></li>')
+
+
+def radzeile(r, zeige_marke=False, mit_jahr=True):
+    name = r['name'] if zeige_marke else r['modell']
+    return (f'<li><a href="{r["pfad"]}"><b>{e(name)}</b>'
+            f'<span>{r["baujahr"] if mit_jahr else ""}{" · " if mit_jahr else ""}{e(r["kategorie"])} · {len(r["teile"])} Teile</span></a></li>')
 
 
 def ist_ebike(r):
@@ -410,12 +426,16 @@ def rad_seite(r, alle):
     vers = [t for t in teile if t['kategorie'] in VERSCHLEISS]
     vers.sort(key=lambda t: VERSCHLEISS.index(t['kategorie']))
     titel_name = f'{r["name"]} ({r["baujahr"]})'
-    titel = f'{titel_name}: Ersatzteile und verbaute Teile'
+    titel = passend(f'{titel_name}: Ersatzteile und verbaute Teile', f'{titel_name}: Ersatzteile und Teile',
+                    f'{titel_name}: Ersatzteile', titel_name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     kurz = [NAMEN.get(k, k) for k in ['Kette', 'Bremsbelag', 'Reifen'] if any(t['kategorie'] == k for t in teile)]
-    beschr = (f'Welche {", ".join(kurz[:-1]) + " und " + kurz[-1] if len(kurz) > 1 else "Teile"} hat das {titel_name}? '
-              f'Alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.')
+    frage = f'Welche {", ".join(kurz[:-1]) + " und " + kurz[-1] if len(kurz) > 1 else "Teile"} hat das {titel_name}?'
+    beschr = passend(f'{frage} Alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.',
+                     f'{frage} Alle {len(teile)} Teile mit Richtpreis und Ersatz.',
+                     f'{titel_name}: alle {len(teile)} verbauten Teile mit Richtpreis und passendem Ersatz.',
+                     f'{titel_name}: {len(teile)} Teile mit Richtpreis und Ersatz.', grenze=165)
     # Als Liste der verbauten Teile, nicht als „Product“: Google erwartet bei Produkten ein Angebot mit
     # festem Preis oder Bewertungen, und unsere Richtpreise sind nur Anhaltswerte.
     teileliste = {
@@ -425,41 +445,50 @@ def rad_seite(r, alle):
                                  **({'url': f'{SEITE}/teile/{t["id"]}/'} if t['id'] in TEILE else {}))
                             for i, t in enumerate(teile)],
     }
+    w = wartungskosten(teile)
     out = [kopf(titel, beschr, r['pfad'], [teileliste, brot], bild=f'{SEITE}/img/raeder/{r["id"]}.png'), nav,
            '  <main>\n  <article class="bento anl rad">\n']
-    uvp = f'<div class="t s2"><span class="eyebrow">Preis neu (UVP)</span><div class="wert">{round(r["uvp_eur"]):,} €</div></div>'.replace(',', '.') if r['uvp_eur'] else ''
-    out.append(f'''    <div class="t k5 kopf">
+    zahlen = [('Verbaute Teile', str(len(teile)))]
+    if r['uvp_eur']:
+        zahlen.append(('Preis neu (UVP)', f'{tsd(round(r["uvp_eur"]))} €'))
+    if w:
+        zahlen.append(('Unterhalt je 1.000 km', euro_genau(w['summe'])))
+    elif vers:
+        zahlen.append(('Verschleißteile', str(len(vers))))
+    kacheln = ''.join(f'<div class="t s2"><span class="eyebrow">{e(k)}</span><div class="wert">{v}</div></div>' for k, v in zahlen)
+    out.append(f'''    <div class="t {art_farbe(r["kategorie"])} kopf">
       <span class="eyebrow">{e(r["kategorie"])} · Modelljahr {r["baujahr"]}</span>
       <h1>{e(titel_name)}</h1>
-      <p class="lead">Alle {len(teile)} verbauten Teile des {e(r["name"])} aus dem Modelljahr {r["baujahr"]}: von der Kette bis zum Innenlager, mit Richtpreisen und Teilen, die als Ersatz passen.</p>
+      <p class="lead">Alle {len(teile)} verbauten Teile, was als Ersatz passt und was der Unterhalt kostet.</p>
     </div>
-    <div class="daten">
-      <div class="t s2"><span class="eyebrow">Teile im Katalog</span><div class="wert">{len(teile)}</div></div>
-      <div class="t s2"><span class="eyebrow">Verschleißteile</span><div class="wert">{len(vers)}</div></div>
-      {uvp}
-    </div>
+    <div class="daten">{kacheln}</div>
 ''')
-    out.append(kurz_gefragt(r))
+    # Inhalt links, auf dem Desktop rechts eine mitlaufende Spalte mit Sprungmarken und App
+    sprung = []
+    haupt = []
     if vers:
-        karten = ''.join(verschleiss_kachel(t, FARBEN[i % len(FARBEN)]) for i, t in enumerate(vers))
-        out.append(f'''    <section class="voll" aria-labelledby="vers-titel">
-      <h2 id="vers-titel" class="zwischen">Verschleißteile am {e(r["modell"])}</h2>
-      <div class="karten">{karten}</div>
-    </section>
+        sprung.append(('verschleiss', 'Verschleißteile'))
+        zeilen = ''.join(verschleiss_zeile(t) for t in vers)
+        haupt.append(f'''      <section class="t s1 vliste-box" id="verschleiss" aria-labelledby="vers-titel">
+        <span class="eyebrow">Verschleißteile</span>
+        <h2 id="vers-titel">Was am {e(r["modell"])} verschleißt</h2>
+        <p>Die {len(vers)} Teile, die du regelmäßig tauschst. Tipp auf eine Zeile für Ersatz und Shops.</p>
+        <ul class="vliste">{zeilen}</ul>
+      </section>
 ''')
-    w = wartungskosten(teile)
     if w:
-        out.append(wartung_kasten(r, w, alle))
+        sprung.append(('unterhalt', 'Unterhalt'))
+        haupt.append(wartung_kasten(r, w, alle))
     else:
         luecken = unterhalt_luecken(teile)
         if luecken:
-            out.append(f'''    <section class="t k2 voll wartung" aria-labelledby="wk-titel">
-      <span class="eyebrow">Unterhalt</span>
-      <h2 id="wk-titel" style="font-size:26px;margin:6px 0 4px">Unterhalt noch nicht berechnet</h2>
-      <p>Für {e(" und ".join(luecken))} fehlt im Katalog noch ein Teil oder ein Richtpreis. Ohne sie wäre der Wert zu niedrig, deshalb rechnen wir ihn hier noch nicht aus. Weißt du, was verbaut ist? <a href="#verbessern">Schick uns einen Hinweis.</a></p>
-    </section>
+            haupt.append(f'''      <section class="t k2 wartung" id="unterhalt" aria-labelledby="wk-titel">
+        <span class="eyebrow">Unterhalt</span>
+        <h2 id="wk-titel">Unterhalt noch nicht berechnet</h2>
+        <p>Für {e(" und ".join(luecken))} fehlt im Katalog noch ein Teil oder ein Richtpreis. Ohne sie wäre der Wert zu niedrig, deshalb rechnen wir ihn hier noch nicht aus. Weißt du, was verbaut ist? <a href="#verbessern">Schick uns einen Hinweis.</a></p>
+      </section>
 ''')
-    out.append(versicherung_kasten(r))
+    haupt.append(versicherung_kasten(r))
     gruppen = []
     for name, kats in GRUPPEN:
         g = [t for t in teile if t['kategorie'] in kats]
@@ -472,49 +501,64 @@ def rad_seite(r, alle):
             f'{"<span>" + e(", ".join(x for x in [t["merkmale"], hinweis(t)] if x)) + "</span>" if (t["merkmale"] or hinweis(t)) else ""}</td>'
             f'<td class="preis">{preis(t["preis"])}</td></tr>'
             for t in g)
-        gruppen.append(f'<h3>{e(name)}</h3><table class="teiltabelle"><tbody>{zeilen}</tbody></table>')
-    out.append(f'''    <section class="t s1 voll alle" aria-labelledby="alle-titel">
-      <span class="eyebrow">Ausstattung</span>
-      <h2 id="alle-titel" style="font-size:30px;margin:6px 0 4px">Alle Teile am {e(r["name"])}</h2>
-      {"".join(gruppen)}
-      <p class="klein">* Aus den übrigen Teilen erschlossen, bitte am Rad prüfen. Preise sind Richtpreise ohne Gewähr.</p>
-    </section>
+        gruppen.append(f'<details class="gruppe"{" open" if not gruppen else ""}><summary><h3>{e(name)}</h3>'
+                       f'<span>{len(g)} {"Teil" if len(g) == 1 else "Teile"}</span></summary>'
+                       f'<table class="teiltabelle"><tbody>{zeilen}</tbody></table></details>')
+    sprung.append(('alle', 'Alle Teile'))
+    haupt.append(f'''      <section class="t s1 alle" id="alle" aria-labelledby="alle-titel">
+        <span class="eyebrow">Ausstattung</span>
+        <h2 id="alle-titel">Alle {len(teile)} Teile am {e(r["name"])}</h2>
+        {"".join(gruppen)}
+        <p class="klein">* Aus den übrigen Teilen erschlossen, bitte am Rad prüfen. Preise sind Richtpreise ohne Gewähr.</p>
+      </section>
 ''')
-    out.append(vergleich_kasten(r, alle))
-    out.append(anleitungen_fuers_rad(r))
-    out.append(vorschlag_form(r, titel_name))
-    out.append(f'''    <aside class="t k4 app">
-      <div>
-        <span class="eyebrow">Die App zum Rad</span>
-        <h2 style="margin:6px 0 8px">Dein {e(r["modell"])} in der Radgarage</h2>
-        <p>Leg dein Rad in der App an und alle Teile sind sofort da. Die Radgarage zählt die Kilometer mit, sagt dir, wann Kette, Beläge und Reifen fällig sind, und zeigt passenden Ersatz mit Preisen aus mehreren Shops.</p>
-      </div>
-      <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
-    </aside>
-''')
-    # Erst andere Ausstattungen derselben Reihe, dann dieselbe Radart der Marke, jeweils nahe am Modelljahr.
+    fragen = kurz_gefragt(r)
+    if fragen:
+        sprung.append(('fragen', 'Fragen'))
+        haupt.append(fragen)
+    vgl = vergleich_kasten(r, alle)
+    if vgl:
+        sprung.append(('vergleich', 'Vergleich'))
+        haupt.append(vgl)
+    haupt.append(anleitungen_fuers_rad(r))
+    # Mehr Räder: andere Ausstattungen derselben Reihe, dann dieselbe Radart der Marke, dazu ähnliche anderer Marken
     marke = [x for x in alle if x['marke_slug'] == r['marke_slug'] and x['id'] != r['id']]
     marke.sort(key=lambda x: (x['reihe'] != r['reihe'], x['kategorie'] != r['kategorie'], abs(x['baujahr'] - r['baujahr']),
                               x['modell']))
     andere = marke[:6]
-    if andere:
-        out.append(f'''    <section class="t mehr" aria-labelledby="mehr-titel">
-      <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Räder von {e(r["hersteller"])}</h2>
-      <div class="karten">{"".join(radkarte(x, i, mit_jahr=x["modell"] == r["modell"]) for i, x in enumerate(andere))}</div>
-    </section>
-''')
     aehnlich = aehnliche(r, alle)
-    if aehnlich:
-        out.append(f'''    <section class="t mehr" aria-labelledby="aehnlich-titel">
-      <h2 id="aehnlich-titel" style="font-size:30px;margin:14px 0 12px">Ähnliche Räder anderer Marken</h2>
-      <div class="karten">{"".join(radkarte(x, i + 1, zeige_marke=True) for i, x in enumerate(aehnlich))}</div>
-    </section>
+    if andere or aehnlich:
+        spalten = []
+        if andere:
+            spalten.append(f'<div><h3>Weitere Räder von {e(r["hersteller"])}</h3><ul class="radzeilen">{"".join(radzeile(x) for x in andere)}</ul></div>')
+        if aehnlich:
+            spalten.append(f'<div><h3>Ähnliche Räder anderer Marken</h3><ul class="radzeilen">{"".join(radzeile(x, zeige_marke=True) for x in aehnlich)}</ul></div>')
+        haupt.append(f'''      <section class="t s2 mehr-raeder" aria-label="Weitere Räder">
+        <div class="spalten">{"".join(spalten)}</div>
+      </section>
 ''')
-    out.append(f'''  </article>
+    haupt.append(vorschlag_form(r, titel_name))
+    app = f'''<aside class="t k4 app-klein">
+          <span class="eyebrow">Die App zum Rad</span>
+          <h2>Dein {e(r["modell"])} in der Radgarage</h2>
+          <p>Alle Teile sind sofort da. Die App zählt deine Kilometer und sagt dir, wann Kette, Beläge und Reifen fällig sind.</p>
+          <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
+        </aside>'''
+    marken = ''.join(f'<a href="#{i}">{e(t)}</a>' for i, t in sprung)
+    out.append(f'''    <nav class="sprung" aria-label="Auf dieser Seite">{marken}</nav>
+    <div class="haupt">
+{"".join(haupt)}    </div>
+    <div class="seite">
+      <div class="klebt">
+        <nav class="t s1 inhalt" aria-label="Inhalt"><span class="eyebrow">Auf dieser Seite</span>{marken}<a href="#verbessern">Fehler melden</a></nav>
+        {app}
+      </div>
+    </div>
+  </article>
   <p class="hinweis">Angaben nach Herstellerdaten und Testberichten, Stand {e(r["geaendert"][:7].replace("-", "/"))}. Hersteller ändern die Ausstattung manchmal während des Modelljahrs, prüf vor dem Kauf die Teile an deinem Rad. Fehler entdeckt? Schreib uns an <a href="mailto:kontakt@radgarage.app">kontakt@radgarage.app</a> oder nutze in der App „Verbesserung vorschlagen“. Shop-Links sind Suchlinks, keine Partnerlinks.</p>
   </main>
 ''')
-    out.append('<script src="/raeder/vorschlag.js?v=1" defer></script>\n')
+    out.append('<script src="/raeder/vorschlag.js?v=2" defer></script>\n')
     if w:
         out.append('<script src="/raeder/rechner.js?v=1" defer></script>\n')
     out.append(FUSS)
@@ -591,12 +635,12 @@ def kurz_gefragt(r):
                        f'{teil_link(kassette)}{" (" + e(kassette["merkmale"]) + ")" if kassette["merkmale"] else ""}.' + _ersatz(kassette)))
     if not fragen:
         return ''
-    inhalt = ''.join(f'<div><h3>{q}</h3><p>{a}</p></div>' for q, a in fragen)
-    return f'''    <section class="t s1 voll gefragt" aria-labelledby="gefragt-titel">
-      <span class="eyebrow">Kurz gefragt</span>
-      <h2 id="gefragt-titel" style="font-size:30px;margin:6px 0 4px">Das Wichtigste zum {e(r["modell"])}</h2>
-      <div class="antworten">{inhalt}</div>
-    </section>
+    inhalt = ''.join(f'<details><summary><h3>{q}</h3></summary><p>{a}</p></details>' for q, a in fragen)
+    return f'''      <section class="t s1 gefragt" id="fragen" aria-labelledby="gefragt-titel">
+        <span class="eyebrow">Kurz gefragt</span>
+        <h2 id="gefragt-titel">Häufige Fragen zum {e(r["modell"])}</h2>
+        <div class="antworten">{inhalt}</div>
+      </section>
 '''
 
 
@@ -653,12 +697,14 @@ def vergleich_kasten(r, alle):
         satz += f' Die UVP lag bei {tsd(round(r["uvp_eur"]))} € statt {tsd(round(n["uvp_eur"]))} €.'
     titel = (f'{r["baujahr"]} oder {n["baujahr"]}: was ist anders?' if n['modell'] == r['modell']
              else f'Was ist anders als beim {n["modell"]}?')
-    return f'''    <section class="t k3 voll nachbar-vgl" aria-labelledby="vgl-titel">
-      <span class="eyebrow">Vergleich</span>
-      <h2 id="vgl-titel" style="font-size:30px;margin:6px 0 4px">{e(titel)}</h2>
-      <p>{satz}</p>
-      {tabelle}
-    </section>
+    if tabelle:
+        tabelle = f'<details class="aufklapp"><summary>Unterschiede ansehen</summary>{tabelle}</details>'
+    return f'''      <section class="t k3 nachbar-vgl" id="vergleich" aria-labelledby="vgl-titel">
+        <span class="eyebrow">Vergleich</span>
+        <h2 id="vgl-titel">{e(titel)}</h2>
+        <p>{satz}</p>
+        {tabelle}
+      </section>
 '''
 
 
@@ -679,15 +725,16 @@ RAD_ANLEITUNGEN = [
 def anleitungen_fuers_rad(r):
     kats = {t['kategorie'] for t in r['teile']}
     da = {a['slug']: a for a in ANLEITUNGEN}
-    passend = [da[s] for s, wenn in RAD_ANLEITUNGEN if s in da and wenn(r, kats)]
-    if not passend:
+    liste = [da[s] for s, wenn in RAD_ANLEITUNGEN if s in da and wenn(r, kats)]
+    if not liste:
         return ''
-    links = ''.join(f'<a href="/anleitungen/{a["slug"]}/">{e(a["h1"])}</a>' for a in passend)
-    return f'''    <nav class="t s2 voll rad-anleitungen" aria-label="Anleitungen für dieses Rad">
-      <span class="eyebrow">Selbst machen</span>
-      <h2 style="font-size:26px;margin:6px 0 10px">Anleitungen für dein {e(r["modell"])}</h2>
-      <div class="chips">{links}</div>
-    </nav>
+    links = ''.join(f'<a href="/anleitungen/{a["slug"]}/">{e(a["h1"])}</a>' for a in liste)
+    links += '<a class="alle-link" href="/anleitungen/">Alle Anleitungen</a>'
+    return f'''      <nav class="t s2 rad-anleitungen" aria-label="Anleitungen für dieses Rad">
+        <span class="eyebrow">Selbst machen</span>
+        <h2>Anleitungen für dein {e(r["modell"])}</h2>
+        <div class="chips">{links}</div>
+      </nav>
 '''
 
 
@@ -703,10 +750,11 @@ def vorschlag_form(r, titel_name):
         f'<label><input type="radio" name="grund" value="{g}" required> {e(t)}</label>' for g, t in GRUENDE)
     teile = ''.join(
         f'<option value="{e(t["id"])}">{e(NAMEN.get(t["kategorie"], t["kategorie"]))}: {e(teilname(t))}</option>' for t in r['teile'])
-    return f'''    <section class="t s2 voll vorschlag" id="verbessern" aria-labelledby="vs-titel">
-      <span class="eyebrow">Mitmachen</span>
-      <h2 id="vs-titel" style="font-size:30px;margin:6px 0 6px">Stimmt etwas nicht?</h2>
-      <p>Du kennst das {e(r["modell"])} besser? Sag uns, was falsch ist oder fehlt. Ganz ohne Anmeldung. Wir prüfen jeden Hinweis und verbessern den Katalog für alle.</p>
+    return f'''      <details class="t s1 vorschlag" id="verbessern">
+      <summary><span class="eyebrow">Mitmachen</span>
+      <h2 id="vs-titel">Stimmt etwas nicht?</h2>
+      <p>Du kennst das {e(r["modell"])} besser? Sag uns, was falsch ist oder fehlt. Ganz ohne Anmeldung.</p>
+      <span class="pill ghost">Hinweis geben</span></summary>
       <form class="vs-form" data-rad="{e(r["id"])}" data-titel="{e(titel_name)}" novalidate>
         <fieldset><legend>Was ist los?</legend><div class="wahl">{gruende}</div></fieldset>
         <label class="feld vs-teil" hidden>Welches Teil?
@@ -720,7 +768,7 @@ def vorschlag_form(r, titel_name):
         <p class="msg" role="status" hidden></p>
         <p class="klein">Wir speichern nur deinen Hinweis, keinen Namen und keine E-Mail-Adresse. Mehr in der <a href="/datenschutz.html#hinweise">Datenschutzerklärung</a>.</p>
       </form>
-    </section>
+      </details>
 '''
 
 
@@ -728,7 +776,7 @@ def radkarte(r, i=0, ebene='h3', zeige_marke=False, mit_jahr=False):
     name = r['name'] if zeige_marke else r['modell']
     if mit_jahr:
         name += f' ({r["baujahr"]})'
-    return (f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{r["pfad"]}">'
+    return (f'<a class="t {art_farbe(r["kategorie"])} karte" href="{r["pfad"]}">'
             f'<span class="eyebrow">{e(r["hersteller"])} · {r["baujahr"]}</span><{ebene}>{e(name)}</{ebene}>'
             f'<span class="meta">{e(r["kategorie"])} · {len(r["teile"])} Teile</span></a>')
 
@@ -768,11 +816,14 @@ def reihen_abschnitte(raeder):
     reihen = OrderedDict()
     for r in sorted(raeder, key=lambda x: (x['reihe'].lower(), -x['baujahr'], x['modell'])):
         reihen.setdefault(r['reihe'], []).append(r)
-    return '\n'.join(
-        f'  <section class="reihe-abschnitt" aria-label="{e(name)}"><h2 class="zwischen">'
-        f'{reihe_titel(name, rs)}</h2>'
-        f'<div class="karten">{"".join(radkarte(x, i) for i, x in enumerate(rs))}</div></section>'
+    # Eine Kachel je Reihe mit den Rädern als kurze Zeilen, oben Sprungmarken zu den Reihen
+    sprung = ''.join(f'<a href="#reihe-{slug(n)}">{e(n)}</a>' for n in reihen)
+    kacheln = ''.join(
+        f'<section class="t s1 reihe-kachel" id="reihe-{slug(name)}" aria-label="{e(name)}"><h2>{reihe_titel(name, rs)}'
+        f'<span>{len(rs)} {"Rad" if len(rs) == 1 else "Räder"}</span></h2>'
+        f'<ul class="radzeilen">{"".join(radzeile(x) for x in rs)}</ul></section>'
         for name, rs in reihen.items())
+    return f'  <nav class="chips reihen-sprung" aria-label="Reihen">{sprung}</nav>\n  <div class="reihen-raster">{kacheln}</div>\n'
 
 
 def marken_seite(slug, raeder):
@@ -801,8 +852,7 @@ def uebersicht_seite(alle, gesamt):
     beschr = 'Welche Teile sind an deinem Fahrrad verbaut? Ersatzteile nach Marke und Modell, mit Richtpreisen und passendem Ersatz.'
     m = marken(alle)
     marken_kacheln = ''.join(
-        f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="/raeder/{s}/"><span class="eyebrow">Marke</span>'
-        f'<h2>{e(rs[0]["hersteller"])}</h2><span class="meta">{len(rs)} Modelle</span></a>'
+        f'<a class="marke-kachel" href="/raeder/{s}/"><h2>{e(rs[0]["hersteller"])}</h2><span>{len(rs)} Modelle</span></a>'
         for i, (s, rs) in enumerate(m.items()))
     return ''.join([kopf(titel, beschr, '/raeder/', [brot]), nav, f'''  <main>
   <div class="bento uebersicht">
@@ -822,8 +872,9 @@ def uebersicht_seite(alle, gesamt):
   <section aria-label="Wissen" style="margin-top:14px">
     <div class="chips">{WISSEN_CHIPS}</div>
   </section>
-  <section aria-label="Marken" style="margin-top:14px">
-    <div class="karten">{marken_kacheln}</div>
+  <section class="t s1 marken-box" aria-labelledby="marken-titel">
+    <h2 id="marken-titel">Alle {len(m)} Marken</h2>
+    <div class="marken-raster">{marken_kacheln}</div>
   </section>
   </main>
 ''', FUSS])
@@ -859,12 +910,15 @@ def reihe_seite(pfad, rs):
     spanne = f'{jahre[0]}' if len(jahre) == 1 else f'{jahre[0]} bis {jahre[-1]}'
     nav, brot = krumen([('Radgarage', '/'), ('Räder', '/raeder/'), (r0['hersteller'], f'/raeder/{r0["marke_slug"]}/'),
                         (r0['reihe'], pfad)])
-    titel = f'{name}: alle Ausstattungen und Teile im Vergleich'
+    titel = passend(f'{name}: alle Ausstattungen und Teile im Vergleich', f'{name}: Ausstattungen im Vergleich',
+                    f'{name}: alle Ausstattungen', name)
     if len(titel) < 50:
         titel += ' | Radgarage'
     mit_uvp = any(r['uvp_eur'] for r in rs)
-    beschr = (f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
-              f'{"UVP und " if mit_uvp else ""}was jede Version im Unterhalt kostet.')
+    beschr = passend(f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
+                     f'{"UVP und " if mit_uvp else ""}was jede Version im Unterhalt kostet.',
+                     f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen und Unterhalt.',
+                     f'{len(rs)} Ausstattungen des {name} im Vergleich: Teile und Unterhalt.', grenze=165)
     liste = {'@context': 'https://schema.org', '@type': 'ItemList', 'name': name,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + r['pfad'],
                                   'name': f'{r["name"]} ({r["baujahr"]})'} for i, r in enumerate(rs)]}

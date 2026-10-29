@@ -55,7 +55,7 @@ def sitemap(seiten):
 # Eine Sitemap je Bereich, damit die Search Console zeigt, welcher Bereich wie gut im Index ist.
 # sitemap.xml ist der Index darüber, so wie er in der Search Console eingereicht ist.
 BEREICHE = [('raeder', ('/raeder/',)), ('teile', ('/teile/',)),
-            ('ratgeber', ('/anleitungen/', '/reifengroessen/', '/verschleissrechner/', '/schaltgruppen/',
+            ('ratgeber', ('/anleitungen/', '/wissen/', '/reifengroessen/', '/verschleissrechner/', '/schaltgruppen/',
                           '/e-bike-systeme/', '/unterhaltskosten/')),
             ('seiten', ('',))]
 
@@ -73,7 +73,8 @@ def sitemaps(seiten):
 
 
 if __name__ == '__main__':
-    schreiben('css/seiten.css', '\n'.join(lesen(f'_quellen/{n}') for n in ['basis.css', 'anleitungen-extra.css', 'raeder-extra.css']))
+    schreiben('css/seiten.css', '\n'.join(lesen(f'_quellen/{n}') for n in ['basis.css', 'anleitungen-extra.css', 'raeder-extra.css', 'rahmen.css']))
+    schreiben('css/rahmen.css', lesen('_quellen/rahmen.css'))
     alle = ra.laden()
     neuestes = max(r['geaendert'] for r in alle)
     seiten = ['/', '/anleitungen/', '/raeder/']
@@ -99,6 +100,8 @@ if __name__ == '__main__':
     seiten += gr.bauen(alle, schreiben)
     seiten += wi.bauen(alle, schreiben, lesen)
     schreiben('js/finder.js', lesen('_quellen/finder.js'))
+    schreiben('wissen/index.html', wi.wissen_seite())
+    seiten.append(('/wissen/', wi.STAND_WISSEN))
     schreiben('ueber-uns/index.html', se.ueber_uns(len(alle), len(ra.TEILE), int(werte['marken'])))
     schreiben('so-pruefen-wir/index.html', se.methodik(len(alle), len(ra.TEILE), neuestes))
     schreiben('fuer-vereine/index.html', se.fuer_vereine(len(alle), len(an.ANLEITUNGEN)))

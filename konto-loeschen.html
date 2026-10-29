@@ -7,6 +7,10 @@
 <meta name="description" content="So löschst du dein Radgarage-Konto und alle gesicherten Daten, in der App oder per E-Mail.">
 <link rel="preload" href="fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="canonical" href="https://radgarage.app/konto-loeschen.html">
+<meta property="og:title" content="Konto löschen · Radgarage">
+<meta property="og:image" content="https://radgarage.app/img/werkstatt.jpg">
+<meta property="og:url" content="https://radgarage.app/konto-loeschen.html">
 <meta name="theme-color" content="#F2EDE2">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -221,17 +225,19 @@ footer { padding-bottom: 40px; }
   .kopfnav a:hover, .kopfnav a[aria-current] { background: var(--bg); }
 }
 </style>
+<link rel="stylesheet" href="/css/rahmen.css?v=9">
 </head>
 <body>
 <div class="wrap">
   <header>
-    <a href="./" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a></nav>
+    <a href="/" class="logo">Radgarage</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
     <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <main>
     <section class="legal legal-page" id="konto-loeschen">
-      <h2>Konto löschen</h2>
+      <h1>Konto löschen</h1>
       <p>Du kannst dein Radgarage-Konto jederzeit löschen, zusammen mit allem, was wir dazu gespeichert haben. Ohne Konto speichern wir nichts von dir: Dann liegen deine Daten nur auf deinem Handy und verschwinden, wenn du die App löschst.</p>
 
       <h3>In der App</h3>
@@ -265,22 +271,35 @@ footer { padding-bottom: 40px; }
     </section>
     <p><a class="back" href="./">Zurück zur Startseite</a></p>
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

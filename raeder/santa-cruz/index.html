@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Räder", "item": "https://radgarage.app/raeder/"}, {"@type": "ListItem", "position": 3, "name": "Santa Cruz", "item": "https://radgarage.app/raeder/santa-cruz/"}]}</script>
 </head>
@@ -27,8 +27,9 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/" aria-current="true">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><a href="/raeder/">Räder</a></li><li><span aria-current="page">Santa Cruz</span></li></ol></nav>
   <main>
@@ -39,30 +40,39 @@
       <p class="lead">25 Modelle im Katalog. Wähle dein Rad und sieh, welche Kette, Bremsbeläge, Reifen und anderen Teile verbaut sind.</p>
     </div>
   </div>
-  <section class="reihe-abschnitt" aria-label="Bronson"><h2 class="zwischen"><a href="/raeder/santa-cruz/bronson/">Bronson</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-bronson-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Bronson 70</h3><span class="meta">MTB · 15 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-bronson-90/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Bronson 90</h3><span class="meta">MTB · 16 Teile</span></a><a class="t k3 karte" href="/raeder/santa-cruz/2026-bronson-gx-axs/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Bronson GX AXS</h3><span class="meta">MTB · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Heckler SL"><h2 class="zwischen"><a href="/raeder/santa-cruz/heckler-sl/">Heckler SL</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-heckler-sl-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Heckler SL 70</h3><span class="meta">E-MTB · 16 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-heckler-sl-90/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Heckler SL 90</h3><span class="meta">E-MTB · 16 Teile</span></a><a class="t k3 karte" href="/raeder/santa-cruz/2026-heckler-sl-stout/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Heckler SL Stout</h3><span class="meta">E-MTB · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Hightower"><h2 class="zwischen"><a href="/raeder/santa-cruz/hightower/">Hightower</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-hightower-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Hightower 70</h3><span class="meta">MTB · 15 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-hightower-90/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Hightower 90</h3><span class="meta">MTB · 16 Teile</span></a><a class="t k3 karte" href="/raeder/santa-cruz/2026-hightower-gx-axs/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Hightower GX AXS</h3><span class="meta">MTB · 16 Teile</span></a><a class="t k4 karte" href="/raeder/santa-cruz/2026-hightower-xtr-rsv/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Hightower XTR RSV</h3><span class="meta">MTB · 17 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Megatower"><h2 class="zwischen"><a href="/raeder/santa-cruz/megatower/">Megatower</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-megatower-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Megatower 70</h3><span class="meta">MTB · 15 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-megatower-90/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Megatower 90</h3><span class="meta">MTB · 15 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Tallboy"><h2 class="zwischen"><a href="/raeder/santa-cruz/tallboy/">Tallboy</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2025-tallboy-gx-axs/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy GX AXS</h3><span class="meta">MTB · 13 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2025-tallboy-r/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy R</h3><span class="meta">MTB · 13 Teile</span></a><a class="t k3 karte" href="/raeder/santa-cruz/2025-tallboy-s/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy S</h3><span class="meta">MTB · 13 Teile</span></a><a class="t k4 karte" href="/raeder/santa-cruz/2025-tallboy-x0-axs/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy X0 AXS</h3><span class="meta">MTB · 13 Teile</span></a><a class="t k5 karte" href="/raeder/santa-cruz/2025-tallboy-x0-axs-rsv/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy X0 AXS RSV</h3><span class="meta">MTB · 13 Teile</span></a><a class="t k1 karte" href="/raeder/santa-cruz/2025-tallboy-xx-axs-rsv/"><span class="eyebrow">Santa Cruz · 2025</span><h3>Tallboy XX AXS RSV</h3><span class="meta">MTB · 13 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Vala"><h2 class="zwischen"><a href="/raeder/santa-cruz/vala/">Vala</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-vala-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala 70</h3><span class="meta">E-MTB · 17 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-vala-90/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala 90</h3><span class="meta">E-MTB · 16 Teile</span></a><a class="t k3 karte" href="/raeder/santa-cruz/2026-vala-gx-axs/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala GX AXS</h3><span class="meta">E-MTB · 16 Teile</span></a><a class="t k4 karte" href="/raeder/santa-cruz/2026-vala-x0-axs-rsv/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala X0 AXS RSV</h3><span class="meta">E-MTB · 16 Teile</span></a><a class="t k5 karte" href="/raeder/santa-cruz/2026-vala-xx-axs-rsv/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala XX AXS RSV</h3><span class="meta">E-MTB · 16 Teile</span></a></div></section>
-  <section class="reihe-abschnitt" aria-label="Vala AL"><h2 class="zwischen"><a href="/raeder/santa-cruz/vala-al/">Vala AL</a></h2><div class="karten"><a class="t k1 karte" href="/raeder/santa-cruz/2026-vala-al-70/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala AL 70</h3><span class="meta">E-MTB · 17 Teile</span></a><a class="t k2 karte" href="/raeder/santa-cruz/2026-vala-al-deore/"><span class="eyebrow">Santa Cruz · 2026</span><h3>Vala AL Deore</h3><span class="meta">E-MTB · 17 Teile</span></a></div></section>
+  <nav class="chips reihen-sprung" aria-label="Reihen"><a href="#reihe-bronson">Bronson</a><a href="#reihe-heckler-sl">Heckler SL</a><a href="#reihe-hightower">Hightower</a><a href="#reihe-megatower">Megatower</a><a href="#reihe-tallboy">Tallboy</a><a href="#reihe-vala">Vala</a><a href="#reihe-vala-al">Vala AL</a></nav>
+  <div class="reihen-raster"><section class="t s1 reihe-kachel" id="reihe-bronson" aria-label="Bronson"><h2><a href="/raeder/santa-cruz/bronson/">Bronson</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-bronson-70/"><b>Bronson 70</b><span>2026 · MTB · 15 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-bronson-90/"><b>Bronson 90</b><span>2026 · MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-bronson-gx-axs/"><b>Bronson GX AXS</b><span>2026 · MTB · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-heckler-sl" aria-label="Heckler SL"><h2><a href="/raeder/santa-cruz/heckler-sl/">Heckler SL</a><span>3 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-heckler-sl-70/"><b>Heckler SL 70</b><span>2026 · E-MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-heckler-sl-90/"><b>Heckler SL 90</b><span>2026 · E-MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-heckler-sl-stout/"><b>Heckler SL Stout</b><span>2026 · E-MTB · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-hightower" aria-label="Hightower"><h2><a href="/raeder/santa-cruz/hightower/">Hightower</a><span>4 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-hightower-70/"><b>Hightower 70</b><span>2026 · MTB · 15 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-hightower-90/"><b>Hightower 90</b><span>2026 · MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-hightower-gx-axs/"><b>Hightower GX AXS</b><span>2026 · MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-hightower-xtr-rsv/"><b>Hightower XTR RSV</b><span>2026 · MTB · 17 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-megatower" aria-label="Megatower"><h2><a href="/raeder/santa-cruz/megatower/">Megatower</a><span>2 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-megatower-70/"><b>Megatower 70</b><span>2026 · MTB · 15 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-megatower-90/"><b>Megatower 90</b><span>2026 · MTB · 15 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-tallboy" aria-label="Tallboy"><h2><a href="/raeder/santa-cruz/tallboy/">Tallboy</a><span>6 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2025-tallboy-gx-axs/"><b>Tallboy GX AXS</b><span>2025 · MTB · 13 Teile</span></a></li><li><a href="/raeder/santa-cruz/2025-tallboy-r/"><b>Tallboy R</b><span>2025 · MTB · 13 Teile</span></a></li><li><a href="/raeder/santa-cruz/2025-tallboy-s/"><b>Tallboy S</b><span>2025 · MTB · 13 Teile</span></a></li><li><a href="/raeder/santa-cruz/2025-tallboy-x0-axs/"><b>Tallboy X0 AXS</b><span>2025 · MTB · 13 Teile</span></a></li><li><a href="/raeder/santa-cruz/2025-tallboy-x0-axs-rsv/"><b>Tallboy X0 AXS RSV</b><span>2025 · MTB · 13 Teile</span></a></li><li><a href="/raeder/santa-cruz/2025-tallboy-xx-axs-rsv/"><b>Tallboy XX AXS RSV</b><span>2025 · MTB · 13 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-vala" aria-label="Vala"><h2><a href="/raeder/santa-cruz/vala/">Vala</a><span>5 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-vala-70/"><b>Vala 70</b><span>2026 · E-MTB · 17 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-vala-90/"><b>Vala 90</b><span>2026 · E-MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-vala-gx-axs/"><b>Vala GX AXS</b><span>2026 · E-MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-vala-x0-axs-rsv/"><b>Vala X0 AXS RSV</b><span>2026 · E-MTB · 16 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-vala-xx-axs-rsv/"><b>Vala XX AXS RSV</b><span>2026 · E-MTB · 16 Teile</span></a></li></ul></section><section class="t s1 reihe-kachel" id="reihe-vala-al" aria-label="Vala AL"><h2><a href="/raeder/santa-cruz/vala-al/">Vala AL</a><span>2 Räder</span></h2><ul class="radzeilen"><li><a href="/raeder/santa-cruz/2026-vala-al-70/"><b>Vala AL 70</b><span>2026 · E-MTB · 17 Teile</span></a></li><li><a href="/raeder/santa-cruz/2026-vala-al-deore/"><b>Vala AL Deore</b><span>2026 · E-MTB · 17 Teile</span></a></li></ul></section></div>
+
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

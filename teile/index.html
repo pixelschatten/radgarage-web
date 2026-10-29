@@ -19,7 +19,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=8">
+<link rel="stylesheet" href="/css/seiten.css?v=9">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Teile", "item": "https://radgarage.app/teile/"}]}</script>
 </head>
@@ -27,8 +27,9 @@
 <div class="wrap">
   <header>
     <a href="/" class="logo">Radgarage</a>
-    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/anleitungen/">Anleitungen</a><a href="/raeder/">Räder</a><a href="/teile/" aria-current="page">Ersatzteile</a></nav>
-    <a class="pill" href="/#anmelden">Testzugang sichern</a>
+    <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/" aria-current="page">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <!--kopf-knopf--><a class="pill" href="/#anmelden">Testzugang sichern</a><!--/kopf-knopf-->
   </header>
   <nav class="krumen" aria-label="Brotkrumen"><ol><li><a href="/">Radgarage</a></li><li><span aria-current="page">Teile</span></li></ol></nav>
   <main>
@@ -37,7 +38,7 @@
       <span class="eyebrow">Teile und Ersatz</span>
       <h1>Welches Teil passt an dein Rad?</h1>
       <p class="lead">Der Katalog der Radgarage kennt 2.603 Teile und weiß, an welchen Rädern sie verbaut sind. Such ein Teil oder wähle eine Kategorie und finde passenden Ersatz.</p>
-      <form class="suche" role="search" data-art="teile" action="#"><label class="sr" for="suche-teile">Teil suchen</label><input type="search" id="suche-teile" placeholder="z. B. CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-teile-liste"><ul class="treffer" id="suche-teile-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=1" defer></script>
+      <form class="suche" role="search" data-art="teile" action="#"><label class="sr" for="suche-teile">Teil suchen</label><input type="search" id="suche-teile" placeholder="z. B. CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-teile-liste"><ul class="treffer" id="suche-teile-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script>
     </div>
   </div>
   <section aria-label="Nach System" style="margin-top:14px">
@@ -47,26 +48,40 @@
       <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Reifen</span><h2>Reifengrößen</h2><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
     </div>
   </section>
-  <section aria-label="Kategorien" style="margin-top:14px">
-    <div class="karten"><a class="t k1 karte" href="/teile/kette/"><span class="eyebrow">Teile</span><h2>Ketten</h2><span class="meta">64 im Katalog</span></a><a class="t k2 karte" href="/teile/kassette/"><span class="eyebrow">Teile</span><h2>Kassetten</h2><span class="meta">140 im Katalog</span></a><a class="t k3 karte" href="/teile/bremsbelag/"><span class="eyebrow">Teile</span><h2>Bremsbeläge</h2><span class="meta">27 im Katalog</span></a><a class="t k4 karte" href="/teile/bremsscheibe/"><span class="eyebrow">Teile</span><h2>Bremsscheiben</h2><span class="meta">101 im Katalog</span></a><a class="t k5 karte" href="/teile/reifen/"><span class="eyebrow">Teile</span><h2>Reifen</h2><span class="meta">420 im Katalog</span></a><a class="t k1 karte" href="/teile/schlauch/"><span class="eyebrow">Teile</span><h2>Schläuche</h2><span class="meta">11 im Katalog</span></a><a class="t k2 karte" href="/teile/riemen/"><span class="eyebrow">Teile</span><h2>Riemen</h2><span class="meta">3 im Katalog</span></a><a class="t k3 karte" href="/teile/schaltwerk/"><span class="eyebrow">Teile</span><h2>Schaltwerke</h2><span class="meta">124 im Katalog</span></a><a class="t k4 karte" href="/teile/umwerfer/"><span class="eyebrow">Teile</span><h2>Umwerfer</h2><span class="meta">40 im Katalog</span></a><a class="t k5 karte" href="/teile/schalthebel/"><span class="eyebrow">Teile</span><h2>Schalthebel</h2><span class="meta">103 im Katalog</span></a><a class="t k1 karte" href="/teile/kurbel/"><span class="eyebrow">Teile</span><h2>Kurbeln</h2><span class="meta">363 im Katalog</span></a><a class="t k2 karte" href="/teile/innenlager/"><span class="eyebrow">Teile</span><h2>Innenlager</h2><span class="meta">81 im Katalog</span></a><a class="t k3 karte" href="/teile/bremssattel/"><span class="eyebrow">Teile</span><h2>Bremssättel</h2><span class="meta">148 im Katalog</span></a><a class="t k4 karte" href="/teile/laufradsatz/"><span class="eyebrow">Teile</span><h2>Laufradsätze</h2><span class="meta">604 im Katalog</span></a><a class="t k5 karte" href="/teile/gabel/"><span class="eyebrow">Teile</span><h2>Gabeln</h2><span class="meta">3 im Katalog</span></a><a class="t k1 karte" href="/teile/steckachse/"><span class="eyebrow">Teile</span><h2>Steckachsen</h2><span class="meta">242 im Katalog</span></a><a class="t k2 karte" href="/teile/lenker/"><span class="eyebrow">Teile</span><h2>Lenker</h2><span class="meta">2 im Katalog</span></a><a class="t k3 karte" href="/teile/lenkerband/"><span class="eyebrow">Teile</span><h2>Lenkerbänder</h2><span class="meta">2 im Katalog</span></a><a class="t k4 karte" href="/teile/sattel/"><span class="eyebrow">Teile</span><h2>Sättel</h2><span class="meta">4 im Katalog</span></a><a class="t k5 karte" href="/teile/sattelstuetze/"><span class="eyebrow">Teile</span><h2>Sattelstützen</h2><span class="meta">3 im Katalog</span></a><a class="t k1 karte" href="/teile/motor/"><span class="eyebrow">Teile</span><h2>Motoren</h2><span class="meta">49 im Katalog</span></a><a class="t k2 karte" href="/teile/akku/"><span class="eyebrow">Teile</span><h2>Akkus</h2><span class="meta">69 im Katalog</span></a></div>
+  <section aria-labelledby="bereiche-titel" style="margin-top:14px">
+    <h2 id="bereiche-titel" class="zwischen">Alle Teile nach Bereich</h2>
+    <div class="bereiche"><section class="t k1 bereich"><span class="eyebrow">Bereich</span><h3>Antrieb</h3><ul class="radzeilen"><li><a href="/teile/kette/"><b>Ketten</b><span>64 im Katalog</span></a></li><li><a href="/teile/kassette/"><b>Kassetten</b><span>140 im Katalog</span></a></li><li><a href="/teile/riemen/"><b>Riemen</b><span>3 im Katalog</span></a></li><li><a href="/teile/schaltwerk/"><b>Schaltwerke</b><span>124 im Katalog</span></a></li><li><a href="/teile/umwerfer/"><b>Umwerfer</b><span>40 im Katalog</span></a></li><li><a href="/teile/schalthebel/"><b>Schalthebel</b><span>103 im Katalog</span></a></li><li><a href="/teile/kurbel/"><b>Kurbeln</b><span>363 im Katalog</span></a></li><li><a href="/teile/innenlager/"><b>Innenlager</b><span>81 im Katalog</span></a></li></ul></section><section class="t k2 bereich"><span class="eyebrow">Bereich</span><h3>Bremsen</h3><ul class="radzeilen"><li><a href="/teile/bremsbelag/"><b>Bremsbeläge</b><span>27 im Katalog</span></a></li><li><a href="/teile/bremsscheibe/"><b>Bremsscheiben</b><span>101 im Katalog</span></a></li><li><a href="/teile/bremssattel/"><b>Bremssättel</b><span>148 im Katalog</span></a></li></ul></section><section class="t k5 bereich"><span class="eyebrow">Bereich</span><h3>Laufräder und Reifen</h3><ul class="radzeilen"><li><a href="/teile/reifen/"><b>Reifen</b><span>420 im Katalog</span></a></li><li><a href="/teile/schlauch/"><b>Schläuche</b><span>11 im Katalog</span></a></li><li><a href="/teile/laufradsatz/"><b>Laufradsätze</b><span>604 im Katalog</span></a></li><li><a href="/teile/steckachse/"><b>Steckachsen</b><span>242 im Katalog</span></a></li></ul></section><section class="t k3 bereich"><span class="eyebrow">Bereich</span><h3>Cockpit, Sattel und Gabel</h3><ul class="radzeilen"><li><a href="/teile/lenker/"><b>Lenker</b><span>2 im Katalog</span></a></li><li><a href="/teile/lenkerband/"><b>Lenkerbänder</b><span>2 im Katalog</span></a></li><li><a href="/teile/sattel/"><b>Sättel</b><span>4 im Katalog</span></a></li><li><a href="/teile/sattelstuetze/"><b>Sattelstützen</b><span>3 im Katalog</span></a></li><li><a href="/teile/gabel/"><b>Gabeln</b><span>3 im Katalog</span></a></li></ul></section><section class="t k4 bereich"><span class="eyebrow">Bereich</span><h3>E-Antrieb</h3><ul class="radzeilen"><li><a href="/teile/motor/"><b>Motoren</b><span>49 im Katalog</span></a></li><li><a href="/teile/akku/"><b>Akkus</b><span>69 im Katalog</span></a></li></ul></section></div>
   </section>
   </main>
-  <footer>
-    <span>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</span>
-    <nav aria-label="Fußzeile">
-      <a href="/raeder/">Räder</a>
-      <a href="/teile/">Ersatzteile</a>
-      <a href="/anleitungen/">Anleitungen</a>
-      <a href="/feedback/">Feedback</a>
-      <a href="/ueber-uns/">Über uns</a>
-      <a href="/so-pruefen-wir/">So prüfen wir</a>
-      <a href="/fuer-vereine/">Für Vereine</a>
-      <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
-      <a href="mailto:kontakt@radgarage.app">Für Shops und Partner: kontakt@radgarage.app</a>
-      <a href="/impressum.html">Impressum</a>
-      <a href="/datenschutz.html">Datenschutz</a>
-      <a href="/konto-loeschen.html">Konto löschen</a>
-    </nav>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
     <script src="/js/zaehler.js?v=1" defer></script>
   </footer>
 </div>

@@ -6,8 +6,8 @@ _quellen/katalog-auszug.json (Räder mit ihren Teilen). Gebaut wird über python
 import re
 from collections import Counter, OrderedDict
 
-from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, suchfeld
-from raeder import (ANLEITUNG, FARBEN, NAMEN, RICHTWERT_KM, TEILE, alternativen, preis, shoplinks, slug,
+from anleitungen import ANLEITUNGEN, FUSS, SEITE, e, kopf, krumen, passend, suchfeld
+from raeder import (ANLEITUNG, NAMEN, RICHTWERT_KM, TEILE, alternativen, preis, shoplinks, slug,
                     teil_link, teilname, tsd)
 
 # Kategorien in der Reihenfolge der Übersicht, mit Mehrzahl für Überschriften.
@@ -70,13 +70,19 @@ def ersatzkarte(a, i, n_raeder):
     meta = ' · '.join(x for x in [preis(a['preis']), f'an {n_raeder} Rädern verbaut' if n_raeder else ''] if x)
     if meta:
         zeilen.append(f'<span class="meta">{meta}</span>')
-    return f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="/teile/{e(a["id"])}/">{"".join(zeilen)}</a>'
+    return f'<a class="t s1 karte" href="/teile/{e(a["id"])}/">{"".join(zeilen)}</a>'
 
 
 def radliste(raeder):
     gruppen = OrderedDict()
     for r in sorted(raeder, key=lambda x: (x['hersteller'].lower(), x['modell'], -x['baujahr'])):
         gruppen.setdefault(r['hersteller'], []).append(r)
+    if len(raeder) > 30:
+        # Lange Listen nach Marke eingeklappt, die Links bleiben im HTML
+        return '<div class="radmarken">' + ''.join(
+            f'<details><summary><b>{e(marke)}</b><span>{len(rs)}</span></summary><ul>'
+            + ''.join(f'<li><a href="{r["pfad"]}">{e(r["modell"])} ({r["baujahr"]})</a></li>' for r in rs)
+            + '</ul></details>' for marke, rs in gruppen.items()) + '</div>'
     li = []
     for marke, rs in gruppen.items():
         li.append(f'<li class="marke">{e(marke)}</li>')
@@ -90,16 +96,19 @@ def teil_seite(t, raeder, verbaut, paare=None):
     pfad = f'/teile/{t["id"]}/'
     nav, brot = krumen([('Radgarage', '/'), ('Teile', '/teile/'), (KATEGORIEN.get(kat, kat), kat_pfad(kat)), (name, pfad)])
     alt = alternativen(t['id'])
-    titel = f'{name}: passende Räder und Ersatz'
+    titel = passend(f'{name}: passende Räder und Ersatz', f'{name}: Räder und Ersatz', f'{name}: Ersatz', name)
     if len(titel) < 50:
         titel += ' | Radgarage'
-    beispiele = ', '.join(f'{r["name"]}' for r in raeder[:2])
-    beschr = ' '.join(x for x in [
-        f'{name}{" (" + t["merkmale"] + ")" if t["merkmale"] else ""}:',
-        f'Richtpreis {preis(t["preis"])}.' if t['preis'] else '',
-        f'Verbaut an {len(raeder)} Rädern, z. B. {beispiele}.' if raeder else '',
-        f'{len(alt)} Teile passen als Ersatz.' if alt else '',
-    ] if x)
+    def text(n_beispiele, merkmale=True):
+        beispiele = ', '.join(f'{r["name"]}' for r in raeder[:n_beispiele])
+        verbaut = f'Verbaut an {len(raeder)} Rädern' + (f', z. B. {beispiele}.' if beispiele else '.')
+        return ' '.join(x for x in [
+            f'{name}{" (" + t["merkmale"] + ")" if t["merkmale"] and merkmale else ""}:',
+            f'Richtpreis {preis(t["preis"])}.' if t['preis'] else '',
+            verbaut if raeder else '',
+            f'{len(alt)} Teile passen als Ersatz.' if alt else '',
+        ] if x)
+    beschr = passend(text(2), text(1), text(0), text(0, False), grenze=165)
     # Liste der Räder statt „Product“: ohne festen Preis und Bewertungen wertet Google Produktdaten als ungültig.
     schema = [brot]
     if raeder:
@@ -230,15 +239,34 @@ def kategorie_seite(kat, teile, verbaut, paare=None):
 ''', FUSS])
 
 
+# Bereiche am Rad für die Übersicht /teile/, Farben wie bei den Anleitungen
+BEREICHE_TEILE = [
+    ('Antrieb', 'k1', ['Kette', 'Kassette', 'Riemen', 'Schaltwerk', 'Umwerfer', 'Schalthebel', 'Kurbel', 'Innenlager']),
+    ('Bremsen', 'k2', ['Bremsbelag', 'Bremsscheibe', 'Bremssattel']),
+    ('Laufräder und Reifen', 'k5', ['Reifen', 'Schlauch', 'Laufradsatz', 'Steckachse']),
+    ('Cockpit, Sattel und Gabel', 'k3', ['Lenker', 'Lenkerband', 'Sattel', 'Sattelstütze', 'Gabel']),
+    ('E-Antrieb', 'k4', ['Motor', 'Akku']),
+    ('Sonstiges', 's1', ['Sonstiges']),
+]
+
+
+def bereich_kachel(name, farbe, kats):
+    zeilen = ''.join(f'<li><a href="{kat_pfad(k)}"><b>{e(KATEGORIEN.get(k, k))}</b><span>{len(ts)} im Katalog</span></a></li>'
+                     for k, ts in kats)
+    return (f'<section class="t {farbe} bereich"><span class="eyebrow">Bereich</span><h3>{e(name)}</h3>'
+            f'<ul class="radzeilen">{zeilen}</ul></section>') if zeilen else ''
+
+
 def uebersicht_seite(nach_kat):
     nav, brot = krumen([('Radgarage', '/'), ('Teile', '/teile/')])
     titel = 'Fahrrad-Ersatzteile: was passt an welches Rad? | Radgarage'
     gesamt = sum(len(v) for v in nach_kat.values())
     beschr = f'{tsd(gesamt)} Fahrradteile von Kette bis Innenlager: an welchen Rädern sie verbaut sind und welcher Ersatz passt.'
-    kacheln = ''.join(
-        f'<a class="t {FARBEN[i % len(FARBEN)]} karte" href="{kat_pfad(k)}"><span class="eyebrow">Teile</span>'
-        f'<h2>{e(KATEGORIEN.get(k, k))}</h2><span class="meta">{len(ts)} im Katalog</span></a>'
-        for i, (k, ts) in enumerate(nach_kat.items()))
+    kacheln = ''.join(bereich_kachel(name, farbe, [(k, nach_kat[k]) for k in kats if k in nach_kat])
+                      for name, farbe, kats in BEREICHE_TEILE)
+    rest = [(k, ts) for k, ts in nach_kat.items() if not any(k in kats for _, _, kats in BEREICHE_TEILE)]
+    if rest:
+        kacheln += bereich_kachel('Weitere Teile', 's1', rest)
     return ''.join([kopf(titel, beschr, '/teile/', [brot]), nav, f'''  <main>
   <div class="bento uebersicht">
     <div class="t k1 kopf">
@@ -255,8 +283,9 @@ def uebersicht_seite(nach_kat):
       <a class="t k5 karte" href="/reifengroessen/"><span class="eyebrow">Reifen</span><h2>Reifengrößen</h2><span class="meta">ETRTO, Zoll und 700C umrechnen</span></a>
     </div>
   </section>
-  <section aria-label="Kategorien" style="margin-top:14px">
-    <div class="karten">{kacheln}</div>
+  <section aria-labelledby="bereiche-titel" style="margin-top:14px">
+    <h2 id="bereiche-titel" class="zwischen">Alle Teile nach Bereich</h2>
+    <div class="bereiche">{kacheln}</div>
   </section>
   </main>
 ''', FUSS])
