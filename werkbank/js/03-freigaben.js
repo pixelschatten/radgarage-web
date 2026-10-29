@@ -170,13 +170,10 @@ let helferOffen = 0;
 function zahlenSetzen() {
   const web = appGruppen.filter((g) => g.web).length;
   const app = appGruppen.length - web;
-  const n = helferOffen + app + web;
-  const zahl = $('#zahl-offen');
-  zahl.hidden = !n;
-  zahl.textContent = String(n);
   $('#fg-zahl-helfer').textContent = helferOffen ? `(${helferOffen})` : '';
   $('#fg-zahl-app').textContent = app ? `(${app})` : '';
   $('#fg-zahl-web').textContent = web ? `(${web})` : '';
+  hinweiseZeichnen();
 }
 
 async function ladeOffen() {
@@ -259,9 +256,8 @@ let fbNeu = 0;
 
 function feedbackZahlSetzen(n) {
   fbNeu = n;
-  $('#zahl-feedback').hidden = !n;
-  $('#zahl-feedback').textContent = String(n);
   $('#fb-zahl-neu').textContent = n ? `(${n})` : '';
+  hinweiseZeichnen();
 }
 
 async function feedbackZahl() {

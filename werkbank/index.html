@@ -828,6 +828,21 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 .neu-gruppe .wl-person { padding: 10px 16px; }
 .neu-gruppe > .fine { margin: 0; padding: 4px 16px 14px; }
 .toast.oben { bottom: auto; top: 20px; }
+/* Glocke: aufklappbare Liste aller Hinweise */
+.wer { position: relative; }
+.glocke-feld { position: absolute; right: 0; top: calc(100% + 10px); z-index: 55; width: min(400px, calc(100vw - 32px)); max-height: min(70vh, 560px); overflow: auto; padding: 10px; border-radius: 22px; background: var(--surface2); border: 1px solid var(--line); box-shadow: 0 16px 40px var(--shadow); color: var(--text); }
+.hw-kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 6px 8px; color: var(--ink); font-size: 15px; }
+.hw-liste { display: grid; gap: 4px; }
+.hw-zeile { display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px; border: 0; border-radius: 16px; background: transparent; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.hw-zeile:hover, .hw-zeile:focus-visible { background: var(--surface); outline: none; }
+.hw-symbol { width: 38px; height: 38px; flex: none; display: grid; place-items: center; border-radius: 12px; color: var(--ink); }
+.hw-symbol svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hw-text { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.hw-text b { color: var(--ink); font-size: 15px; }
+.hw-text small { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hw-anzahl { flex: none; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 800; line-height: 26px; text-align: center; }
+.hw-leer { margin: 0; padding: 14px 10px; color: var(--muted); font-size: 14px; }
+@media (max-width: 520px) { .glocke-feld { position: fixed; left: 16px; right: 16px; width: auto; } }
 </style>
 </head>
 <body>
@@ -839,7 +854,12 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         <button type="button" role="radio" data-design="light" title="Bright" aria-label="Bright"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
         <button type="button" role="radio" data-design="dark" title="Dark" aria-label="Dark"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button>
       </div>
-      <div class="wer" id="wer" hidden><button class="knopf-weich" type="button" id="suche-auf" title="Suchen (Strg+K oder /)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Suchen</span><kbd>Strg K</kbd></button><span class="ava" id="wer-bild" aria-hidden="true"></span><span id="wer-mail"></span><span class="chip rolle-chip" id="wer-rolle"></span><button class="zahnrad glocke" type="button" id="neu-glocke" data-recht="konten_betreuen" title="Neu dabei: Warteliste und neue Konten" aria-label="Neu dabei: Warteliste und neue Konten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="glocke-zahl" id="neu-zahl" hidden></span></button><button class="zahnrad" type="button" id="konto-auf" data-tab="konto" title="Dein Konto und Einstellungen" aria-label="Dein Konto und Einstellungen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><button class="pill ghost klein" id="abmelden" type="button">Abmelden</button></div>
+      <div class="wer" id="wer" hidden><button class="knopf-weich" type="button" id="suche-auf" title="Suchen (Strg+K oder /)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span>Suchen</span><kbd>Strg K</kbd></button><span class="ava" id="wer-bild" aria-hidden="true"></span><span id="wer-mail"></span><span class="chip rolle-chip" id="wer-rolle"></span><button class="zahnrad glocke" type="button" id="neu-glocke" title="Hinweise" aria-label="Hinweise" aria-haspopup="true" aria-expanded="false" aria-controls="glocke-feld"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="glocke-zahl" id="neu-zahl" hidden></span></button><button class="zahnrad" type="button" id="konto-auf" data-tab="konto" title="Dein Konto und Einstellungen" aria-label="Dein Konto und Einstellungen" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button><button class="pill ghost klein" id="abmelden" type="button">Abmelden</button>
+        <div class="glocke-feld" id="glocke-feld" role="region" aria-label="Hinweise" hidden>
+          <div class="hw-kopf"><b>Hinweise</b><button class="pill ghost mini" type="button" id="hw-gesehen" hidden>Neu dabei gesehen</button></div>
+          <div class="hw-liste" id="hw-liste"></div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -936,11 +956,11 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       <button type="button" role="tab" data-tab="uebersicht" aria-selected="false" data-recht="katalog_pflegen">Übersicht</button>
       <button type="button" role="tab" data-tab="erfassen" aria-selected="false" data-recht="katalog_erfassen">Rad erfassen</button>
       <button type="button" role="tab" data-tab="teile" aria-selected="false">Teil erfassen</button>
-      <button type="button" role="tab" data-tab="freigaben" aria-selected="false" data-recht="katalog_pflegen">Freigaben<span class="zahl" id="zahl-offen" hidden></span></button>
+      <button type="button" role="tab" data-tab="freigaben" aria-selected="false" data-recht="katalog_pflegen">Freigaben</button>
       <button type="button" role="tab" data-tab="katalog" aria-selected="false">Katalog</button>
       <button type="button" role="tab" data-tab="eigene" aria-selected="false" data-nur-rolle="helfer">Meine offenen Räder</button>
-      <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
-      <button type="button" role="tab" data-tab="crm" aria-selected="false" data-recht="konten_betreuen">CRM<span class="zahl" id="zahl-postfach" hidden></span></button>
+      <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback</button>
+      <button type="button" role="tab" data-tab="crm" aria-selected="false" data-recht="konten_betreuen">CRM</button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
       <button type="button" role="tab" data-tab="steuern" aria-selected="false" data-recht="katalog_pflegen">App steuern</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
@@ -1821,16 +1841,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <div class="toast oben" id="neu-toast" role="status" hidden><span id="neu-toast-text"></span><button class="pill klein" type="button" id="neu-toast-auf">Ansehen</button><button class="pill klein" type="button" id="neu-toast-zu" aria-label="Hinweis schließen">×</button></div>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/02-erfassen.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/03-freigaben.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/07-uebersicht.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/08-konten.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/09-katalog.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/10-statistik.js?v=2026-10-29-neu-dabei"></script>
-<script src="js/11-start.js?v=2026-10-29-neu-dabei"></script>
+<script src="js/01-kern.js?v=2026-10-29-glocke"></script>
+<script src="js/02-erfassen.js?v=2026-10-29-glocke"></script>
+<script src="js/03-freigaben.js?v=2026-10-29-glocke"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-29-glocke"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-29-glocke"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-29-glocke"></script>
+<script src="js/07-uebersicht.js?v=2026-10-29-glocke"></script>
+<script src="js/08-konten.js?v=2026-10-29-glocke"></script>
+<script src="js/09-katalog.js?v=2026-10-29-glocke"></script>
+<script src="js/10-statistik.js?v=2026-10-29-glocke"></script>
+<script src="js/11-start.js?v=2026-10-29-glocke"></script>
 </body>
 </html>

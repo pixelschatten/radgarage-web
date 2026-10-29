@@ -1,4 +1,4 @@
-// Werkbank, Teil 11 von 11: CSV-Export, Suche über alles, Start.
+// Werkbank, Teil 11 von 11: CSV-Export, Suche über alles, Hinweise (Glocke), Start.
 'use strict';
 
 // ---------- CSV-Export ----------
@@ -156,6 +156,172 @@ document.addEventListener('keydown', (ev) => {
     if ($('#dlg').hidden) sucheOeffnen();
   }
 });
+
+// ---------- Hinweise: Glocke oben rechts ----------
+// Sammelt alles, was ansteht (neue Warteliste und Konten, Freigaben, App-Vorschläge, Website-Hinweise, Feedback, Mails,
+// Betrieb, abgelehnte eigene Einträge), je nach Recht. Klick auf die Glocke klappt die Liste auf, Klick auf einen Hinweis
+// führt an die Stelle. Alle zwei Minuten neu gefragt, solange der Tab sichtbar ist.
+
+const TITEL_WERKBANK = document.title;
+const HW_SYMBOL = {
+  person: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  liste: '<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+  rad: '<circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="M6 16l4-8h5l3 8M10 8l4 8"/>',
+  stift: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+  welt: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18"/>',
+  handy: '<rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>',
+  blase: '<path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  ampel: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/>',
+  zurueck: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+};
+let hwBetrieb = null;
+let hwRueck = [];
+let hwToastZeit = null;
+
+function rueckGesehen() {
+  try { return localStorage.getItem('werkbank-rueck-gesehen') || ''; } catch { return ''; }
+}
+
+// Alle Hinweise als [schluessel, anzahl, titel, unter, farbe, symbol, ziel]; zählt nur, was die Rolle sehen darf
+function hinweisListe() {
+  const w = neuDaten && neuDaten.warteliste;
+  const k = neuDaten && neuDaten.konten;
+  const namen = (liste) => (liste || []).slice(0, 2).map((x) => x.email).join(', ') + ((liste || []).length > 2 ? ' …' : '');
+  const pflegen = darf('katalog_pflegen');
+  const web = appGruppen.filter((g) => g.web).length;
+  const korr = appGruppen.filter((g) => !g.web && g.art === 'korrektur').length;
+  const probleme = (hwBetrieb && hwBetrieb.probleme) || [];
+  const rot = probleme.filter((p) => p.stufe === 'rot');
+  const seit = rueckGesehen();
+  const rueck = hwRueck.filter((x) => String(x.wann) > seit);
+  return [
+    ['warteliste', w ? w.anzahl : 0, 'Neu auf der Warteliste', namen(w && w.eintraege), 'k4', 'liste', neuKachelZeigen],
+    ['konten', k ? k.anzahl : 0, k && k.anzahl === 1 ? 'Neues Konto' : 'Neue Konten', namen(k && k.eintraege), 'k5', 'person', neuKachelZeigen],
+    ['helfer', pflegen ? helferOffen : 0, 'Räder von Helfern freigeben', 'Neue Räder und Ergänzungen', 'k3', 'rad', () => { tab('freigaben'); fgAnsichtSetzen('helfer'); }],
+    ['korrektur', pflegen ? korr : 0, 'Korrekturen aus der App', 'Nutzer melden Fehler an Rädern', 'k1', 'stift', () => { tab('freigaben'); appFilter = 'korrektur'; fgAnsichtSetzen('app'); }],
+    ['app', pflegen ? appGruppen.length - web - korr : 0, 'Vorschläge aus der App', 'Räder, Teile, Barcodes', 'k2', 'handy', () => { tab('freigaben'); appFilter = ''; fgAnsichtSetzen('app'); }],
+    ['web', pflegen ? web : 0, 'Hinweise von der Website', 'Besucher der Radseiten', 'k5', 'welt', () => { tab('freigaben'); fgAnsichtSetzen('web'); }],
+    ['feedback', darf('feedback') ? fbNeu : 0, 'Neues Feedback', 'von radgarage.app/feedback', 'k3', 'blase', () => tab('feedback')],
+    ['mails', darf('konten_betreuen') ? pfUngelesen : 0, 'Ungelesene Mails', 'im Postfach des CRM', 'k2', 'mail', () => zumPostfach()],
+    ['betrieb', rot.length, 'Läuft nicht alles', (rot[0] || {}).text || '', 'k1', 'ampel', () => { tab('uebersicht'); $('#betrieb').scrollIntoView({ behavior: 'smooth', block: 'center' }); }],
+    ['rueck', rueck.length, rueck.length === 1 ? 'Ein Eintrag wurde abgelehnt' : 'Einträge wurden abgelehnt', rueck[0] ? `${rueck[0].titel}${rueck[0].grund ? `: „${rueck[0].grund}“` : ''}` : '', 'k1', 'zurueck', () => {
+      try { localStorage.setItem('werkbank-rueck-gesehen', String(hwRueck[0] ? hwRueck[0].wann : '')); } catch { /* dann bleibt er stehen */ }
+      tab('eigene');
+      hinweiseZeichnen();
+    }],
+  ];
+}
+
+function hinweiseZeichnen() {
+  const glocke = $('#neu-glocke');
+  if (!glocke) return;
+  const angemeldet = !$('#s-werkbank').hidden;
+  const alle = angemeldet ? hinweisListe() : [];
+  const offen = alle.filter(([, n]) => n > 0);
+  const n = offen.reduce((s, [, x]) => s + x, 0);
+  // Gelbe Betriebspunkte zeigen, aber nicht mitzählen (manches bleibt länger gelb)
+  const gelb = angemeldet ? ((hwBetrieb && hwBetrieb.probleme) || []).filter((p) => p.stufe === 'gelb') : [];
+  glocke.classList.toggle('neu', n > 0);
+  $('#neu-zahl').hidden = !n;
+  $('#neu-zahl').textContent = n > 99 ? '99+' : String(n);
+  glocke.title = n ? `${n} ${n === 1 ? 'Hinweis' : 'Hinweise'}` : 'Keine neuen Hinweise';
+  glocke.setAttribute('aria-label', `Hinweise: ${glocke.title}`);
+  document.title = n ? `(${n}) ${TITEL_WERKBANK}` : TITEL_WERKBANK;
+  const zeile = (schluessel, anzahl, titel, unter, farbe, symbol, ziel) => {
+    const b = mk('button', { type: 'button', className: 'hw-zeile' });
+    b.innerHTML = `<span class="hw-symbol ${farbe}"><svg viewBox="0 0 24 24" aria-hidden="true">${HW_SYMBOL[symbol]}</svg></span>`;
+    b.append(mk('span', { className: 'hw-text' }, mk('b', { textContent: titel }), unter ? mk('small', { textContent: unter }) : null),
+      ...(anzahl ? [mk('span', { className: 'hw-anzahl', textContent: zahlDe(anzahl) })] : []));
+    b.dataset.hinweis = schluessel;
+    b.addEventListener('click', () => { glockeZu(); ziel(); });
+    return b;
+  };
+  const liste = $('#hw-liste');
+  liste.replaceChildren(...offen.map((h) => zeile(...h)),
+    ...(gelb.length ? [zeile('betrieb-gelb', 0, gelb.length === 1 ? 'Bitte ansehen' : `${gelb.length} Punkte bitte ansehen`, gelb[0].text, 'k3', 'ampel',
+      () => { tab('uebersicht'); $('#betrieb').scrollIntoView({ behavior: 'smooth', block: 'center' }); })] : []));
+  if (!liste.children.length) liste.append(mk('p', { className: 'hw-leer', textContent: 'Alles erledigt. Neue Hinweise erscheinen hier.' }));
+  const neu = alle.filter(([s, x]) => (s === 'warteliste' || s === 'konten') && x > 0).length;
+  $('#hw-gesehen').hidden = !neu;
+  return alle;
+}
+
+// Kurzer Hinweis oben, wenn beim regelmäßigen Nachfragen etwas dazugekommen ist
+function hinweisToast(vorher, alle) {
+  const mehr = alle.filter(([s, n]) => n > (vorher[s] || 0));
+  if (!mehr.length) return;
+  $('#neu-toast-text').textContent = `Neu: ${mehr.map(([s, n, titel]) => `${titel}${n > 1 ? ` (${n})` : ''}`).join(', ')}.`;
+  $('#neu-toast').hidden = false;
+  clearTimeout(hwToastZeit);
+  hwToastZeit = setTimeout(() => { $('#neu-toast').hidden = true; }, 15000);
+}
+
+// alles: auch die Zahlen, die die Reiter sonst selbst laden (Freigaben, Feedback, Postfach)
+// melden: Zuwachs gegenüber dem bisherigen Stand oben anzeigen (nur beim regelmäßigen Nachfragen)
+async function hinweiseLaden(alles = false, melden = false) {
+  if ($('#s-werkbank').hidden) {
+    neuDaten = null;
+    hwBetrieb = null;
+    hwRueck = [];
+    glockeZu();
+    hinweiseZeichnen();
+    return;
+  }
+  const vorher = Object.fromEntries(hinweisListe().map(([s, n]) => [s, n]));
+  const auftraege = [
+    neuDabei(),
+    (darf('katalog_pflegen') || darf('system')) ? rpc('werkbank_betrieb').then((b) => { hwBetrieb = b; }, () => {}) : null,
+    darf('katalog_erfassen') && !darf('katalog_pflegen') ? rpc('katalog_meine_rueckmeldungen').then((r) => {
+      hwRueck = (r || []).slice().sort((a, b) => String(b.wann).localeCompare(String(a.wann)));
+    }, () => {}) : null,
+  ];
+  if (alles) {
+    if (darf('feedback')) auftraege.push(feedbackZahl());
+    if (darf('konten_betreuen')) auftraege.push(postfachZahl());
+    // Die offene Freigaben-Liste nicht unter den Händen neu zeichnen
+    if (darf('katalog_pflegen') && $('[data-panel="freigaben"]').hidden) auftraege.push(ladeOffen());
+  }
+  await Promise.all(auftraege.filter(Boolean));
+  const alle = hinweiseZeichnen() || [];
+  if (melden) hinweisToast(vorher, alle);
+}
+
+function glockeZu() {
+  $('#glocke-feld').hidden = true;
+  $('#neu-glocke').setAttribute('aria-expanded', 'false');
+}
+$('#neu-glocke').addEventListener('click', () => {
+  const feld = $('#glocke-feld');
+  if (!feld.hidden) { glockeZu(); return; }
+  hinweiseZeichnen();
+  feld.hidden = false;
+  // Auf dem Handy liegt das Feld fest über der Seite, direkt unter der Glocke
+  if (getComputedStyle(feld).position === 'fixed') {
+    const unten = $('#neu-glocke').getBoundingClientRect().bottom + 10;
+    feld.style.top = `${unten}px`;
+    feld.style.maxHeight = `${window.innerHeight - unten - 16}px`;
+  } else { feld.style.top = ''; feld.style.maxHeight = ''; }
+  $('#neu-glocke').setAttribute('aria-expanded', 'true');
+  $('#neu-toast').hidden = true;
+  const erste = $('.hw-zeile', feld);
+  if (erste) erste.focus();
+  hinweiseLaden(true);
+});
+document.addEventListener('click', (ev) => {
+  if (!$('#glocke-feld').hidden && !ev.target.closest('#glocke-feld, #neu-glocke, #neu-toast')) glockeZu();
+});
+document.addEventListener('keydown', (ev) => {
+  if (ev.key === 'Escape' && !$('#glocke-feld').hidden) { glockeZu(); $('#neu-glocke').focus(); }
+});
+$('#hw-gesehen').addEventListener('click', async () => {
+  await neuGesehen();
+  hinweiseZeichnen();
+});
+$('#neu-toast-auf').addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); $('#neu-glocke').click(); });
+$('#neu-toast-zu').addEventListener('click', () => { $('#neu-toast').hidden = true; });
+setInterval(() => { if (document.visibilityState === 'visible') hinweiseLaden(true, true); }, 120000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !$('#s-werkbank').hidden) hinweiseLaden(true, true); });
 
 // ---------- Start ----------
 

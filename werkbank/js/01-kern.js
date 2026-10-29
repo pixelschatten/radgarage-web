@@ -393,7 +393,7 @@ $('#abmelden').addEventListener('click', async () => {
   $('#wer-bild').replaceWith(Object.assign(document.createElement('span'), { id: 'wer-bild', className: 'ava' }));
   ergaenzenEnde();
   zeige('s-mail');
-  neuDabei();
+  hinweiseLaden();
 });
 
 // ---------- Werkbank ----------
@@ -466,10 +466,9 @@ async function werkbank() {
   zeige('s-werkbank');
   tabAusAdresse();
   ladeMarken();
-  if (darf('katalog_pflegen')) ladeOffen();
-  if (darf('feedback')) feedbackZahl();
-  if (darf('konten_betreuen')) { postfachZahl(); ladeSignatur(); }
-  neuDabei();
+  if (darf('konten_betreuen')) ladeSignatur();
+  // Lädt auch die Zahlen für Freigaben, Feedback und Postfach
+  hinweiseLaden(true);
   letzteAktivitaet = Date.now();
   pruefeCodes();
   ladeEigenesBild();
