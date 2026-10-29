@@ -384,6 +384,19 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 .st-partner p { grid-column: 1 / -1; margin: 4px 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); }
 .st-partner.leer { display: block; background: transparent; border: 1.5px dashed var(--line); color: var(--muted); font-size: 14px; }
 .st-vorschau.aus .st-partner { opacity: .55; }
+.st-takt { display: flex; flex-wrap: wrap; gap: 10px 12px; align-items: flex-end; }
+.st-takt label { min-width: 200px; }
+.st-takt .msg { flex-basis: 100%; }
+.st-takt .msg:empty { display: none; }
+.st-unter { display: flex; flex-direction: column; gap: 12px; padding: 18px; border-radius: 16px; background: var(--bg); border: 1px solid var(--line); }
+.st-unter h5 { margin: 0; font-size: 16px; font-weight: 800; }
+.st-unter .msg:empty { display: none; }
+#pa-liste li.pa-zeile { grid-template-columns: 44px 1fr auto; }
+#pa-liste .st-logo { width: 44px; height: 44px; border-radius: 12px; background: #fff; border: 1px solid var(--line); display: grid; place-items: center; overflow: hidden; }
+#pa-liste .st-logo img { width: 36px; height: 36px; object-fit: contain; }
+#pa-liste .chip { margin-left: 4px; }
+.pa-knoepfe { display: flex; flex-wrap: wrap; gap: 6px; justify-content: flex-end; }
+@media (max-width: 700px) { #pa-liste li.pa-zeile { grid-template-columns: 44px 1fr; } .pa-knoepfe { grid-column: 1 / -1; justify-content: flex-start; } }
 label.schalter { display: flex; align-items: center; gap: 12px; cursor: pointer; }
 label.schalter input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 label.schalter .schiene { flex: none; position: relative; width: 46px; height: 28px; border-radius: 999px; background: var(--line); transition: background .15s; }
@@ -1264,23 +1277,34 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
               <div class="st-fuss"><button class="pill klein" type="submit">Premium speichern</button></div>
               <div class="msg" role="status"></div>
             </form>
-            <form class="st-kachel st-breit" id="f-st-partner" autocomplete="off">
+            <div class="st-kachel st-breit" id="st-partner">
               <div class="st-titel"><h4>Partner-Kachel</h4><span class="st-status" id="st-s-partner"></span></div>
-              <p class="fine">Ein Sponsor unten in der Garage, gekennzeichnet als „Partner“. Kein Werbenetzwerk: Logo und Text liegen bei uns, gezählt werden nur Tipps auf die Kachel. <span id="st-partner-klicks"></span></p>
-              <label class="schalter"><input type="checkbox" name="partner_aktiv" role="switch"><span class="schiene" aria-hidden="true"></span>Partner-Kachel zeigen</label>
-              <div class="st-paar">
-                <label>Name<input name="partner_name" maxlength="60" placeholder="z. B. Radladen Müller"></label>
-                <label>Link<input type="url" name="partner_link" maxlength="300" placeholder="https://…"></label>
-              </div>
-              <label><span>Text <span class="opt">optional, bis 160 Zeichen</span></span><textarea name="partner_text" rows="2" maxlength="160" placeholder="z. B. Dein Fachhändler in Freiburg: Inspektion in 48 Stunden."></textarea></label>
-              <div class="st-paar">
-                <label><span>Logo <span class="opt">PNG, JPG oder WebP, quadratisch, bis 500 KB</span></span><input type="file" name="partner_logo" accept="image/png,image/jpeg,image/webp"></label>
-                <label><span>Sichtbar bis <span class="opt">optional, z. B. Vertragsende</span></span><input type="date" name="partner_bis"></label>
-              </div>
-              <div class="st-vorschau"><span class="eyebrow" id="st-ve-partner">So sieht es in der App aus</span><div class="st-partner" id="st-v-partner"></div></div>
-              <div class="st-fuss"><button class="pill klein" type="submit">Partner speichern</button><button class="knopf-weich" type="button" id="st-partner-weg" hidden>Partner entfernen</button></div>
-              <div class="msg" role="status"></div>
-            </form>
+              <p class="fine">Partner unten in der Garage, gekennzeichnet als „Partner“. Sind mehrere sichtbar, wechseln sie sich in der Reihenfolge der Liste ab, die App startet jedes Mal bei einem zufälligen. Kein Werbenetzwerk: Logos und Texte liegen bei uns, gezählt werden nur Summen je Partner.</p>
+              <form class="st-takt" id="f-st-takt" autocomplete="off">
+                <label>Wechsel alle<select name="partner_takt"><option value="5">5 Sekunden</option><option value="6">6 Sekunden</option><option value="8">8 Sekunden (üblich)</option><option value="10">10 Sekunden</option><option value="12">12 Sekunden</option><option value="15">15 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></label>
+                <button class="knopf-weich" type="submit">Takt speichern</button>
+                <div class="msg" role="status"></div>
+              </form>
+              <ul class="liste" id="pa-liste"></ul>
+              <form class="st-unter" id="f-st-partner" autocomplete="off">
+                <input type="hidden" name="id">
+                <h5 id="pa-formtitel">Neuer Partner</h5>
+                <label class="schalter"><input type="checkbox" name="aktiv" role="switch" checked><span class="schiene" aria-hidden="true"></span>In der App zeigen</label>
+                <div class="st-paar">
+                  <label>Name<input name="name" maxlength="60" placeholder="z. B. Radladen Müller"></label>
+                  <label>Link<input type="url" name="link" maxlength="300" placeholder="https://…"></label>
+                </div>
+                <label><span>Text <span class="opt">optional, bis 160 Zeichen</span></span><textarea name="text" rows="2" maxlength="160" placeholder="z. B. Dein Fachhändler in Freiburg: Inspektion in 48 Stunden."></textarea></label>
+                <label><span>Logo <span class="opt">PNG, JPG oder WebP, quadratisch, bis 500 KB</span></span><input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
+                <div class="st-paar">
+                  <label><span>Sichtbar ab <span class="opt">optional, Vertragsbeginn</span></span><input type="date" name="von"></label>
+                  <label><span>Sichtbar bis <span class="opt">optional, Vertragsende</span></span><input type="date" name="bis"></label>
+                </div>
+                <div class="st-vorschau"><span class="eyebrow" id="st-ve-partner">So sieht er in der App aus</span><div class="st-partner" id="st-v-partner"></div></div>
+                <div class="st-fuss"><button class="pill klein" type="submit">Partner speichern</button><button class="knopf-weich" type="button" id="pa-abbrechen" hidden>Abbrechen</button></div>
+                <div class="msg" role="status"></div>
+              </form>
+            </div>
           </div>
         </div>
         <div class="t ganz" id="verlauf">
