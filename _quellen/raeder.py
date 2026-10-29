@@ -231,6 +231,20 @@ def wartungskosten(teile):
             'riemen': any(t['kategorie'] == 'Riemen' for t in teile)}
 
 
+def unterhalt_luecken(teile):
+    """Was fehlt, damit wartungskosten() rechnen kann: Teile, die im Katalog fehlen oder keinen Richtpreis haben."""
+    def mit_preis(kat):
+        return any(t['preis'] for t in teile if t['kategorie'] == kat)
+
+    luecken = []
+    if not (mit_preis('Kette') or mit_preis('Kassette')):
+        luecken.append('Kette')
+    for kat, name in (('Bremsbelag', 'Bremsbeläge'), ('Reifen', 'Reifen')):
+        if not mit_preis(kat):
+            luecken.append(name)
+    return luecken
+
+
 def euro_genau(x):
     return f'{x:.2f} €'.replace('.', ',')
 
@@ -386,6 +400,15 @@ def rad_seite(r, alle):
     w = wartungskosten(teile)
     if w:
         out.append(wartung_kasten(r, w, alle))
+    else:
+        luecken = unterhalt_luecken(teile)
+        if luecken:
+            out.append(f'''    <section class="t k2 voll wartung" aria-labelledby="wk-titel">
+      <span class="eyebrow">Unterhalt</span>
+      <h2 id="wk-titel" style="font-size:26px;margin:6px 0 4px">Unterhalt noch nicht berechnet</h2>
+      <p>Für {e(" und ".join(luecken))} fehlt im Katalog noch ein Teil oder ein Richtpreis. Ohne sie wäre der Wert zu niedrig, deshalb rechnen wir ihn hier noch nicht aus. Weißt du, was verbaut ist? <a href="#verbessern">Schick uns einen Hinweis.</a></p>
+    </section>
+''')
     gruppen = []
     for name, kats in GRUPPEN:
         g = [t for t in teile if t['kategorie'] in kats]
@@ -735,7 +758,7 @@ def uebersicht_seite(alle, gesamt):
     <div class="t k5 kopf">
       <span class="eyebrow">Räder und Teile</span>
       <h1>Was ist an deinem Rad verbaut?</h1>
-      <p class="lead">Der Katalog der Radgarage kennt über {tsd(gesamt)} Fahrräder von {len(m)} Marken mit allen verbauten Teilen. Such dein Modell oder wähl die Marke und sieh, welche Kette, Beläge und Reifen passen.</p>
+      <p class="lead">Der Katalog der Radgarage kennt {tsd(gesamt)} Fahrräder von {len(m)} Marken mit allen verbauten Teilen. Such dein Modell oder wähl die Marke und sieh, welche Kette, Beläge und Reifen passen.</p>
       {suchfeld('raeder')}
       <form class="finder" action="#" aria-label="Rad nach Marke, Modell und Jahr finden">
         <label>Marke<select name="marke"><option value="">Marke wählen</option>{''.join(f'<option value="{s}">{e(rs[0]["hersteller"])}</option>' for s, rs in m.items())}</select></label>
@@ -788,23 +811,39 @@ def reihe_seite(pfad, rs):
     titel = f'{name}: alle Ausstattungen und Teile im Vergleich'
     if len(titel) < 50:
         titel += ' | Radgarage'
+    mit_uvp = any(r['uvp_eur'] for r in rs)
     beschr = (f'{len(rs)} Ausstattungen des {name} ({spanne}) im Vergleich: Schaltung, Bremsen, Reifen, '
-              f'UVP und was jede Version im Unterhalt kostet.')
+              f'{"UVP und " if mit_uvp else ""}was jede Version im Unterhalt kostet.')
     liste = {'@context': 'https://schema.org', '@type': 'ItemList', 'name': name,
              'itemListElement': [{'@type': 'ListItem', 'position': i + 1, 'url': SEITE + r['pfad'],
                                   'name': f'{r["name"]} ({r["baujahr"]})'} for i, r in enumerate(rs)]}
     zeilen = []
     guenstig = None
+    offen = 0
     for r in rs:
         w = wartungskosten(r['teile'])
         if w and (guenstig is None or w['summe'] < guenstig[1]):
             guenstig = (r, w['summe'])
-        uvp = f'{tsd(round(r["uvp_eur"]))} €' if r['uvp_eur'] else '–'
+        uvp = (f'<td class="zahl" data-label="UVP">{tsd(round(r["uvp_eur"])) + " €" if r["uvp_eur"] else "k. A."}</td>'
+               if mit_uvp else '')
+        if w:
+            unterhalt = euro_genau(w['summe'])
+        else:
+            offen += 1
+            unterhalt = f'<span class="offen">fehlt: {e(", ".join(unterhalt_luecken(r["teile"])) or "Preise")}</span>'
         zeilen.append(
             f'<tr><th scope="row"><a href="{r["pfad"]}">{e(r["modell"])}</a></th><td data-label="Jahr">{r["baujahr"]}</td>'
-            f'<td class="zahl" data-label="UVP">{uvp}</td><td data-label="Schaltung">{_erstes(r, "Schaltwerk", "Motor")}</td>'
+            f'{uvp}<td data-label="Schaltung">{_erstes(r, "Schaltwerk", "Motor")}</td>'
             f'<td data-label="Bremse">{_erstes(r, "Bremssattel", "Bremsbelag")}</td><td data-label="Reifen">{_erstes(r, "Reifen")}</td>'
-            f'<td class="zahl" data-label="Unterhalt je 1.000 km">{euro_genau(w["summe"]) if w else "–"}</td></tr>')
+            f'<td class="zahl" data-label="Unterhalt je 1.000 km">{unterhalt}</td></tr>')
+    fussnote = ('Unterhalt = Teilekosten für Kette, Kassette, Bremsbeläge und Reifen (soweit Preise bekannt) nach Richtpreisen '
+                'und typischen Wechselabständen, ohne Werkstatt. Angaben ohne Gewähr.')
+    if offen:
+        fussnote += (f' Bei {offen} {"Version" if offen == 1 else "Versionen"} fehlt noch ein Teil oder Richtpreis, '
+                     'dort steht, was fehlt. Ohne diese Teile wäre der Wert zu niedrig.')
+    if mit_uvp:
+        fussnote += ' UVP nur, wenn der Hersteller sie selbst nennt (k. A. = keine Angabe).'
+
     satz = ''
     if guenstig and len(rs) > 2:
         satz = (f' Am günstigsten im Unterhalt ist das {e(guenstig[0]["modell"])} ({guenstig[0]["baujahr"]}) '
@@ -819,10 +858,10 @@ def reihe_seite(pfad, rs):
     <section class="t s1 voll vergleich" aria-labelledby="vg-titel">
       <h2 id="vg-titel" style="font-size:30px;margin:0 0 10px">Ausstattung und Unterhalt</h2>
       <div class="tabelle-rahmen"><table class="vergleichstabelle">
-        <thead><tr><th scope="col">Ausstattung</th><th scope="col">Jahr</th><th scope="col" class="zahl">UVP</th><th scope="col">Schaltung</th><th scope="col">Bremse</th><th scope="col">Reifen</th><th scope="col" class="zahl">Unterhalt je 1.000 km</th></tr></thead>
+        <thead><tr><th scope="col">Ausstattung</th><th scope="col">Jahr</th>{'<th scope="col" class="zahl">UVP</th>' if mit_uvp else ''}<th scope="col">Schaltung</th><th scope="col">Bremse</th><th scope="col">Reifen</th><th scope="col" class="zahl">Unterhalt je 1.000 km</th></tr></thead>
         <tbody>{"".join(zeilen)}</tbody>
       </table></div>
-      <p class="klein">Unterhalt = Teilekosten für Kette, Kassette, Bremsbeläge und Reifen (soweit Preise bekannt) nach Richtpreisen und typischen Wechselabständen, ohne Werkstatt. Angaben ohne Gewähr.</p>
+      <p class="klein">{e(fussnote)}</p>
     </section>
   </div>
   <section aria-label="Alle Versionen" style="margin-top:14px">
