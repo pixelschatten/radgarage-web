@@ -1421,3 +1421,120 @@ $('#wl-abgleich').addEventListener('click', async (ev) => {
   } catch (e) { meldung($('#msg-warteliste'), fehlerText(e), true); }
   b.disabled = false;
 });
+
+// ----- Neu dabei: Glocke oben und Kachel im CRM (neu-dabei.sql) -----
+// Neue Einträge auf der Warteliste und neue Konten seit dem eigenen letzten Blick. Der Stand liegt je Person auf dem Server,
+// gilt also auf jedem Gerät. Alle zwei Minuten neu gefragt, solange die Werkbank sichtbar ist.
+
+const TITEL_WERKBANK = document.title;
+let neuDaten = null;
+let neuBekannt = null;
+let neuToastZeit = null;
+
+function neuZeile(email, zeile, chips) {
+  const person = mk('button', { type: 'button', className: 'wl-person' }, ava(email), mk('span', { className: 'pf-mitte' },
+    mk('span', { className: 'pf-wer', textContent: email }),
+    mk('span', { className: 'pf-vorschau', textContent: zeile }),
+    chips.length ? mk('span', { className: 'pf-meta' }, ...chips.map(([t, art]) => mk('span', { className: art || '', textContent: t }))) : null));
+  person.addEventListener('click', () => personDialog(email));
+  return mk('div', { className: 'wl-zeile' }, person);
+}
+
+function neuGruppe(titel, teil, art, ziel, zeile) {
+  const kopf = mk('div', { className: 'neu-gruppe-kopf' }, mk('h4', { textContent: `${titel} · ${zahlDe(teil.anzahl)} neu` }),
+    mk('div', { className: 'aktionen', style: 'margin:0' }, ziel,
+      teil.anzahl ? Object.assign(mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Gesehen' }), { onclick: () => neuGesehen(art) }) : null));
+  const mehr = teil.anzahl - teil.eintraege.length;
+  return mk('div', { className: 'neu-gruppe' }, kopf, ...teil.eintraege.map(zeile),
+    !teil.anzahl ? mk('p', { className: 'fine', textContent: 'Nichts Neues.' }) : null,
+    mehr > 0 ? mk('p', { className: 'fine', textContent: `und ${zahlDe(mehr)} weitere` }) : null);
+}
+
+function zeichneNeu(zeigen = false) {
+  const d = neuDaten;
+  const w = d && d.warteliste;
+  const k = d && d.konten;
+  const n = (w ? w.anzahl : 0) + (k ? k.anzahl : 0);
+  const glocke = $('#neu-glocke');
+  glocke.classList.toggle('neu', n > 0);
+  $('#neu-zahl').hidden = !n;
+  $('#neu-zahl').textContent = n > 99 ? '99+' : String(n);
+  const teile = [w && w.anzahl ? `${zahlDe(w.anzahl)} auf der Warteliste` : '', k && k.anzahl ? `${zahlDe(k.anzahl)} ${k.anzahl === 1 ? 'neues Konto' : 'neue Konten'}` : ''].filter(Boolean);
+  glocke.title = n ? `Neu dabei: ${teile.join(', ')}` : 'Neu dabei: nichts Neues';
+  glocke.setAttribute('aria-label', glocke.title);
+  document.title = n ? `(${n}) ${TITEL_WERKBANK}` : TITEL_WERKBANK;
+  const kachel = $('#neu-kachel');
+  if (!d) { kachel.hidden = true; return; }
+  if (zeigen || n) kachel.hidden = false;
+  if (kachel.hidden) return;
+  $('#neu-kachel-zahl').hidden = !n;
+  $('#neu-kachel-zahl').textContent = String(n);
+  const seit = [w, k].filter(Boolean).map((x) => new Date(x.seit)).sort((a, b) => a - b)[0];
+  $('#neu-seit').textContent = n ? `Seit deinem letzten Blick (${zeitKurz(seit)}). Ein Klick öffnet die Personenkarte.` : 'Alles gesehen. Neue Einträge erscheinen hier und an der Glocke oben.';
+  $('#neu-gesehen').hidden = !n;
+  const zurListe = (text, fn) => Object.assign(mk('button', { type: 'button', className: 'pill ghost mini', textContent: text }), { onclick: fn });
+  $('#neu-spalten').replaceChildren(...[
+    w && neuGruppe('Warteliste', w, 'warteliste', zurListe('Zur Warteliste', () => crmZeigen('warteliste')), (x) => neuZeile(x.email,
+      `eingetragen ${zeitKurz(x.eingetragen)}${x.radmarke ? ` · fährt ${x.radmarke}` : ''}`,
+      [[x.testzugang ? `Tester${x.plattform ? `, ${x.plattform}` : ''}` : 'Nur Bescheid', 'wv'], ...(x.konto ? [['Konto', 'zu']] : [])])),
+    k && neuGruppe('Neue Konten', k, 'konten', darf('konten_sehen') ? zurListe('Zu den Konten', () => tab('konten')) : null, (x) => neuZeile(x.email,
+      `registriert ${zeitKurz(x.registriert)} · über ${(x.anbieter || []).map((a) => ANBIETER[a] || a).join(', ') || 'E-Mail'}`,
+      [[`${x.raeder || 0} ${x.raeder === 1 ? 'Rad' : 'Räder'}`], ...(x.bestaetigt ? [] : [['nicht bestätigt', 'wv']]), ...(x.warteliste ? [['Warteliste', 'zu']] : [])])),
+  ].filter(Boolean));
+}
+
+function neuToast(d) {
+  // Nur melden, was seit dem letzten Abruf in dieser Sitzung dazugekommen ist
+  const jetzt = new Set([...(d.warteliste?.eintraege || []).map((x) => `w:${x.email}`), ...(d.konten?.eintraege || []).map((x) => `k:${x.id}`)]);
+  const vorher = neuBekannt;
+  neuBekannt = jetzt;
+  if (!vorher) return;
+  const frisch = [...jetzt].filter((x) => !vorher.has(x));
+  if (!frisch.length) return;
+  const w = frisch.filter((x) => x.startsWith('w:')).map((x) => x.slice(2));
+  const k = frisch.filter((x) => x.startsWith('k:')).length;
+  const teile = [];
+  if (w.length) teile.push(w.length === 1 ? `${w[0]} steht jetzt auf der Warteliste` : `${w.length} neu auf der Warteliste`);
+  if (k) teile.push(k === 1 ? 'ein neues Konto' : `${k} neue Konten`);
+  $('#neu-toast-text').textContent = `Neu dabei: ${teile.join(', ')}.`;
+  $('#neu-toast').hidden = false;
+  clearTimeout(neuToastZeit);
+  neuToastZeit = setTimeout(() => { $('#neu-toast').hidden = true; }, 15000);
+}
+
+async function neuDabei(zeigen = false) {
+  if (!darf('konten_betreuen') || $('#s-werkbank').hidden) { neuDaten = null; neuBekannt = null; zeichneNeu(); return; }
+  try {
+    neuDaten = await rpc('neu_dabei');
+    neuToast(neuDaten);
+  } catch (e) {
+    if (zeigen) meldung($('#msg-neu'), fehlerText(e), true);
+    return;
+  }
+  zeichneNeu(zeigen);
+}
+
+async function neuGesehen(art = null) {
+  if (!neuDaten) return;
+  meldung($('#msg-neu'), '');
+  try {
+    await rpc('neu_dabei_gesehen', { p_art: art, p_bis: neuDaten.stand });
+    await neuDabei(true);
+  } catch (e) { meldung($('#msg-neu'), fehlerText(e), true); }
+}
+
+$('#neu-glocke').addEventListener('click', async () => {
+  $('#neu-toast').hidden = true;
+  tab('crm');
+  await neuDabei(true);
+  $('#neu-kachel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+$('#neu-gesehen').addEventListener('click', () => neuGesehen());
+$('#neu-laden').addEventListener('click', () => neuDabei(true));
+$('#neu-toast-auf').addEventListener('click', () => $('#neu-glocke').click());
+$('#neu-toast-zu').addEventListener('click', () => { $('#neu-toast').hidden = true; });
+setInterval(() => {
+  if (document.visibilityState === 'visible') neuDabei();
+  else if ($('#s-werkbank').hidden) zeichneNeu();
+}, 120000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && neuDaten) neuDabei(); });

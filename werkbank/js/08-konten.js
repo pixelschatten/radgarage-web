@@ -622,6 +622,7 @@ setInterval(async () => {
   ergaenzenEnde();
   dialogZu();
   zeige('s-mail');
+  neuDabei();
   meldung($('#f-mail .msg'), 'Du wurdest nach längerer Pause automatisch abgemeldet.');
 }, 5000);
 
