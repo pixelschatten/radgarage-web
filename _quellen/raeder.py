@@ -40,7 +40,8 @@ FARBEN = ['k1', 'k2', 'k3', 'k4', 'k5']
 # Ohne Partnerlink erscheint der Kasten nicht. Richtwert aus denselben Beispielbeiträgen wie in der App.
 VERSICHERUNG = {
     'name': 'hepster',
-    'link': None,  # Awin-Deeplink mit Platzhalter {ziel}, siehe versicherung_link()
+    # Awin-Deeplink (hepster = Advertiser 17549, Radgarage = Publisher 3134923), {ziel} wird zur Zielseite
+    'link': 'https://www.awin1.com/cread.php?awinmid=17549&awinaffid=3134923&clickref=website&ued={ziel}',
     'ziel': {'rad': 'https://hepster.com/de-de/fahrradversicherung', 'ebike': 'https://hepster.com/de-de/e-bike-versicherung'},
     'anteil_monat': {'rad': 0.0042, 'ebike': 0.0022},
     'mindestens': 2.42,
