@@ -157,7 +157,7 @@ button[disabled] { opacity: .6; cursor: progress; }
 .f .ic svg { width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
 .f.tall { grid-row: span 2; padding-bottom: 0; }
 .f.tall .phone { margin: auto auto 0; padding-top: 0; max-width: 250px; }
-.f.tall .phonebox { margin-top: 18px; display: flex; justify-content: center; }
+.f.tall .phonebox { margin-top: 18px; display: flex; justify-content: center; align-items: flex-end; flex: 1; }
 
 /* Community */
 .community { padding-block: 14px; }
@@ -301,7 +301,7 @@ body { padding-top: env(safe-area-inset-top, 0px); }
 .designs .note { margin-top: 18px !important; text-align: center; color: var(--ink2); }
 @media (max-width: 600px) { .reihe.drei { grid-template-columns: 1fr; gap: 28px; } .paar .duo { max-width: 260px; } }
 </style>
-<link rel="stylesheet" href="/css/rahmen.css?v=9">
+<link rel="stylesheet" href="/css/rahmen.css?v=10">
 </head>
 <body>
 
@@ -377,7 +377,7 @@ body { padding-top: env(safe-area-inset-top, 0px); }
           <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-6 9 6v10H3z"/><path d="M7 20v-6h10v6"/></svg></span>
           <h3>Wissen, was verbaut ist</h3>
           <p>Modell wählen, und alle Teile sind drin. Zu jedem Teil siehst du, was als Ersatz passt, den Richtpreis und Shops. Unbekanntes Teil? Barcode scannen.</p>
-          <div class="phonebox"><img loading="lazy" decoding="async" class="phone" src="img/passt.webp" width="585" height="1266" alt="Teil-Ansicht mit passenden Alternativen und Preisunterschied"></div>
+          <div class="phonebox"><img loading="lazy" decoding="async" class="phone" src="img/teile-am-rad.webp" width="390" height="844" alt="Radseite in der App: Rose Reveal Six Di2 mit 17 Teilen am Rad und den Verschleißteilen Kette und Kassette"></div>
         </div>
         <div class="t k4 f tall">
           <span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9h18v6H3z"/><path d="M7 9v3M11 9v3M15 9v3M19 9v2"/></svg></span>

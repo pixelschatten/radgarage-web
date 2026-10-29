@@ -409,10 +409,10 @@ def versicherung_kasten(r):
                 f'rechnest du deinen Beitrag bei {e(v["name"])} in ein paar Minuten aus.')
         richtwert = 'Kein Angebot. '
     return f'''    <aside class="t k3 voll versichern" aria-labelledby="versichern-titel">
-      <span class="eyebrow">Anzeige</span>
-      <h2 id="versichern-titel" style="font-size:26px;margin:6px 0 4px">{wort} versichern</h2>
+      <span class="anzeige">Anzeige · Partner {e(v["name"])}</span>
+      <h2 id="versichern-titel">{wort} versichern</h2>
       <p>{text}</p>
-      <div class="actions"><a class="pill" href="{e(link)}" target="_blank" rel="sponsored noopener">Beitrag bei {e(v["name"])} berechnen</a><span class="eyebrow">Anzeige</span></div>
+      <div class="actions"><a class="pill" href="{e(link)}" target="_blank" rel="sponsored noopener">Beitrag bei {e(v["name"])} berechnen</a></div>
       <p class="klein">{richtwert}Wir vergleichen keine Tarife und beraten nicht. Schließt du über den Link ab, bekommen wir eine Provision, dein Beitrag ändert sich dadurch nicht. <a href="/datenschutz.html#partnerlinks">Datenschutz</a></p>
     </aside>
 '''
