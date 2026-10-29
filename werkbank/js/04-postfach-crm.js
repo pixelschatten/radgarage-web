@@ -450,6 +450,10 @@ async function unterhaltung(id) {
   vorschau.setAttribute('sandbox', '');
   const senden = Object.assign(document.createElement('button'), { type: 'submit', className: 'pill klein', textContent: 'Antworten' });
   const vorschauKnopf = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Vorschau' });
+  // Steht die Person auf der Warteliste, kann der Abmeldelink drunter (Vorlagen mit Abmeldelink kreuzen das an)
+  const abmelde = mk('input', { type: 'checkbox' });
+  const abmeldeFeld = u.warteliste ? mk('label', { className: 'pf-abmelde', title: 'Für Mails zu Testzugang oder Start. Auf eine Frage der Person reicht die Antwort ohne.' },
+    abmelde, mk('span', { textContent: 'Abmeldelink anhängen' })) : null;
   // Vorschau ersetzt das Antwortfeld an gleicher Stelle, damit Fenster und Knöpfe bleiben, wo sie sind
   vorschauKnopf.addEventListener('click', async () => {
     if (!vorschau.hidden) {
@@ -458,7 +462,7 @@ async function unterhaltung(id) {
       return;
     }
     try {
-      vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff, p_text: text.value });
+      vorschau.srcdoc = await rpc('konto_mail_vorschau', { p_betreff: betreff, p_text: text.value + (abmelde.checked ? FUSS_WARTELISTE : '') });
       vorschau.style.height = `${Math.max(220, text.offsetHeight)}px`;
       text.hidden = true;
       vorschau.hidden = false;
@@ -467,7 +471,7 @@ async function unterhaltung(id) {
   });
   text.addEventListener('keydown', (ev) => { if (ev.key === 'Enter' && (ev.metaKey || ev.ctrlKey)) { ev.preventDefault(); f.requestSubmit(); } });
   const akt = Object.assign(document.createElement('div'), { className: 'pf-antwort-leiste' });
-  akt.append(senden, vorschauKnopf, bausteinWahl(text, vornameVon(u.name)), Object.assign(document.createElement('span'), {
+  akt.append(senden, vorschauKnopf, bausteinWahl(text, vornameVon(u.name), { abmelde: abmeldeFeld ? abmelde : null }), ...(abmeldeFeld ? [abmeldeFeld] : []), Object.assign(document.createElement('span'), {
     className: 'fine', textContent: `An ${u.email} · „${betreff}“ · Strg+Enter sendet`,
   }));
   f.append(text, vorschau, akt, msg);
@@ -476,7 +480,7 @@ async function unterhaltung(id) {
     senden.disabled = true;
     meldung(msg, 'Wird gesendet …');
     try {
-      const r = await rpc('postfach_antworten', { p_id: u.id, p_text: text.value });
+      const r = await rpc('postfach_antworten', { p_id: u.id, p_text: text.value, p_abmeldelink: !!abmeldeFeld && abmelde.checked });
       let st = null;
       for (let i = 0; i < 6 && !(st && st.status); i += 1) {
         await new Promise((ok) => setTimeout(ok, 1000));
@@ -526,7 +530,7 @@ $('#f-signatur').addEventListener('submit', (ev) => {
 });
 $('#pf-suche').addEventListener('input', () => { clearTimeout(pfSucheZeit); pfSucheZeit = setTimeout(ladePostfach, 300); });
 
-// ----- CRM: Bereiche, Personenkarte, Schlagworte, Notizen, Textbausteine, Zuweisen, Kontakte, Sammelmail, Kennzahlen (crm.sql) -----
+// ----- CRM: Bereiche, Personenkarte, Schlagworte, Notizen, Vorlagen, Zuweisen, Kontakte, Sammelmail, Kennzahlen (crm.sql) -----
 
 const mk = (tag, props = {}, ...kinder) => {
   const e = Object.assign(document.createElement(tag), props);
@@ -537,6 +541,8 @@ const feldMit = (text, feld) => mk('label', {}, mk('span', { className: 'pflicht
 const vornameVon = (name) => ((name || '').includes('@') ? '' : (name || '').trim().split(/\s+/)[0] || '');
 // „Hallo {vorname},“ wird zu „Hallo Lena,“ oder ohne Namen zu „Hallo,“
 const mitVorname = (text, vorname) => text.replace(/ ?\{vorname\}/g, vorname ? ` ${vorname}` : '');
+// So sieht der Abmelde-Fuß aus, den der Server unter Mails an die Warteliste setzt (crm_sammelmail_fuss), für die Vorschau
+const FUSS_WARTELISTE = '\n\n–\nDu bekommst diese Mail, weil du dich auf radgarage.app für die Warteliste eingetragen hast. Keine Mails mehr? Hier abmelden: https://radgarage.app/abmelden/?e=…';
 // Löschen erst beim zweiten Klick
 const sicherKnopf = (titel, fn, art = 'pill ghost mini') => {
   const b = mk('button', { type: 'button', className: art, textContent: titel });
@@ -579,7 +585,7 @@ async function ladeSchlagworte() {
   wahl.value = schlagworte.some((w) => w.wort === vorher) ? vorher : '';
 }
 
-// --- Textbausteine ---
+// --- Vorlagen (Textbausteine, crm_bausteine) ---
 
 let bausteine = null;
 async function ladeBausteine(zeichnen = false) {
@@ -597,19 +603,23 @@ async function ladeBausteine(zeichnen = false) {
 function zeichneBausteine() {
   const liste = $('#tb-liste');
   if (!bausteine.length) {
-    liste.replaceChildren(mk('li', { className: 'leer', textContent: 'Noch keine Textbausteine. Lege einen für die Antwort an, die du am häufigsten schreibst.' }));
+    liste.replaceChildren(mk('li', { className: 'leer', textContent: 'Noch keine Vorlagen. Lege eine für die Antwort an, die du am häufigsten schreibst.' }));
     return;
   }
   liste.replaceChildren(...bausteine.map((b) => mk('li', {},
-    mk('div', {}, mk('div', { className: 'name', textContent: b.titel }), mk('div', { className: 'neben tb-text', textContent: b.text })),
+    mk('div', {}, mk('div', { className: 'name' }, b.titel, b.abmeldelink ? mk('span', { className: 'tb-chip', textContent: 'mit Abmeldelink' }) : null),
+      b.betreff ? mk('div', { className: 'neben tb-betreff', textContent: `Betreff: ${b.betreff}` }) : null,
+      mk('div', { className: 'neben tb-text', textContent: b.text })),
     mk('button', { type: 'button', className: 'pill ghost mini', textContent: 'Bearbeiten', onclick: () => bausteinEditor(b) }))));
 }
 
 function bausteinEditor(b = null) {
   const f = mk('form', { autocomplete: 'off' });
   const titel = mk('input', { name: 'titel', required: true, minLength: 2, maxLength: 80, value: b ? b.titel : '', placeholder: 'z. B. Rad ist jetzt im Katalog' });
+  const betreff = mk('input', { name: 'betreff', minLength: 3, maxLength: 150, value: (b && b.betreff) || '', placeholder: 'Optional, z. B. Dein Testzugang zur Radgarage' });
   const text = mk('textarea', { name: 'text', required: true, rows: 8, maxLength: 5000, value: b ? b.text : '',
     placeholder: 'danke für deinen Hinweis, {vorname}! Das Rad ist jetzt im Katalog …' });
+  const abmelde = mk('input', { type: 'checkbox', checked: !!(b && b.abmeldelink) });
   const msg = mk('div', { className: 'msg', role: 'status' });
   const akt = mk('div', { className: 'aktionen' }, mk('button', { type: 'submit', className: 'pill', textContent: 'Speichern' }));
   if (b) {
@@ -618,27 +628,29 @@ function bausteinEditor(b = null) {
     }, 'pill ghost'));
   }
   akt.append(mk('button', { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu }));
-  f.append(feldMit('Titel', titel), feldMit('Text', text),
-    mk('p', { className: 'fine', textContent: 'Ohne Anrede und Signatur. {vorname} wird beim Einfügen durch den Vornamen ersetzt, wenn er bekannt ist.' }), akt, msg);
+  f.append(feldMit('Titel', titel), mk('label', {}, mk('span', { textContent: 'Betreff' }), betreff), feldMit('Text', text),
+    mk('label', { className: 'sm-ok' }, abmelde, mk('span', { textContent: 'Für Mails an die Warteliste: Abmeldelink anhängen' })),
+    mk('p', { className: 'fine', textContent: 'Ohne Anrede und Signatur. {vorname} wird beim Einfügen durch den Vornamen ersetzt, wenn er bekannt ist. Den Betreff übernimmt die Vorlage bei neuen Mails und Sammelmails, wenn er noch leer ist. Neue Mails und Sammelmails an die Warteliste bekommen den Abmeldelink immer, bei Antworten kreuzt die Vorlage „Abmeldelink anhängen“ an.' }), akt, msg);
   f.addEventListener('submit', (ev) => {
     ev.preventDefault();
     mitKnopf(f, async () => {
-      await rpc('crm_baustein_speichern', { p_id: b ? b.id : null, p_titel: titel.value, p_text: text.value });
+      await rpc('crm_baustein_speichern', { p_id: b ? b.id : null, p_titel: titel.value, p_text: text.value, p_betreff: betreff.value.trim() || null, p_abmeldelink: abmelde.checked });
       dialogZu();
       ladeBausteine(true);
     });
   });
-  dialog(b ? 'Textbaustein bearbeiten' : 'Neuer Textbaustein', f);
+  dialog(b ? 'Vorlage bearbeiten' : 'Neue Vorlage', f);
   $('#dlg .dlg-box').classList.add('breit');
 }
 $('#tb-neu').addEventListener('click', () => bausteinEditor());
 
-// Auswahl „Textbaustein …“ neben einem Textfeld, fügt an der Cursorstelle ein
-function bausteinWahl(feld, vorname) {
-  const s = mk('select', { className: 'pf-baustein', title: 'Textbaustein einfügen' });
-  s.setAttribute('aria-label', 'Textbaustein einfügen');
+// Auswahl „Vorlage …“ neben einem Textfeld, fügt an der Cursorstelle ein. Mit betreff füllt sie einen leeren Betreff,
+// mit abmelde kreuzt eine Vorlage mit Abmeldelink das Feld „Abmeldelink anhängen“ an.
+function bausteinWahl(feld, vorname, { betreff = null, abmelde = null } = {}) {
+  const s = mk('select', { className: 'pf-baustein', title: 'Vorlage einfügen' });
+  s.setAttribute('aria-label', 'Vorlage einfügen');
   const fuellen = () => {
-    s.replaceChildren(new Option('Textbaustein …', ''), ...(bausteine || []).map((b) => new Option(b.titel, String(b.id))));
+    s.replaceChildren(new Option('Vorlage …', ''), ...(bausteine || []).map((b) => new Option(b.titel, String(b.id))));
     s.hidden = !(bausteine || []).length;
   };
   fuellen();
@@ -649,6 +661,8 @@ function bausteinWahl(feld, vorname) {
     if (!b) return;
     const a = feld.selectionStart ?? feld.value.length;
     feld.setRangeText(mitVorname(b.text, vorname), a, feld.selectionEnd ?? a, 'end');
+    if (betreff && b.betreff && !betreff.value.trim()) betreff.value = mitVorname(b.betreff, vorname);
+    if (abmelde && b.abmeldelink) abmelde.checked = true;
     feld.focus();
   });
   return s;
@@ -757,7 +771,9 @@ function personKarte(email, { name = '', aktuell = null, solo = false } = {}) {
       const w = p.warteliste;
       teile.push(abschnitt('Warteliste', mk('div', { className: 'pf-fakten' },
         fakt('Eingetragen', datum(w.eingetragen)), fakt('Testzugang', w.testzugang ? 'ja' : 'nein'),
-        w.plattform ? fakt('Handy', w.plattform) : null, w.radmarke ? fakt('Rad', w.radmarke) : null)));
+        w.plattform ? fakt('Handy', w.plattform) : null, w.radmarke ? fakt('Rad', w.radmarke) : null),
+        solo && !k ? mk('div', { className: 'aktionen', style: 'margin:8px 0 0' },
+          mk('button', { type: 'button', className: 'pill mini', textContent: 'E-Mail schreiben', onclick: () => mailEditor({ email: p.email }) })) : null));
     }
     teile.push(abschnitt('Schlagworte', schlagwortEditor(p.email, p.schlagworte || [])));
     teile.push(abschnitt('Notizen', notizEditor(p.email, p.notizen || [])));
@@ -1174,7 +1190,7 @@ function sammelmailEditor() {
   vorschau.setAttribute('sandbox', '');
   const fuss = art !== 'warteliste'
     ? '\n\n–\nDu bekommst diese Mail als Info zu deinem Radgarage-Konto.'
-    : '\n\n–\nDu bekommst diese Mail, weil du dich auf radgarage.app für die Warteliste eingetragen hast. Keine Mails mehr? Hier abmelden: https://radgarage.app/abmelden/?e=…';
+    : FUSS_WARTELISTE;
   const test = mk('button', { type: 'button', className: 'pill ghost', textContent: 'Testmail an mich' });
   const senden = mk('button', { type: 'submit', className: 'pill', textContent: `An ${zahlDe(anzahl)} senden` });
   const vorschauKnopf = mk('button', { type: 'button', className: 'pill ghost', textContent: 'Vorschau' });
@@ -1214,7 +1230,7 @@ function sammelmailEditor() {
       ? `An alle ${zahlDe(anzahl)} mit ${gruppeText}, Konten und Warteliste zusammen. Nur Infos zum Dienst, zu Testzugang oder Start, keine Werbung. Wer nur auf der Warteliste steht, bekommt automatisch einen Abmeldelink.`
       : `An ${zahlDe(anzahl)} Personen der Warteliste (${gruppeText}). Nur zu dem, wofür sie sich eingetragen haben: Testzugang und Start der App. Ein Abmeldelink kommt automatisch unter die Mail.` }),
     feldMit('Betreff', betreff), feldMit('Text', text),
-    mk('div', { className: 'aktionen', style: 'margin:0' }, bausteinWahl(text, '')),
+    mk('div', { className: 'aktionen', style: 'margin:0' }, bausteinWahl(text, '', { betreff })),
     mk('label', { className: 'sm-ok' }, ok, mk('span', { textContent: art === 'service'
       ? 'Die Mail enthält nur Infos zum Dienst, keine Werbung.'
       : art === 'gemischt' ? 'Die Mail enthält nur Infos zum Dienst, zu Testzugang oder Start, keine Werbung.'
@@ -1223,6 +1239,9 @@ function sammelmailEditor() {
     vorschau, mk('div', { className: 'aktionen' }, senden, test, vorschauKnopf, mk('button', { type: 'button', className: 'pill ghost', textContent: 'Abbrechen', onclick: dialogZu })), msg);
   dialog('Sammelmail', f);
   $('#dlg .dlg-box').classList.add('breit');
+  // Vorlagen landen zwischen Anrede und Signatur
+  const pos = text.value.indexOf('\n\n') + 2;
+  text.setSelectionRange(pos, pos);
   betreff.focus();
 }
 $('#ko-sammel').addEventListener('click', sammelmailEditor);

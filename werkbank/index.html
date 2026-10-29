@@ -657,6 +657,13 @@ input.ordner-feld { width: 190px; height: 32px; padding: 0 12px; font-size: 14px
 .pf-mini-liste li { overflow-wrap: anywhere; }
 .pf-mini-liste .fine { display: block; }
 .tb-liste li { align-items: start; }
+.tb-chip { display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; background: var(--k4); color: var(--ink); font-size: 12px; font-weight: 700; vertical-align: 1px; }
+.tb-betreff { font-weight: 600; }
+.pf-abmelde { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink2); cursor: pointer; }
+.pf-abmelde input { width: auto; margin: 0; accent-color: var(--accent); }
+.mail-wer { margin: -6px 0 2px; }
+.mail-wer:empty { display: none; }
+.mail-wer.fehler { color: var(--warn); font-weight: 600; }
 .tb-text { white-space: pre-wrap; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 .sm-art { font-size: 12px; font-weight: 700; padding: 1px 8px; border-radius: 999px; background: var(--k4); color: var(--ink); }
 .sm-hinweis { background: var(--surface); border-radius: 14px; padding: 10px 12px; font-size: 14px; }
@@ -1428,7 +1435,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         <button type="button" role="radio" data-ansicht="postfach" aria-checked="true">Postfach</button>
         <button type="button" role="radio" data-ansicht="kontakte" aria-checked="false">Kontakte</button>
         <button type="button" role="radio" data-ansicht="warteliste" aria-checked="false">Warteliste</button>
-        <button type="button" role="radio" data-ansicht="bausteine" aria-checked="false">Textbausteine</button>
+        <button type="button" role="radio" data-ansicht="bausteine" aria-checked="false">Vorlagen</button>
         <button type="button" role="radio" data-ansicht="kennzahlen" aria-checked="false">Kennzahlen</button>
       </div>
       <datalist id="crm-schlagworte"></datalist>
@@ -1531,12 +1538,12 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
         </details>
       </div>
 
-      <!-- Textbausteine für häufige Antworten, gemeinsam fürs Team -->
+      <!-- Vorlagen (Textbausteine) für häufige Mails, gemeinsam fürs Team -->
       <div data-crm="bausteine" hidden>
         <div class="t k3">
           <div class="mail-kachel">
-            <div><h3>Textbausteine</h3><p class="fine">Im Mail-Fenster über „Textbaustein …“ an der Stelle des Cursors einfügen. Ohne Anrede und Signatur, die stehen dort schon. <code>{vorname}</code> wird zum Vornamen.</p></div>
-            <div class="aktionen" style="margin:0"><button class="pill" type="button" id="tb-neu">Neuer Textbaustein</button></div>
+            <div><h3>Vorlagen</h3><p class="fine">Im Mail-Fenster über „Vorlage …“ an der Stelle des Cursors einfügen. Ohne Anrede und Signatur, die stehen dort schon. <code>{vorname}</code> wird zum Vornamen. Mit Betreff füllt die Vorlage bei neuen Mails und Sammelmails auch den Betreff. Mails an die Warteliste bekommen den Abmeldelink automatisch.</p></div>
+            <div class="aktionen" style="margin:0"><button class="pill" type="button" id="tb-neu">Neue Vorlage</button></div>
           </div>
           <div class="msg" role="status" id="msg-bausteine"></div>
           <ul class="liste tb-liste" id="tb-liste" style="margin-top:12px"></ul>
@@ -1752,12 +1759,12 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="js/01-kern.js?v=2026-10-28-21"></script>
 <script src="js/02-erfassen.js?v=2026-10-28-21"></script>
 <script src="js/03-freigaben.js?v=2026-10-28-21"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-28-auswahl"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-29-vorlagen"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-28-21"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-28-21"></script>
 <script src="js/07-uebersicht.js?v=2026-10-28-21"></script>
 <script src="js/08-konten.js?v=2026-10-28-21"></script>
-<script src="js/09-katalog.js?v=2026-10-28-21"></script>
+<script src="js/09-katalog.js?v=2026-10-29-vorlagen"></script>
 <script src="js/10-statistik.js?v=2026-10-28-21"></script>
 <script src="js/11-start.js?v=2026-10-28-21"></script>
 </body>
