@@ -202,7 +202,7 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 @media (max-width: 560px) { #einfuegen-ergebnis .neu-zeile { grid-template-columns: 1fr; } }
 .scan-knopf { flex: none; }
 .pill.light { background: #fff; color: #28241E; }
-.scanner { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, .78); display: grid; place-items: center; padding: 16px; }
+.scanner { position: fixed; inset: 0; z-index: 70; background: rgba(0, 0, 0, .78); display: grid; place-items: center; padding: 16px; }
 .scanner-box { width: min(520px, 100%); display: grid; gap: 12px; justify-items: center; color: #fff; text-align: center; }
 .scanner video { width: 100%; border-radius: 20px; background: #000; aspect-ratio: 4 / 3; object-fit: cover; outline: 3px solid rgba(255, 255, 255, .6); outline-offset: -40px; }
 .kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
@@ -222,7 +222,7 @@ textarea { resize: vertical; font-size: 15px; font-weight: 500; }
 #bs-liste .aktionen button { padding: 5px 12px; font-size: 13px; }
 #bs-liste.offen { max-height: 440px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
 #ue-marken td { padding: 6px 8px; font-size: 14px; }
-.dlg { position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
+.dlg { position: fixed; inset: 0; z-index: 65; background: rgba(0, 0, 0, .55); display: grid; place-items: center; padding: 16px; overflow-y: auto; }
 .dlg-box { width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; box-shadow: 0 20px 50px var(--shadow); }
 .dlg-box form { margin-top: 10px; }
 .dlg-box.breit { width: min(640px, 100%); }
@@ -820,6 +820,24 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 .hw-anzahl { flex: none; min-width: 26px; height: 26px; padding: 0 8px; border-radius: 999px; background: var(--accent); color: var(--on-accent); font-size: 13px; font-weight: 800; line-height: 26px; text-align: center; }
 .hw-leer { margin: 0; padding: 14px 10px; color: var(--muted); font-size: 14px; }
 @media (max-width: 520px) { .glocke-feld { position: fixed; left: 16px; right: 16px; width: auto; } }
+/* Handy und Tablet (29.10.): Umschalter wischen statt umbrechen, Kontenzeilen mit Knopf darunter.
+   Dialoge (65) und Scanner (70) liegen über der Kopfleiste (50) und dem Kontomenü (55). */
+@media (max-width: 760px) {
+  main .segment:not(#qa-ansicht) { display: flex; flex-wrap: nowrap; width: max-content; max-width: 100%; overflow-x: auto; border-radius: 999px; scrollbar-width: none; overscroll-behavior-x: contain; scroll-padding-inline: 8px; }
+  main .segment:not(#qa-ansicht)::-webkit-scrollbar { display: none; }
+  main .segment:not(#qa-ansicht) button { flex: none; white-space: nowrap; }
+  /* js/12-wischen.js setzt die Klassen, solange es links oder rechts weitergeht */
+  main .segment.wisch-rechts { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent); }
+  main .segment.wisch-links { -webkit-mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to left, #000 calc(100% - 32px), transparent); }
+  main .segment.wisch-links.wisch-rechts { -webkit-mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to right, transparent, #000 32px, #000 calc(100% - 32px), transparent); }
+}
+@media (max-width: 520px) {
+  #kt-liste li { grid-template-columns: minmax(0, 1fr); }
+  #kt-liste li > .pill { justify-self: start; margin-left: 26px; }
+  /* Postfach: Name bekommt die erste Zeile, Zähler, Konto-Chip und Zeit rutschen bei Bedarf darunter */
+  .pf-kopf { flex-wrap: wrap; row-gap: 2px; }
+  .pf-wer { max-width: calc(100% - 28px); }
+}
 /* Kopfleiste (29.10.): dunkler Balken wie die Tab-Leiste der App, Reiter als Schiene darunter, am Handy Burger-Menü */
 header.leiste { position: sticky; top: max(10px, env(safe-area-inset-top, 0px)); z-index: 50; display: flex; align-items: center; gap: 14px; min-height: 60px; margin-top: 16px; padding: 8px 8px 8px 22px; border-radius: 26px; background: var(--nav); color: #F2EDE2; box-shadow: var(--leiste-abdeckung), 0 10px 30px var(--shadow);
   /* Schatten in Seitenfarbe nach oben deckt Inhalt ab, der beim Scrollen über der Leiste hervorschaut */
@@ -1913,5 +1931,6 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 <script src="js/09-katalog.js?v=2026-10-29-leiste"></script>
 <script src="js/10-statistik.js?v=2026-10-29-leiste"></script>
 <script src="js/11-start.js?v=2026-10-29-leiste"></script>
+<script src="js/12-wischen.js?v=1"></script>
 </body>
 </html>
