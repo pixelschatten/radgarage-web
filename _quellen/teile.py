@@ -77,6 +77,12 @@ def radliste(raeder):
     gruppen = OrderedDict()
     for r in sorted(raeder, key=lambda x: (x['hersteller'].lower(), x['modell'], -x['baujahr'])):
         gruppen.setdefault(r['hersteller'], []).append(r)
+    if len(raeder) > 30:
+        # Lange Listen nach Marke eingeklappt, die Links bleiben im HTML
+        return '<div class="radmarken">' + ''.join(
+            f'<details><summary><b>{e(marke)}</b><span>{len(rs)}</span></summary><ul>'
+            + ''.join(f'<li><a href="{r["pfad"]}">{e(r["modell"])} ({r["baujahr"]})</a></li>' for r in rs)
+            + '</ul></details>' for marke, rs in gruppen.items()) + '</div>'
     li = []
     for marke, rs in gruppen.items():
         li.append(f'<li class="marke">{e(marke)}</li>')

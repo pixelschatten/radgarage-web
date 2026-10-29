@@ -133,3 +133,126 @@ ul.paare small { color: var(--muted); font-size: 13px; white-space: nowrap; }
 .paar-tabelle th a { color: var(--ink); }
 .kat-tabelle ul.paare { white-space: normal; min-width: 260px; }
 section > ul.paare { margin-top: 10px; }
+
+/* Radseite: Inhalt links, auf dem Desktop eine mitlaufende Spalte mit Sprungmarken und App, auf dem Handy eine Sprungleiste oben */
+.rad .haupt { grid-column: span 8; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rad .seite { grid-column: span 4; min-width: 0; }
+.rad .klebt { position: sticky; top: 16px; display: flex; flex-direction: column; gap: 14px; }
+.rad .haupt h2, .rad .seite h2 { font-size: clamp(25px, 2.6vw, 30px); margin: 6px 0 6px; }
+.rad .haupt > section > p, .rad .haupt > nav > p { max-width: 40em; }
+.sprung { display: none; }
+.inhalt { display: flex; flex-direction: column; gap: 2px; padding: 20px 18px; }
+.inhalt .eyebrow { padding: 0 10px 6px; }
+.inhalt a { text-decoration: none; font-weight: 700; padding: 8px 10px; border-radius: 12px; }
+.inhalt a:hover { background: var(--surface); }
+.app-klein p { font-size: 16px; }
+.app-klein .actions { margin-top: 14px; }
+.app-klein .pill { font-size: 15px; padding: 11px 18px; }
+/* Aufklappen: ein gemeinsamer Pfeil für Verschleißteile, Teilegruppen, Fragen und Details */
+.vliste summary, .gruppe > summary, .gefragt summary, .aufklapp > summary { cursor: pointer; list-style: none; }
+.vliste summary::-webkit-details-marker, .gruppe > summary::-webkit-details-marker, .gefragt summary::-webkit-details-marker,
+.aufklapp > summary::-webkit-details-marker, .vorschlag > summary::-webkit-details-marker { display: none; }
+.vliste summary::after, .gruppe > summary::after, .gefragt summary::after, .aufklapp > summary::after {
+  content: ""; flex: none; width: 9px; height: 9px; border-right: 2.5px solid var(--muted); border-bottom: 2.5px solid var(--muted);
+  transform: translateY(-3px) rotate(45deg); transition: transform .2s ease; justify-self: end; align-self: center; }
+.vliste details[open] summary::after, .gruppe[open] > summary::after, .gefragt details[open] summary::after, .aufklapp[open] > summary::after { transform: translateY(2px) rotate(-135deg); }
+/* Verschleißteile als Liste */
+.vliste { list-style: none; margin: 12px 0 0; padding: 0; }
+.vliste > li { border-top: 1px solid var(--line); }
+.vliste summary { display: grid; grid-template-columns: 118px minmax(0, 1fr) auto 16px; gap: 2px 14px; align-items: baseline; padding: 14px 0; }
+.vk { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.vn { font-weight: 800; font-size: 18px; line-height: 1.3; }
+.vf { font-weight: 700; font-size: 15px; color: var(--ink2); white-space: nowrap; }
+.vmehr { padding: 0 30px 16px 132px; display: grid; gap: 6px; font-size: 15px; }
+.vmehr p { margin: 0; }
+.vmehr .pruefen { font-weight: 700; }
+a.pfeil { font-weight: 700; }
+a.pfeil::after { content: " →"; }
+/* Alle Teile nach Gruppen zum Aufklappen */
+.gruppe { border-top: 1px solid var(--line); }
+.alle .gruppe:first-of-type { margin-top: 10px; }
+.gruppe > summary { display: flex; align-items: center; gap: 12px; padding: 14px 0; }
+.gruppe > summary h3 { margin: 0; font-size: 19px; flex: 1; }
+.gruppe > summary span { color: var(--muted); font-weight: 700; font-size: 14px; }
+.gruppe .teiltabelle { margin-bottom: 10px; }
+.aufklapp { margin-top: 12px; }
+.aufklapp > summary { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 15px; padding: 6px 0; }
+.aufklapp[open] > summary { margin-bottom: 4px; }
+.wartung .aufklapp .teiltabelle { margin-top: 4px; }
+/* Häufige Fragen */
+.gefragt .antworten { display: block; margin-top: 10px; }
+.gefragt details { border-top: 1px solid var(--line); }
+.gefragt summary { display: flex; align-items: center; gap: 12px; padding: 13px 0; }
+.gefragt summary h3 { margin: 0; font-size: 17px; flex: 1; line-height: 1.3; }
+.gefragt details p { padding: 0 28px 14px 0; }
+/* Weitere Räder als kompakte Zeilen */
+.mehr-raeder .spalten { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; }
+.mehr-raeder h3 { font-size: 19px; margin: 0 0 6px; }
+.radzeilen { list-style: none; margin: 0; padding: 0; }
+.radzeilen li { border-top: 1px solid var(--line); }
+.radzeilen a { display: flex; flex-direction: column; padding: 9px 0; text-decoration: none; }
+.radzeilen a b { font-weight: 800; }
+.radzeilen a:hover b { text-decoration: underline; }
+.radzeilen a span { font-size: 14px; color: var(--muted); }
+.rad-anleitungen .chips a.alle-link { background: transparent; box-shadow: inset 0 0 0 2px var(--line); }
+/* Hinweisformular eingeklappt */
+.vorschlag > summary { cursor: pointer; list-style: none; display: block; }
+.vorschlag > summary .pill { margin-top: 14px; font-size: 15px; padding: 10px 18px; }
+.vorschlag[open] > summary .pill { display: none; }
+.vorschlag > summary p { color: var(--ink2); max-width: 40em; }
+@media (max-width: 999px) {
+  .rad .haupt, .rad .seite { grid-column: span 12; }
+  .rad .klebt { position: static; }
+  .rad .inhalt { display: none; }
+  .sprung { display: flex; grid-column: span 12; position: sticky; top: 0; z-index: 5; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    margin: -4px -16px 0; padding: 8px 16px; background: var(--bg); }
+  .sprung::-webkit-scrollbar { display: none; }
+  .sprung a { flex: none; text-decoration: none; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 999px; background: var(--surface); color: var(--text); }
+}
+@media (max-width: 600px) {
+  .rad .daten { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .rad .daten .t { padding: 12px 12px; border-radius: 18px; }
+  .rad .daten .t:nth-child(3):last-child { grid-column: auto; }
+  .rad .daten .eyebrow { font-size: 10px; letter-spacing: .06em; display: block; line-height: 1.3; min-height: 2.6em; }
+  .rad .daten .wert { font-size: 19px; }
+  .vliste summary { grid-template-columns: minmax(0, 1fr) 16px; gap: 0 10px; }
+  .vliste .vk { grid-column: 1; }
+  .vliste .vn { grid-column: 1; }
+  .vliste .vf { grid-column: 1; font-size: 14px; font-weight: 600; }
+  .vliste summary::after { grid-column: 2; grid-row: 1 / span 3; }
+  .vmehr { padding: 0 0 14px; }
+  .mehr-raeder .spalten { grid-template-columns: 1fr; gap: 18px; }
+}
+
+/* Markenseite: eine Kachel je Reihe statt einer Karte je Rad; Räderübersicht: Marken als kompaktes Raster */
+.reihen-sprung { margin: 14px 0 0; }
+.reihen-sprung a { background: var(--surface); }
+.reihen-raster { columns: 3 280px; column-gap: 14px; margin-top: 14px; }
+.reihen-raster > .reihe-kachel { break-inside: avoid; margin-bottom: 14px; }
+.reihe-kachel h2 { font-size: 24px; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; scroll-margin-top: 16px; }
+.reihe-kachel h2 span { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--muted); letter-spacing: 0; white-space: nowrap; }
+.marken-box { margin-top: 14px; }
+.marken-box h2 { font-size: 26px; margin: 0 0 12px; }
+.marken-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+.marke-kachel { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 13px 16px; border-radius: 16px; background: var(--surface); text-decoration: none; color: var(--ink); }
+.marke-kachel:hover { background: var(--k5); }
+.marke-kachel h2 { font-size: 18px; margin: 0 !important; }
+.marke-kachel span { font-size: 13px; color: var(--muted); font-weight: 700; white-space: nowrap; }
+
+@media (max-width: 600px) {
+  .reihen-raster { grid-template-columns: 1fr; }
+  .reihen-sprung { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .reihen-sprung a { flex: none; }
+  .marken-raster { grid-template-columns: 1fr 1fr; }
+}
+
+/* Lange Räderlisten (Teile, Schaltgruppen, E-Bike-Systeme) nach Marke eingeklappt */
+.radmarken { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 12px; align-items: start; }
+.radmarken details { background: var(--surface); border-radius: 16px; }
+.radmarken details[open] { grid-column: 1 / -1; background: var(--bg); }
+.radmarken summary { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 12px 16px; cursor: pointer; list-style: none; }
+.radmarken summary::-webkit-details-marker { display: none; }
+.radmarken summary span { font-size: 13px; font-weight: 800; color: var(--muted); background: var(--bg); border-radius: 999px; padding: 2px 9px; }
+.radmarken details[open] summary span { background: var(--surface); }
+.radmarken ul { columns: 3 220px; column-gap: 24px; list-style: none; margin: 0; padding: 0 16px 14px; }
+.radmarken li { break-inside: avoid; padding: 5px 0; border-top: 1px solid var(--line); font-size: 15px; }
