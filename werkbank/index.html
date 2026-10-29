@@ -104,8 +104,8 @@ input.code { font-size: 26px; letter-spacing: .4em; text-align: center; font-var
 .qr img { width: 200px; height: 200px; background: #fff; border-radius: 14px; padding: 8px; }
 .qr code { word-break: break-all; font-size: 13px; }
 
-nav.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 6px 0 16px; }
-nav.tabs button { font: inherit; font-weight: 700; font-size: 15px; padding: 10px 18px; border-radius: 999px; border: 2px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
+nav.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 6px 0 16px; }
+nav.tabs button { font: inherit; font-weight: 700; font-size: 15px; padding: 10px 14px; border-radius: 999px; border: 2px solid var(--line); background: transparent; color: var(--text); cursor: pointer; }
 nav.tabs button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: var(--k1); color: var(--ink); font-size: 13px; }
 
@@ -503,6 +503,12 @@ td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
 .st-gitter .breit { grid-column: 1 / -1; }
 .st-reiter { margin-top: 22px; flex-wrap: wrap; border-radius: 22px; }
 .st-reiter button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+#vl-ansicht button[aria-selected="true"] { background: var(--accent); color: var(--on-accent); }
+#as-reiter[hidden] { display: none; }
+.as-teil { margin-top: 18px; }
+.as-teil .as-gitter { margin-top: 0; }
+.as-teil > .t + .t { margin-top: 14px; }
+#heute, #betrieb { align-self: stretch; }
 .st-teil > .st-abschnitt:first-child { margin-top: 18px; }
 .st-abschnitt { font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 26px 0 0; }
 .diagramm h3 { margin-bottom: 2px; }
@@ -917,6 +923,7 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
       <button type="button" role="tab" data-tab="feedback" aria-selected="false" data-recht="feedback">Feedback<span class="zahl" id="zahl-feedback" hidden></span></button>
       <button type="button" role="tab" data-tab="crm" aria-selected="false" data-recht="konten_betreuen">CRM<span class="zahl" id="zahl-postfach" hidden></span></button>
       <button type="button" role="tab" data-tab="statistik" aria-selected="false" data-recht="statistik">Statistik</button>
+      <button type="button" role="tab" data-tab="steuern" aria-selected="false" data-recht="katalog_pflegen">App steuern</button>
       <button type="button" role="tab" data-tab="konten" aria-selected="false" data-recht="konten_sehen rollen">Konten</button>
     </nav>
 
@@ -1114,15 +1121,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 
     <!-- Übersicht, Baustellen, Verlauf (Admin) -->
     <section data-panel="uebersicht" hidden>
-      <!-- Reihenfolge: was ansteht, ob alles läuft, Katalog (Zahlen, Füllrunde, Paare aus Listen), Super-Admin-Werkzeuge, Verlauf.
+      <!-- Reihenfolge: was ansteht und ob alles läuft, Katalog (Zahlen, Füllrunde, Paare aus Listen), Verlauf mit Papierkorb.
+           App steuern, Partner, Shops und Store-Start liegen im Reiter „App steuern“.
            Breite Kacheln über beide Spalten, Paare nebeneinander, die Kacheln einer Zeile sind gleich hoch. -->
       <div class="raster ue-raster">
-        <div class="t k3 ganz" id="heute">
+        <div class="t k3" id="heute">
           <h3>Heute zu tun</h3>
           <div class="aufgaben" id="ue-aufgaben"><p class="fine">Lade …</p></div>
         </div>
         <!-- Läuft alles? Zeitpläne, Mails, Sicherung, Datenbank (werkbank-betrieb.sql) -->
-        <div class="t k4 betrieb ganz" id="betrieb">
+        <div class="t k4 betrieb" id="betrieb">
           <div class="betrieb-kopf">
             <div><h3>Läuft alles? <span class="ampel" id="be-ampel">…</span></h3><p class="fine" id="be-stand">Prüfe …</p></div>
             <div class="aktionen" style="margin:0">
@@ -1131,10 +1139,10 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
             </div>
           </div>
           <ul class="be-probleme" id="be-probleme"></ul>
-          <div class="be-gitter" id="be-gitter"></div>
           <details class="be-details">
-            <summary>Zeitpläne im Hintergrund <span class="fine" id="be-zeit-zahl"></span></summary>
-            <div class="tabelle-scroll"><table><thead><tr><th>Was</th><th>Wie oft</th><th>Zuletzt</th><th>24 Std.</th></tr></thead><tbody id="be-zeit"></tbody></table></div>
+            <summary>Alle Prüfpunkte und Zeitpläne <span class="fine" id="be-zeit-zahl"></span></summary>
+            <div class="be-gitter" id="be-gitter"></div>
+            <div class="tabelle-scroll" style="margin-top:12px"><table><thead><tr><th>Was</th><th>Wie oft</th><th>Zuletzt</th><th>24 Std.</th></tr></thead><tbody id="be-zeit"></tbody></table></div>
             <p class="fine" id="be-fehler" style="margin-top:10px"></p>
           </details>
           <div class="msg" role="status" id="msg-betrieb"></div>
@@ -1197,6 +1205,127 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <p class="fine" style="margin-top:14px">Katalog als Tabelle für Excel oder Numbers:</p>
           <div class="aktionen"><button class="knopf-weich" type="button" id="csv-raeder">Räder (CSV)</button><button class="knopf-weich" type="button" id="csv-teile">Teile (CSV)</button><button class="knopf-weich" type="button" id="csv-zuordnung">Räder mit Teilen (CSV)</button></div>
         </div>
+        <div class="t ganz" id="verlauf">
+          <div class="as-kopf">
+            <h3>Verlauf</h3>
+            <div class="segment" role="tablist" aria-label="Ansicht" id="vl-ansicht">
+              <button type="button" role="tab" data-vl="verlauf" aria-selected="true">Änderungen</button>
+              <button type="button" role="tab" data-vl="papierkorb" aria-selected="false">Papierkorb <span class="opt" id="pk-zahl"></span></button>
+            </div>
+          </div>
+          <div class="vl-teil" data-vl="verlauf">
+          <p class="fine">Die letzten Änderungen am Katalog und an Konten, aus Werkbank und App. Katalog-Änderungen lassen sich 30 Tage lang rückgängig machen, solange niemand danach daran weitergearbeitet hat.</p>
+          <div class="zeile" style="margin-bottom:6px">
+            <label>Suchen<input type="search" id="vl-suche" placeholder="Rad, Teil oder Person"></label>
+            <label>Art<select id="vl-art"><option value="">Alle</option></select></label>
+          </div>
+          <div class="tabelle-scroll"><table class="verlauf"><thead><tr><th>Wann</th><th>Wer</th><th>Was</th><th><span class="sr">Rückgängig</span></th></tr></thead><tbody id="ue-verlauf"></tbody></table></div>
+          <div class="aktionen" style="margin-top:12px"><button class="knopf-weich" type="button" id="vl-auf" hidden aria-expanded="false" aria-controls="ue-verlauf"></button><button class="pill ghost klein" type="button" id="vl-mehr" hidden>Ältere laden</button><button class="knopf-weich" type="button" id="csv-verlauf">Als CSV</button></div>
+          </div>
+          <div class="vl-teil" data-vl="papierkorb" id="papierkorb" hidden>
+          <p class="fine">Gelöschte Räder, Teile und Shops und zusammengeführte Teile der letzten 30 Tage. „Wiederherstellen“ holt alles zurück, beim Rad auch seine Teileliste.</p>
+          <ul class="liste" id="pk-liste" style="margin-top:12px"></ul>
+          <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="pk-auf" hidden aria-expanded="false" aria-controls="pk-liste"></button></div>
+          <div class="msg" role="status" id="msg-papierkorb"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- App steuern: Hinweise und Premium, Partner, Store-Start (nur Super-Admin, app-steuerung.sql, store-start.sql) und Shops (Admins).
+         Jede Unterkachel speichert nur ihre eigenen Felder. Unterreiter mit eigener Adresse (#steuern/partner). -->
+    <section data-panel="steuern" hidden>
+      <div class="st-kopf">
+        <div><h2>App steuern</h2><p class="fine" style="margin:4px 0 0">Kommt beim nächsten Öffnen der App an, ganz ohne Update. <span id="st-geaendert"></span></p></div>
+        <button class="knopf-weich" type="button" id="steuer-neu" data-recht="system">Neu laden</button>
+      </div>
+      <div class="segment st-reiter" role="tablist" aria-label="Bereich" id="as-reiter">
+        <button type="button" role="tab" data-as="hinweise" data-recht="system" aria-selected="true">Hinweise<span class="nur-breit"> und Premium</span></button>
+        <button type="button" role="tab" data-as="partner" data-recht="system" aria-selected="false">Partner</button>
+        <button type="button" role="tab" data-as="shops" aria-selected="false">Shops</button>
+        <button type="button" role="tab" data-as="tester" data-recht="system" aria-selected="false">Store-Start<span class="nur-breit"> und Tester</span></button>
+      </div>
+      <div id="steuer">
+        <div class="as-teil" data-as="hinweise">
+          <div class="t k2">
+            <div class="as-gitter">
+              <form class="st-kachel" id="f-st-banner" autocomplete="off">
+                <div class="st-titel"><h4>Mitteilung</h4><span class="st-status" id="st-s-banner"></span></div>
+                <p class="fine">Streifen oben in der Garage. Wer ihn wegtippt, sieht ihn erst bei einem neuen Text wieder.</p>
+                <label>Text<textarea name="banner_text" rows="2" maxlength="300" placeholder="z. B. Neu: Das Wartungsheft gibt es jetzt als PDF."></textarea></label>
+                <div class="st-paar">
+                  <label>Art<select name="banner_art"><option value="info">Hinweis</option><option value="neu">Neu</option><option value="warnung">Warnung</option></select></label>
+                  <label><span>Sichtbar bis <span class="opt">optional</span></span><input type="date" name="banner_bis"></label>
+                </div>
+                <label><span>Link „Mehr dazu“ <span class="opt">optional</span></span><input type="url" name="banner_link" maxlength="300" placeholder="https://radgarage.app/…"></label>
+                <div class="st-vorschau"><span class="eyebrow" id="st-ve-banner">So sieht es in der App aus</span><div class="st-streifen" id="st-v-banner"></div></div>
+                <div class="st-fuss"><button class="pill klein" type="submit">Mitteilung speichern</button><button class="knopf-weich" type="button" id="st-banner-weg" hidden>Entfernen</button></div>
+                <div class="msg" role="status"></div>
+              </form>
+              <form class="st-kachel" id="f-st-wartung" autocomplete="off">
+                <div class="st-titel"><h4>Wartungshinweis</h4><span class="st-status" id="st-s-wartung"></span></div>
+                <p class="fine">Für Arbeiten am Server. Die App läuft weiter, die Garage liegt auf dem Handy.</p>
+                <label class="schalter"><input type="checkbox" name="wartung" role="switch"><span class="schiene" aria-hidden="true"></span>Wartungshinweis zeigen</label>
+                <label><span>Text <span class="opt">optional, sonst der Standardtext</span></span><textarea name="wartung_text" rows="3" maxlength="300" placeholder="Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen."></textarea></label>
+                <div class="st-vorschau"><span class="eyebrow" id="st-ve-wartung">So sieht es in der App aus</span><div class="st-streifen wartung" id="st-v-wartung"></div></div>
+                <div class="st-fuss"><button class="pill klein" type="submit">Wartung speichern</button></div>
+                <div class="msg" role="status"></div>
+              </form>
+              <form class="st-kachel" id="f-st-update" autocomplete="off">
+                <div class="st-titel"><h4>Pflicht-Update</h4><span class="st-status" id="st-s-update"></span></div>
+                <p class="fine">Ältere Versionen zeigen nur noch „Bitte aktualisiere Radgarage“ mit Link in den Store. Erst setzen, wenn die neue Version in beiden Stores freigegeben ist.</p>
+                <label>Mindestversion<input name="mindest_version" pattern="\d+\.\d+\.\d+" maxlength="12" placeholder="z. B. 1.1.0" inputmode="decimal"></label>
+                <label><span>Text <span class="opt">optional</span></span><textarea name="update_text" rows="2" maxlength="300" placeholder="Diese Version ist zu alt für den Katalog und die Sicherung deiner Garage."></textarea></label>
+                <div class="st-fuss"><button class="pill klein" type="submit">Update-Pflicht speichern</button><button class="knopf-weich" type="button" id="st-update-weg" hidden>Aufheben</button></div>
+                <div class="msg" role="status"></div>
+              </form>
+              <form class="st-kachel" id="f-st-premium" autocomplete="off">
+                <div class="st-titel"><h4>Premium</h4><span class="st-status" id="st-s-premium"></span></div>
+                <p class="fine">Bis zum Store-Start ist alles frei. Wirkt nur in App-Versionen mit eingebautem Kauf, ältere bleiben frei.</p>
+                <div class="st-wahl" role="radiogroup" aria-label="Premium">
+                  <label><input type="radio" name="premium_aktiv" value="aus"><b>Alles frei</b><span>Alle Funktionen ohne Kauf, wie in der Testphase.</span></label>
+                  <label><input type="radio" name="premium_aktiv" value="an"><b>Nur nach Kauf</b><span>Premium-Funktionen erst nach dem Kauf für 4,99 € (einmalig).</span></label>
+                </div>
+                <div class="st-fuss"><button class="pill klein" type="submit">Premium speichern</button></div>
+                <div class="msg" role="status"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="as-teil" data-as="partner" hidden>
+          <div class="t k2">
+              <div class="st-kachel" id="st-partner">
+                <div class="st-titel"><h4>Partner-Kachel</h4><span class="st-status" id="st-s-partner"></span></div>
+                <p class="fine">Partner unten in der Garage, gekennzeichnet als „Partner“. Sind mehrere sichtbar, wechseln sie sich in der Reihenfolge der Liste ab, die App startet jedes Mal bei einem zufälligen. Kein Werbenetzwerk: Logos und Texte liegen bei uns, gezählt werden nur Summen je Partner.</p>
+                <form class="st-takt" id="f-st-takt" autocomplete="off">
+                  <label>Wechsel alle<select name="partner_takt"><option value="5">5 Sekunden</option><option value="6">6 Sekunden</option><option value="8">8 Sekunden (üblich)</option><option value="10">10 Sekunden</option><option value="12">12 Sekunden</option><option value="15">15 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></label>
+                  <button class="knopf-weich" type="submit">Takt speichern</button>
+                  <div class="msg" role="status"></div>
+                </form>
+                <ul class="liste" id="pa-liste"></ul>
+                <form class="st-unter" id="f-st-partner" autocomplete="off">
+                  <input type="hidden" name="id">
+                  <h5 id="pa-formtitel">Neuer Partner</h5>
+                  <label class="schalter"><input type="checkbox" name="aktiv" role="switch" checked><span class="schiene" aria-hidden="true"></span>In der App zeigen</label>
+                  <div class="st-paar">
+                    <label>Name<input name="name" maxlength="60" placeholder="z. B. Radladen Müller"></label>
+                    <label>Link<input type="url" name="link" maxlength="300" placeholder="https://…"></label>
+                  </div>
+                  <label><span>Text <span class="opt">optional, bis 160 Zeichen</span></span><textarea name="text" rows="2" maxlength="160" placeholder="z. B. Dein Fachhändler in Freiburg: Inspektion in 48 Stunden."></textarea></label>
+                  <label><span>Logo <span class="opt">PNG, JPG oder WebP, quadratisch, bis 500 KB</span></span><input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
+                  <div class="st-paar">
+                    <label><span>Sichtbar ab <span class="opt">optional, Vertragsbeginn</span></span><input type="date" name="von"></label>
+                    <label><span>Sichtbar bis <span class="opt">optional, Vertragsende</span></span><input type="date" name="bis"></label>
+                  </div>
+                  <div class="st-vorschau"><span class="eyebrow" id="st-ve-partner">So sieht er in der App aus</span><div class="st-partner" id="st-v-partner"></div></div>
+                  <div class="st-fuss"><button class="pill klein" type="submit">Partner speichern</button><button class="knopf-weich" type="button" id="pa-abbrechen" hidden>Abbrechen</button></div>
+                  <div class="msg" role="status"></div>
+                </form>
+              </div>
+          </div>
+        </div>
+      </div>
+      <div class="as-teil" data-as="shops" hidden>
         <div class="t k1" id="shops">
           <h3>Shops</h3>
           <p class="fine">Die Shops hinter „Teil kaufen“ in der App, in dieser Reihenfolge. {q} steht für den Suchbegriff. Änderungen kommen beim nächsten App-Start an.</p>
@@ -1204,15 +1333,9 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
           <div class="msg" role="status" id="msg-shops"></div>
           <div class="aktionen" style="margin-top:12px"><button class="pill klein" type="button" id="shop-neu">Shop hinzufügen</button></div>
         </div>
-        <div class="t" id="papierkorb">
-          <h3>Papierkorb <span class="opt" id="pk-zahl"></span></h3>
-          <p class="fine">Gelöschte Räder, Teile und Shops und zusammengeführte Teile der letzten 30 Tage. „Wiederherstellen“ holt alles zurück, beim Rad auch seine Teileliste.</p>
-          <ul class="liste" id="pk-liste" style="margin-top:12px"></ul>
-          <div class="aktionen" style="margin-top:10px"><button class="knopf-weich" type="button" id="pk-auf" hidden aria-expanded="false" aria-controls="pk-liste"></button></div>
-          <div class="msg" role="status" id="msg-papierkorb"></div>
-        </div>
-        <!-- Store-Start und Testphase (nur Super-Admin, store-start.sql) -->
-        <div class="t k5 ganz" id="tester" data-recht="system">
+      </div>
+      <div class="as-teil" data-as="tester" hidden>
+        <div class="t k5" id="tester">
           <h3>Store-Start und Tester</h3>
           <p class="fine">Testplätze aus der Warteliste, wer davon die App nutzt, Googles Pflicht für den geschlossenen Test und TestFlight. Was nur in der Play Console und in App Store Connect steht, trägst du unten ein.</p>
           <div class="be-gitter" id="ts-gitter"></div>
@@ -1233,96 +1356,6 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
             </form>
           </details>
           <div class="msg" role="status" id="msg-tester"></div>
-        </div>
-        <!-- App steuern (nur Super-Admin, app-steuerung.sql): vier Unterkacheln, jede speichert nur ihre eigenen Felder -->
-        <div class="t k2 ganz" id="steuer" data-recht="system">
-          <div class="as-kopf">
-            <div>
-              <h3>App steuern</h3>
-              <p class="fine">Kommt beim nächsten Öffnen der App an, ganz ohne Update. <span id="st-geaendert"></span></p>
-            </div>
-            <button class="knopf-weich" type="button" id="steuer-neu">Neu laden</button>
-          </div>
-          <div class="as-gitter">
-            <form class="st-kachel" id="f-st-banner" autocomplete="off">
-              <div class="st-titel"><h4>Mitteilung</h4><span class="st-status" id="st-s-banner"></span></div>
-              <p class="fine">Streifen oben in der Garage. Wer ihn wegtippt, sieht ihn erst bei einem neuen Text wieder.</p>
-              <label>Text<textarea name="banner_text" rows="2" maxlength="300" placeholder="z. B. Neu: Das Wartungsheft gibt es jetzt als PDF."></textarea></label>
-              <div class="st-paar">
-                <label>Art<select name="banner_art"><option value="info">Hinweis</option><option value="neu">Neu</option><option value="warnung">Warnung</option></select></label>
-                <label><span>Sichtbar bis <span class="opt">optional</span></span><input type="date" name="banner_bis"></label>
-              </div>
-              <label><span>Link „Mehr dazu“ <span class="opt">optional</span></span><input type="url" name="banner_link" maxlength="300" placeholder="https://radgarage.app/…"></label>
-              <div class="st-vorschau"><span class="eyebrow" id="st-ve-banner">So sieht es in der App aus</span><div class="st-streifen" id="st-v-banner"></div></div>
-              <div class="st-fuss"><button class="pill klein" type="submit">Mitteilung speichern</button><button class="knopf-weich" type="button" id="st-banner-weg" hidden>Entfernen</button></div>
-              <div class="msg" role="status"></div>
-            </form>
-            <form class="st-kachel" id="f-st-wartung" autocomplete="off">
-              <div class="st-titel"><h4>Wartungshinweis</h4><span class="st-status" id="st-s-wartung"></span></div>
-              <p class="fine">Für Arbeiten am Server. Die App läuft weiter, die Garage liegt auf dem Handy.</p>
-              <label class="schalter"><input type="checkbox" name="wartung" role="switch"><span class="schiene" aria-hidden="true"></span>Wartungshinweis zeigen</label>
-              <label><span>Text <span class="opt">optional, sonst der Standardtext</span></span><textarea name="wartung_text" rows="3" maxlength="300" placeholder="Wir arbeiten gerade am Server. Deine Garage funktioniert wie gewohnt, Sicherung und Katalog-Updates können kurz hängen."></textarea></label>
-              <div class="st-vorschau"><span class="eyebrow" id="st-ve-wartung">So sieht es in der App aus</span><div class="st-streifen wartung" id="st-v-wartung"></div></div>
-              <div class="st-fuss"><button class="pill klein" type="submit">Wartung speichern</button></div>
-              <div class="msg" role="status"></div>
-            </form>
-            <form class="st-kachel" id="f-st-update" autocomplete="off">
-              <div class="st-titel"><h4>Pflicht-Update</h4><span class="st-status" id="st-s-update"></span></div>
-              <p class="fine">Ältere Versionen zeigen nur noch „Bitte aktualisiere Radgarage“ mit Link in den Store. Erst setzen, wenn die neue Version in beiden Stores freigegeben ist.</p>
-              <label>Mindestversion<input name="mindest_version" pattern="\d+\.\d+\.\d+" maxlength="12" placeholder="z. B. 1.1.0" inputmode="decimal"></label>
-              <label><span>Text <span class="opt">optional</span></span><textarea name="update_text" rows="2" maxlength="300" placeholder="Diese Version ist zu alt für den Katalog und die Sicherung deiner Garage."></textarea></label>
-              <div class="st-fuss"><button class="pill klein" type="submit">Update-Pflicht speichern</button><button class="knopf-weich" type="button" id="st-update-weg" hidden>Aufheben</button></div>
-              <div class="msg" role="status"></div>
-            </form>
-            <form class="st-kachel" id="f-st-premium" autocomplete="off">
-              <div class="st-titel"><h4>Premium</h4><span class="st-status" id="st-s-premium"></span></div>
-              <p class="fine">Bis zum Store-Start ist alles frei. Wirkt nur in App-Versionen mit eingebautem Kauf, ältere bleiben frei.</p>
-              <div class="st-wahl" role="radiogroup" aria-label="Premium">
-                <label><input type="radio" name="premium_aktiv" value="aus"><b>Alles frei</b><span>Alle Funktionen ohne Kauf, wie in der Testphase.</span></label>
-                <label><input type="radio" name="premium_aktiv" value="an"><b>Nur nach Kauf</b><span>Premium-Funktionen erst nach dem Kauf für 4,99 € (einmalig).</span></label>
-              </div>
-              <div class="st-fuss"><button class="pill klein" type="submit">Premium speichern</button></div>
-              <div class="msg" role="status"></div>
-            </form>
-            <div class="st-kachel st-breit" id="st-partner">
-              <div class="st-titel"><h4>Partner-Kachel</h4><span class="st-status" id="st-s-partner"></span></div>
-              <p class="fine">Partner unten in der Garage, gekennzeichnet als „Partner“. Sind mehrere sichtbar, wechseln sie sich in der Reihenfolge der Liste ab, die App startet jedes Mal bei einem zufälligen. Kein Werbenetzwerk: Logos und Texte liegen bei uns, gezählt werden nur Summen je Partner.</p>
-              <form class="st-takt" id="f-st-takt" autocomplete="off">
-                <label>Wechsel alle<select name="partner_takt"><option value="5">5 Sekunden</option><option value="6">6 Sekunden</option><option value="8">8 Sekunden (üblich)</option><option value="10">10 Sekunden</option><option value="12">12 Sekunden</option><option value="15">15 Sekunden</option><option value="20">20 Sekunden</option><option value="30">30 Sekunden</option></select></label>
-                <button class="knopf-weich" type="submit">Takt speichern</button>
-                <div class="msg" role="status"></div>
-              </form>
-              <ul class="liste" id="pa-liste"></ul>
-              <form class="st-unter" id="f-st-partner" autocomplete="off">
-                <input type="hidden" name="id">
-                <h5 id="pa-formtitel">Neuer Partner</h5>
-                <label class="schalter"><input type="checkbox" name="aktiv" role="switch" checked><span class="schiene" aria-hidden="true"></span>In der App zeigen</label>
-                <div class="st-paar">
-                  <label>Name<input name="name" maxlength="60" placeholder="z. B. Radladen Müller"></label>
-                  <label>Link<input type="url" name="link" maxlength="300" placeholder="https://…"></label>
-                </div>
-                <label><span>Text <span class="opt">optional, bis 160 Zeichen</span></span><textarea name="text" rows="2" maxlength="160" placeholder="z. B. Dein Fachhändler in Freiburg: Inspektion in 48 Stunden."></textarea></label>
-                <label><span>Logo <span class="opt">PNG, JPG oder WebP, quadratisch, bis 500 KB</span></span><input type="file" name="logo" accept="image/png,image/jpeg,image/webp"></label>
-                <div class="st-paar">
-                  <label><span>Sichtbar ab <span class="opt">optional, Vertragsbeginn</span></span><input type="date" name="von"></label>
-                  <label><span>Sichtbar bis <span class="opt">optional, Vertragsende</span></span><input type="date" name="bis"></label>
-                </div>
-                <div class="st-vorschau"><span class="eyebrow" id="st-ve-partner">So sieht er in der App aus</span><div class="st-partner" id="st-v-partner"></div></div>
-                <div class="st-fuss"><button class="pill klein" type="submit">Partner speichern</button><button class="knopf-weich" type="button" id="pa-abbrechen" hidden>Abbrechen</button></div>
-                <div class="msg" role="status"></div>
-              </form>
-            </div>
-          </div>
-        </div>
-        <div class="t ganz" id="verlauf">
-          <h3>Verlauf</h3>
-          <p class="fine">Die letzten Änderungen am Katalog und an Konten, aus Werkbank und App. Katalog-Änderungen lassen sich 30 Tage lang rückgängig machen, solange niemand danach daran weitergearbeitet hat.</p>
-          <div class="zeile" style="margin-bottom:6px">
-            <label>Suchen<input type="search" id="vl-suche" placeholder="Rad, Teil oder Person"></label>
-            <label>Art<select id="vl-art"><option value="">Alle</option></select></label>
-          </div>
-          <div class="tabelle-scroll"><table class="verlauf"><thead><tr><th>Wann</th><th>Wer</th><th>Was</th><th><span class="sr">Rückgängig</span></th></tr></thead><tbody id="ue-verlauf"></tbody></table></div>
-          <div class="aktionen" style="margin-top:12px"><button class="knopf-weich" type="button" id="vl-auf" hidden aria-expanded="false" aria-controls="ue-verlauf"></button><button class="pill ghost klein" type="button" id="vl-mehr" hidden>Ältere laden</button><button class="knopf-weich" type="button" id="csv-verlauf">Als CSV</button></div>
         </div>
       </div>
     </section>
@@ -1756,16 +1789,16 @@ table.verlauf tr.zurueck td:nth-child(3) { text-decoration: line-through; opacit
 <script src="zxing.js?v=0.21.3" defer></script>
 <div class="toast" id="ab-warnung" role="alert" hidden><span id="ab-text">Gleich wirst du automatisch abgemeldet.</span><button class="pill klein" type="button" id="ab-bleiben">Angemeldet bleiben</button></div>
 <!-- Werkbank in Teilen (js/), Reihenfolge wichtig. Bei jeder Änderung ?v= in allen Zeilen hochzählen. -->
-<script src="js/01-kern.js?v=2026-10-28-21"></script>
-<script src="js/02-erfassen.js?v=2026-10-28-21"></script>
-<script src="js/03-freigaben.js?v=2026-10-28-21"></script>
-<script src="js/04-postfach-crm.js?v=2026-10-29-vorlagen"></script>
-<script src="js/05-vorschlaege-teile.js?v=2026-10-28-21"></script>
-<script src="js/06-bearbeiten.js?v=2026-10-28-21"></script>
-<script src="js/07-uebersicht.js?v=2026-10-28-21"></script>
-<script src="js/08-konten.js?v=2026-10-28-21"></script>
-<script src="js/09-katalog.js?v=2026-10-29-vorlagen"></script>
-<script src="js/10-statistik.js?v=2026-10-28-21"></script>
-<script src="js/11-start.js?v=2026-10-28-21"></script>
+<script src="js/01-kern.js?v=2026-10-29-steuern"></script>
+<script src="js/02-erfassen.js?v=2026-10-29-steuern"></script>
+<script src="js/03-freigaben.js?v=2026-10-29-steuern"></script>
+<script src="js/04-postfach-crm.js?v=2026-10-29-steuern"></script>
+<script src="js/05-vorschlaege-teile.js?v=2026-10-29-steuern"></script>
+<script src="js/06-bearbeiten.js?v=2026-10-29-steuern"></script>
+<script src="js/07-uebersicht.js?v=2026-10-29-steuern"></script>
+<script src="js/08-konten.js?v=2026-10-29-steuern"></script>
+<script src="js/09-katalog.js?v=2026-10-29-steuern"></script>
+<script src="js/10-statistik.js?v=2026-10-29-steuern"></script>
+<script src="js/11-start.js?v=2026-10-29-steuern"></script>
 </body>
 </html>
