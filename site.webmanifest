@@ -1,7 +1,7 @@
 {
   "name": "Radgarage",
   "short_name": "Radgarage",
-  "description": "Wissen, was an deinem Rad verbaut ist und was passt.",
+  "description": "Alles rund um dein Rad. An einem Ort.",
   "start_url": "/",
   "display": "browser",
   "background_color": "#F2EDE2",
