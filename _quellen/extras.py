@@ -57,9 +57,32 @@ def zahlen_einsetzen(html, werte):
 def fuss_angleichen(html):
     """Fußzeile durch die gemeinsame ersetzen und die Symbole im Kopf ergänzen."""
     neu = re.sub(r'[ \t]*<footer\b.*?</footer>\n?', lambda m: FUSS_INHALT, html, count=1, flags=re.S)
-    if 'rel="icon"' not in neu:
+    if 'rel="icon"' in neu:
+        neu = re.sub(r'(?:<link rel="(?:icon|apple-touch-icon|manifest)"[^>]*>\n)+', lambda m: ICONS + '\n', neu, count=1)
+    else:
         neu = re.sub(r'(<meta name="theme-color"[^>]*>\n)', lambda m: m.group(1) + ICONS + '\n', neu, count=1)
     return neu
+
+
+def symbole_bauen():
+    """Tab-Symbol, Apple-Touch-Icon und Manifest-Icons aus dem App-Icon. Schreibt nur, wenn sich etwas ändert."""
+    from PIL import Image
+    icon = Image.open(os.path.join(WURZEL, '_quellen', 'app-icon.png')).convert('RGB')
+
+    def png(groesse):
+        puffer = io.BytesIO()
+        icon.resize((groesse, groesse), Image.LANCZOS).save(puffer, 'PNG', optimize=True)
+        return puffer.getvalue()
+
+    puffer = io.BytesIO()
+    icon.resize((48, 48), Image.LANCZOS).save(puffer, 'ICO', sizes=[(16, 16), (32, 32), (48, 48)])
+    dateien = {'favicon.ico': puffer.getvalue(), 'img/favicon-96.png': png(96), 'apple-touch-icon.png': png(180),
+               'img/icon-192.png': png(192), 'img/icon-512.png': png(512)}
+    for name, daten in dateien.items():
+        pfad = os.path.join(WURZEL, name)
+        if not os.path.exists(pfad) or open(pfad, 'rb').read() != daten:
+            with open(pfad, 'wb') as f:
+                f.write(daten)
 
 
 def kopf_angleichen(html, pfad):

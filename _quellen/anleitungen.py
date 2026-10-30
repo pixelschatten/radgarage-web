@@ -579,9 +579,11 @@ def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werk
 {kopfzeile(pfad)}'''
 
 
-# Symbol für Browser-Tab, Lesezeichen und Handy-Startbildschirm (aus dem App-Icon, erzeugt von bauen.py)
-ICONS = ('<link rel="icon" href="/favicon.ico" sizes="32x32">\n'
-         '<link rel="apple-touch-icon" href="/apple-touch-icon.png">\n'
+# Symbol für Browser-Tab, Lesezeichen und Handy-Startbildschirm (aus _quellen/app-icon.png, erzeugt von extras.symbole_bauen)
+# ?v= hochzählen, wenn sich das App-Icon ändert: Safari hält Tab-Symbole sonst sehr lange im Speicher.
+ICONS = ('<link rel="icon" href="/favicon.ico?v=2" sizes="32x32">\n'
+         '<link rel="icon" href="/img/favicon-96.png?v=2" type="image/png" sizes="96x96">\n'
+         '<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">\n'
          '<link rel="manifest" href="/site.webmanifest">')
 KOPF_JS = 1  # hochzählen, wenn sich _quellen/kopf.js ändert
 CSS_VERSION = 11  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
