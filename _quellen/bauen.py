@@ -75,6 +75,7 @@ def sitemaps(seiten):
 if __name__ == '__main__':
     schreiben('css/seiten.css', '\n'.join(lesen(f'_quellen/{n}') for n in ['basis.css', 'anleitungen-extra.css', 'raeder-extra.css', 'rahmen.css']))
     schreiben('css/rahmen.css', lesen('_quellen/rahmen.css'))
+    ex.symbole_bauen()
     alle = ra.laden()
     neuestes = max(r['geaendert'] for r in alle)
     seiten = ['/', '/anleitungen/', '/raeder/']
