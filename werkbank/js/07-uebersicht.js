@@ -462,7 +462,7 @@ async function ladeBetrieb() {
     feld('Datensicherung', s ? vorZeit(s.wann) : 'noch keine',
       s ? `${s.ok ? 'erfolgreich' : 'fehlgeschlagen'}${s.bytes ? `, ${groesse(s.bytes)} verschlüsselt` : ''}, ${zahlDe(b.sicherungen_30)} ${b.sicherungen_30 === 1 ? 'Sicherung' : 'Sicherungen'} in 30 Tagen` : 'Einrichtung siehe docs/datensicherung.md im App-Repo'),
     feld('Zeitpläne', `${zahlDe(zeitOk)} von ${zahlDe(zeiten.length)}`, 'laufen ohne Fehler'),
-    feld('Brevo, 24 Std.', a.fehler_24h ? `${zahlDe(a.fehler_24h)} Fehler` : 'keine Fehler', `${zahlDe(a.gesamt_24h)} Mails und Abrufe`),
+    feld('Brevo u. a., 24 Std.', a.fehler_24h ? `${zahlDe(a.fehler_24h)} Fehler` : 'keine Fehler', `${zahlDe(a.gesamt_24h)} Mails und Abrufe`),
     feld('Werkbank-Mails heute', `${zahlDe(b.mails.heute)} / ${zahlDe(b.mails.grenze)}`, 'Grenze für Sammelmails', b.mails.heute / b.mails.grenze),
     feld('Datenbank', groesse(b.datenbank.bytes), `von ${groesse(b.datenbank.grenze)} im Gratis-Plan`, b.datenbank.bytes / b.datenbank.grenze),
     feld('Postfach', vorZeit(b.postfach.letzter_eingang), 'letzte eingegangene Mail'));
@@ -483,10 +483,34 @@ async function ladeBetrieb() {
       Object.assign(document.createElement('td'), { textContent: `${zahlDe(z.laeufe_24h)} ${z.laeufe_24h === 1 ? 'Lauf' : 'Läufe'}${z.fehler_24h ? `, ${zahlDe(z.fehler_24h)} Fehler` : ''}` }));
     return tr;
   }));
+  // Offene Fehler der letzten 7 Tage, je mit „Erledigt“ (zählt dann nicht mehr für die Ampel)
   const fehler = a.letzte_fehler || [];
-  $('#be-fehler').textContent = fehler.length
-    ? 'Letzte Fehler bei Brevo: ' + fehler.map((f) => `${new Date(f.wann).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} (${f.status || 'ohne Antwort'}${f.fehler ? ': ' + f.fehler.slice(0, 80) : ''})`).join(' · ')
-    : 'Keine Fehler bei Brevo in den letzten 7 Tagen.';
+  const box = $('#be-fehler');
+  if (!fehler.length) { box.textContent = 'Keine offenen Fehler bei Anfragen nach außen (Brevo und andere) in den letzten 7 Tagen.'; return; }
+  box.replaceChildren('Letzte Fehler bei Anfragen nach außen (meist Brevo):');
+  for (const f of fehler) {
+    const zeile = Object.assign(document.createElement('span'), { className: 'be-fehler-zeile' });
+    zeile.append(document.createElement('br'),
+      `${new Date(f.wann).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} (${f.status || 'ohne Antwort'}${f.fehler ? ': ' + f.fehler.slice(0, 160) : ''}) `);
+    if (f.fehler && f.fehler.length > 160) zeile.title = f.fehler;
+    if (f.id) {
+      const knopf = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Erledigt' });
+      knopf.title = 'Fehler ist geklärt: zählt nicht mehr für die Ampel';
+      knopf.addEventListener('click', async () => {
+        knopf.disabled = true;
+        try {
+          await rpc('betrieb_fehler_erledigt', { p_id: f.id });
+          await ladeBetrieb();
+          meldung($('#msg-betrieb'), 'Fehler als erledigt markiert.');
+        } catch (e) {
+          knopf.disabled = false;
+          meldung($('#msg-betrieb'), fehlerText(e), true);
+        }
+      });
+      zeile.append(knopf);
+    }
+    box.append(zeile);
+  }
 }
 $('#be-neu').addEventListener('click', ladeBetrieb);
 
