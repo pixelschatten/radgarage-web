@@ -65,8 +65,8 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 /* Hero */
 .hero { padding-block: 8px 14px; }
 .hero .intro { grid-column: span 7; grid-row: span 2; padding: 36px 36px 32px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; }
-h1 { font-size: clamp(40px, 5.6vw, 70px); line-height: 1; margin: 12px 0 16px; text-wrap: balance; }
-.lead { font-size: 19px; max-width: 30em; }
+h1 { font-size: var(--h1); line-height: 1; margin: 12px 0 16px; text-wrap: balance; }
+.lead { font-size: var(--lead); max-width: 30em; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .hero .shot { grid-column: span 5; grid-row: span 3; display: flex; align-items: flex-end; justify-content: center; padding: 28px 28px 0; min-height: 520px; }
 .hero .plaetze { grid-column: span 4; }
@@ -79,7 +79,7 @@ section { scroll-margin-top: 16px; }
 .anmelden { padding-block: 0 14px; }
 .anmelden .test { grid-column: span 5; display: flex; flex-direction: column; gap: 14px; }
 .anmelden .formular { grid-column: span 7; padding: 30px 32px; }
-h2 { font-size: clamp(30px, 3.8vw, 46px); line-height: 1.04; margin: 6px 0 12px; text-wrap: balance; }
+h2 { font-size: var(--h2); line-height: 1.04; margin: 6px 0 12px; text-wrap: balance; }
 h3 { font-size: 21px; line-height: 1.2; margin: 0 0 6px; }
 .steps { list-style: none; counter-reset: s; padding: 0; margin: 4px 0 0; display: grid; gap: 12px; }
 .steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; color: var(--ink2); }
@@ -188,7 +188,7 @@ footer a { color: var(--text); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .dock { transition: none; } }
 body { padding-top: env(safe-area-inset-top, 0px); }
 .legal-page { padding-block: 16px 48px; max-width: 46em; font-size: 16px; }
-.legal-page h2 { font-size: clamp(32px, 5vw, 44px); margin: 8px 0 16px; }
+.legal-page h2 { font-size: var(--h1-recht); margin: 8px 0 16px; }
 .legal-page h3 { font-size: 20px; margin: 24px 0 6px; }
 .legal-page p { margin: 0 0 10px; }
 .legal-page .fine { margin-top: 16px; }
@@ -208,7 +208,7 @@ footer { padding-bottom: 40px; }
 .t.kopf { display: block; margin-bottom: 0; }
 .t.kopf p { max-width: 40em; }
 .anl .kopf { grid-column: span 8; padding: 34px 34px 30px; }
-.anl .kopf h1 { font-size: clamp(36px, 4.8vw, 58px); margin: 10px 0 14px; }
+.anl .kopf h1 { font-size: var(--h1-seite); margin: 10px 0 14px; }
 .anl .kopf .lead { color: var(--ink2); }
 .anl .daten { grid-column: span 4; display: grid; gap: 14px; }
 .anl .daten .t { padding: 20px 24px; }
@@ -253,12 +253,12 @@ footer { padding-bottom: 40px; }
 .karten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .karte { display: flex; flex-direction: column; gap: 6px; text-decoration: none; min-height: 170px; transition: transform .15s ease; }
 .karte:hover { transform: translateY(-3px); }
-.karte h2, .karte h3 { font-size: 23px; line-height: 1.15; margin: 6px 0 0; hyphens: auto; overflow-wrap: break-word; }
+.karte h2, .karte h3 { font-size: 23px; line-height: 1.15; margin: 6px 0 0; overflow-wrap: break-word; }
 .karte .meta { margin-top: auto; font-size: 14px; font-weight: 700; color: var(--ink2); }
 .hinweis { font-size: 14px; color: var(--muted); max-width: 52em; margin: 6px 0 30px; }
 
 .uebersicht .kopf { grid-column: span 12; padding: 40px 36px; }
-.uebersicht .kopf h1 { font-size: clamp(40px, 5.6vw, 66px); margin: 10px 0 14px; }
+.uebersicht .kopf h1 { font-size: min(var(--h1), 66px); margin: 10px 0 14px; }
 
 @media (max-width: 900px) {
   .anl .kopf, .anl .daten, .anl .wann, .anl .werkzeug, .anl .schritte, .anl .video, .anl .tipp { grid-column: span 12; grid-row: auto; }
@@ -331,7 +331,7 @@ body.eingebettet { padding: 8px; }
 
 /* Modellseiten: Verschleißteile als Kacheln, alle Teile als Tabelle nach Gruppen. */
 .voll { grid-column: span 12; }
-.zwischen { font-size: 30px; margin: 14px 0 12px; }
+.zwischen { font-size: var(--h2-t); margin: 14px 0 12px; }
 .teilkarte { display: flex; flex-direction: column; gap: 8px; }
 .teilkarte h3 { margin: 2px 0 0; font-size: 22px; }
 .teilkarte .fakten { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 15px; }
@@ -544,10 +544,10 @@ a.pfeil::after { content: " →"; }
 .reihen-sprung a { background: var(--surface); }
 .reihen-raster { columns: 3 280px; column-gap: 14px; margin-top: 14px; }
 .reihen-raster > .reihe-kachel { break-inside: avoid; margin-bottom: 14px; }
-.reihe-kachel h2 { font-size: 24px; margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; scroll-margin-top: 16px; }
+.reihe-kachel h2 { font-size: min(var(--h2-k), 24px); margin: 0 0 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; scroll-margin-top: 16px; }
 .reihe-kachel h2 span { font-family: var(--font); font-size: 14px; font-weight: 700; color: var(--muted); letter-spacing: 0; white-space: nowrap; }
 .marken-box { margin-top: 14px; }
-.marken-box h2 { font-size: 26px; margin: 0 0 12px; }
+.marken-box h2 { font-size: var(--h2-k); margin: 0 0 12px; }
 .marken-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .marke-kachel { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 13px 16px; border-radius: 16px; background: var(--surface); text-decoration: none; color: var(--ink); }
 .marke-kachel:hover { background: var(--k5); }
@@ -594,7 +594,7 @@ a.pfeil::after { content: " →"; }
 /* Kasten „Rad versichern“: eine Kennzeichnung oben, Text mit Luft, Knopf abgesetzt */
 .versichern { padding: 30px 32px; }
 .versichern .anzeige { display: inline-block; font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; padding: 5px 11px; border-radius: 999px; background: color-mix(in srgb, var(--ink) 10%, transparent); }
-.versichern h2 { font-size: 26px; margin: 14px 0 8px; }
+.versichern h2 { font-size: var(--h2-k); margin: 14px 0 8px; }
 .versichern > p:not(.klein) { max-width: 60ch; line-height: 1.6; }
 .versichern .actions { margin: 20px 0 18px; }
 .versichern .klein { max-width: 72ch; font-size: 13.5px; line-height: 1.55; padding-top: 14px; border-top: 1px solid color-mix(in srgb, var(--ink) 15%, transparent); }
@@ -602,6 +602,27 @@ a.pfeil::after { content: " →"; }
 
 /* Rahmen aller Seiten: Kopf mit Hauptmenü und Suche, Fußzeile in Spalten. Steckt in css/seiten.css und als
    css/rahmen.css in den von Hand gepflegten Seiten (Startseite, Rechtstexte), die ihr eigenes CSS mitbringen. */
+/* Schrift (30.10.): eine Größenskala für alle Seiten, am Handy fließend kleiner, damit Überschriften nicht in
+   sechs Zeilen zerfallen. Überschriften und kurze Texte umbrechen ausgewogen, Fließtext ohne einzelnes Wort am Ende.
+   rg-nw hält Teilenummern zusammen (setzt anleitungen.umbrueche beim Bauen), h1[data-lang] sind Titel über 40 Zeichen. */
+:root {
+  --h1: clamp(40px, 5.6vw, 70px); --h1-seite: clamp(36px, 4.8vw, 58px); --h1-recht: clamp(32px, 5vw, 44px);
+  --h2: clamp(30px, 3.8vw, 46px); --h2-t: 30px; --h2-k: 26px; --lead: 19px;
+}
+@media (max-width: 600px) {
+  :root {
+    --h1: clamp(30px, 3.5vw + 20px, 36px); --h1-seite: clamp(29px, 3vw + 20px, 34px); --h1-recht: clamp(28px, 2vw + 22px, 32px);
+    --h2: clamp(25px, 2vw + 17.5px, 28px); --h2-t: var(--h2); --h2-k: clamp(22px, 1vw + 18.5px, 24px); --lead: 18px;
+  }
+  h1[data-lang] { --h1: clamp(26px, 2vw + 19px, 29px); --h1-seite: var(--h1); }
+}
+h1 { font-size: var(--h1); }
+h2 { font-size: var(--h2); }
+.lead { font-size: var(--lead); }
+h1, h2, h3, h4, summary, figcaption, legend, dt, th, .eyebrow, .pill, .wert { text-wrap: balance; }
+p, li, dd, td, label, blockquote { text-wrap: pretty; }
+rg-nw { white-space: nowrap; }
+
 header { position: relative; }
 .kopfmenue { display: contents; }
 .kopfmenue > .pill { display: none; }
@@ -676,12 +697,13 @@ footer.fuss p { margin: 0; font-size: 14px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (max-width: 600px) { .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; } }
 /* Rechtstexte: Überschrift als H1, Inhaltsverzeichnis der Datenschutzerklärung */
-.legal-page h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.05; margin: 8px 0 16px; }
+.legal-page h1 { font-size: var(--h1-recht); line-height: 1.05; margin: 8px 0 16px; }
 .inhaltsliste { background: var(--surface); border-radius: 22px; padding: 18px 22px; margin: 0 0 22px; }
 .inhaltsliste b { display: block; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .inhaltsliste ol { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 28px; font-size: 15px; }
 .inhaltsliste li { break-inside: avoid; padding: 3px 0; }
 .inhaltsliste a { color: var(--text); font-weight: 600; }
 .legal-page h3[id] { scroll-margin-top: 16px; }
-/* Lange Wörter (Datenschutzerklärung, Verschleißrechner) in großen Überschriften am Handy trennen statt überlaufen lassen */
-@media (max-width: 600px) { h1, h2 { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 12 5 5; overflow-wrap: break-word; } }
+/* Überschriften am Handy nicht automatisch trennen: zusammen mit dem ausgewogenen Umbruch trennt der Browser sonst
+   auch Wörter, die in eine Zeile passen („Kettenver-schleiß“). Nur ein Wort, das gar nicht passt, bricht um. */
+@media (max-width: 600px) { h1, h2 { hyphens: manual; -webkit-hyphens: manual; overflow-wrap: break-word; } }

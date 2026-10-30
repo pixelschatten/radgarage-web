@@ -961,7 +961,7 @@ def reihe_seite(pfad, rs):
       <p class="lead">{len(rs)} Versionen aus den Modelljahren {spanne}. Hier siehst du auf einen Blick, womit sie sich unterscheiden.{satz}</p>
     </div>
     <section class="t s1 voll vergleich" aria-labelledby="vg-titel">
-      <h2 id="vg-titel" style="font-size:30px;margin:0 0 10px">Ausstattung und Unterhalt</h2>
+      <h2 id="vg-titel" style="font-size:var(--h2-t);margin:0 0 10px">Ausstattung und Unterhalt</h2>
       <div class="tabelle-rahmen"><table class="vergleichstabelle">
         <thead><tr><th scope="col">Ausstattung</th><th scope="col">Jahr</th>{'<th scope="col" class="zahl">UVP</th>' if mit_uvp else ''}<th scope="col">Schaltung</th><th scope="col">Bremse</th><th scope="col">Reifen</th><th scope="col" class="zahl">Unterhalt je 1.000 km</th></tr></thead>
         <tbody>{"".join(zeilen)}</tbody>

@@ -129,7 +129,7 @@ def seite(alle, stand):
               for t in d['typen']]
     out.append(f'''    <section class="t s1 voll" aria-labelledby="typ-titel">
       <span class="eyebrow">Nach Radtyp</span>
-      <h2 id="typ-titel" style="font-size:30px;margin:6px 0 4px">Unterhalt je 1.000 km</h2>
+      <h2 id="typ-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Unterhalt je 1.000 km</h2>
       <p>Am teuersten im Unterhalt sind {e(teuer["name"])} mit {euro(teuer["median"])} je 1.000 km, am günstigsten {e(guenstig["name"])} mit {euro(guenstig["median"])}. Ein großer Teil des Unterschieds steckt in den Reifen: Sie kosten bei {e(teuer["name"])} im Mittel {euro(teuer["reifen"])} je 1.000 km, bei {e(guenstig["name"])} {euro(guenstig["reifen"])}.</p>
       {_balken(zeilen, [('Radtyp', ''), ('', 'spur'), ('Median', 'zahl'), ('Spanne (mittlere Hälfte) · Anzahl', 'nebenbei')])}
       <p class="klein">Median = die Hälfte der Räder liegt darunter, die Hälfte darüber. „Meist“ = die mittlere Hälfte der Räder. Radtypen mit weniger als {MIN_RAEDER} ausgewerteten Rädern fehlen.</p>
@@ -138,7 +138,7 @@ def seite(alle, stand):
     anteil_zeilen = [(n, a, f'{round(100 * a)} %', '') for n, a in d['anteile']]
     out.append(f'''    <section class="t k4 halb" aria-labelledby="anteil-titel">
       <span class="eyebrow">Wofür das Geld draufgeht</span>
-      <h2 id="anteil-titel" style="font-size:28px;margin:6px 0 4px">Reifen und Beläge machen das meiste aus</h2>
+      <h2 id="anteil-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Reifen und Beläge machen das meiste aus</h2>
       <p>Im Schnitt gehen {reifen_anteil} % der Teilekosten auf die Reifen. Zusammen mit den Bremsbelägen sind es rund {round(100 * (d["anteile"][0][1] + d["anteile"][1][1]))} %. Kette und Kassette fallen weniger ins Gewicht, als viele denken.</p>
       {_balken(anteil_zeilen, [('Teil', ''), ('', 'spur'), ('Anteil', 'zahl'), ('', 'nebenbei')])}
     </section>
@@ -147,7 +147,7 @@ def seite(alle, stand):
     erste, letzte = d['ketten'][0], d['ketten'][-1]
     out.append(f'''    <section class="t k5 halb" aria-labelledby="kette-titel">
       <span class="eyebrow">Ketten</span>
-      <h2 id="kette-titel" style="font-size:28px;margin:6px 0 4px">Mehr Gänge, teurere Kette</h2>
+      <h2 id="kette-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Mehr Gänge, teurere Kette</h2>
       <p>Eine {erste["fach"]}-fach-Kette kostet im Mittel {euro(erste["median"])}, eine {letzte["fach"]}-fach-Kette {euro(letzte["median"])}. Gezählt ist die Kette, die ab Werk am Rad verbaut ist.</p>
       {_balken(ketten_zeilen, [('Schaltung', ''), ('', 'spur'), ('Richtpreis', 'zahl'), ('Räder', 'nebenbei')])}
     </section>
@@ -161,7 +161,7 @@ def seite(alle, stand):
                            for n, werte, einheit in d['trends'])
     out.append(f'''    <section class="t s2 voll" aria-labelledby="trend-titel">
       <span class="eyebrow">Neue Räder</span>
-      <h2 id="trend-titel" style="font-size:30px;margin:6px 0 4px">Was sich von Modelljahr zu Modelljahr ändert</h2>
+      <h2 id="trend-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Was sich von Modelljahr zu Modelljahr ändert</h2>
       <p>Bei den Modelljahren 2024 bis 2026 im Katalog setzen sich elektronische Schaltungen und 12-fach durch, Gravelbikes rollen auf breiteren Reifen. Elektronische Schaltungen bringen einen kleinen Akku mit, 12- und 13-fach-Ketten sind teurer.</p>
       <div class="tabelle-rahmen"><table class="vergleichstabelle trend-tabelle">
         <thead><tr><th scope="col">Modelljahr</th>{"".join(f'<th scope="col" class="zahl">{j}</th>' for j in JAHRE)}</tr></thead>
@@ -172,7 +172,7 @@ def seite(alle, stand):
 ''')
     out.append(f'''    <section class="t k3 voll text-abschnitt" aria-labelledby="methode-titel">
       <span class="eyebrow">So haben wir gerechnet</span>
-      <h2 id="methode-titel" style="font-size:30px;margin:6px 0 8px">Methode und Grenzen</h2>
+      <h2 id="methode-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Methode und Grenzen</h2>
       <ul class="punkte">
         <li><b>Grundlage:</b> {tsd(d["gesamt"])} Räder im Katalog, davon {tsd(d["n"])} mit Richtpreisen für Reifen, Bremsbeläge und Kette oder Kassette. Die übrigen fehlen in der Auswertung.</li>
         <li><b>Rechnung:</b> Richtpreis des ab Werk verbauten Teils geteilt durch den Verschleiß-Richtwert: Kette {tsd(RICHTWERT_KM["Kette"])} km, Kassette {tsd(RICHTWERT_KM["Kassette"])} km, Bremsbeläge {tsd(RICHTWERT_KM["Bremsbelag"])} km, Reifen {tsd(RICHTWERT_KM["Reifen"])} km. Beläge und Reifen zählen für vorn und hinten. Ohne Werkstattkosten.</li>

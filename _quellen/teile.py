@@ -152,7 +152,7 @@ def teil_seite(t, raeder, verbaut, paare=None):
         anleitung += f'<a class="pill ghost" href="/anleitungen/{a["slug"]}/">Anleitung: {e(a["h1"])}</a>'
     out.append(f'''    <section class="t s2 voll teil-kauf" aria-labelledby="kauf-titel">
       <span class="eyebrow">Kaufen und einbauen</span>
-      <h2 id="kauf-titel" style="font-size:26px;margin:6px 0 6px">{e(name)} finden</h2>
+      <h2 id="kauf-titel" style="font-size:var(--h2-k);margin:6px 0 6px">{e(name)} finden</h2>
       <p>Suchen bei {shoplinks(t)}. Preise schwanken, der Richtpreis ist ein Anhaltswert ohne Gewähr.</p>
       {"<div class='actions'>" + anleitung + "</div>" if anleitung else ""}
     </section>
@@ -168,7 +168,7 @@ def teil_seite(t, raeder, verbaut, paare=None):
                  'am Rad oder einen Akku, den der Radhersteller für dein Modell freigibt.')
         out.append(f'''    <section class="t k4 voll" aria-labelledby="paar-titel">
       <span class="eyebrow">Passt zusammen · {e(NAMEN.get(gegen, gegen))}</span>
-      <h2 id="paar-titel" style="font-size:30px;margin:6px 0 4px">{e(ueber)}</h2>
+      <h2 id="paar-titel" style="font-size:var(--h2-t);margin:6px 0 4px">{e(ueber)}</h2>
       <p>{text}</p>
       {paar_liste(dazu.most_common(), teil)}
     </section>
@@ -184,7 +184,7 @@ def teil_seite(t, raeder, verbaut, paare=None):
     if raeder:
         out.append(f'''    <section class="t s1 voll" aria-labelledby="raeder-titel">
       <span class="eyebrow">Verbaut an</span>
-      <h2 id="raeder-titel" style="font-size:30px;margin:6px 0 4px">Räder mit {e(name)}</h2>
+      <h2 id="raeder-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Räder mit {e(name)}</h2>
       {radliste(raeder)}
     </section>
 ''')

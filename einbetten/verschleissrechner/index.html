@@ -13,28 +13,28 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=11">
+<link rel="stylesheet" href="/css/seiten.css?v=12">
 </head>
 <body class="eingebettet">
 <main class="bento anl">
     <section class="t k2 voll verschleiss-rechner" aria-labelledby="vr-titel" data-teile='[{&quot;k&quot;:&quot;kette&quot;,&quot;n&quot;:&quot;Kette&quot;,&quot;km&quot;:6000,&quot;preis&quot;:25},{&quot;k&quot;:&quot;kassette&quot;,&quot;n&quot;:&quot;Kassette&quot;,&quot;km&quot;:15000,&quot;preis&quot;:50},{&quot;k&quot;:&quot;belaege&quot;,&quot;n&quot;:&quot;Bremsbeläge (vorn und hinten)&quot;,&quot;km&quot;:3000,&quot;preis&quot;:24},{&quot;k&quot;:&quot;reifen&quot;,&quot;n&quot;:&quot;Reifen (beide)&quot;,&quot;km&quot;:6000,&quot;preis&quot;:60}]'>
       <span class="eyebrow">Rechner</span>
-      <h2 id="vr-titel" style="font-size:30px;margin:6px 0 10px">Dein Fahrprofil</h2>
+      <h2 id="vr-titel" style="font-size:var(--h2-t);margin:6px 0 10px">Dein Fahrprofil</h2>
       <form class="werkzeug-form" action="#">
-        <label for="vr-km">Kilometer im Jahr: <output for="vr-km" class="vr-km-wert">3.000 km</output></label>
+        <label for="vr-km">Kilometer im Jahr: <output for="vr-km" class="vr-km-wert">3.000&nbsp;km</output></label>
         <input type="range" id="vr-km" min="500" max="20000" step="500" value="3000">
         <fieldset><legend>Wie fährst du meistens?</legend><div class="wahl">
-          <label><input type="checkbox" name="ebike"> E-Bike</label>
+          <label><input type="checkbox" name="ebike"> <rg-nw>E-Bike</rg-nw></label>
           <label><input type="checkbox" name="nass"> Oft bei Nässe</label>
           <label><input type="checkbox" name="gelaende"> Viel Gelände oder Berge</label>
         </div></fieldset>
       </form>
       <div class="tabelle-rahmen"><table class="vergleichstabelle vr-tabelle">
         <thead><tr><th scope="col">Teil</th><th scope="col">Wechsel</th><th scope="col">Bei dir</th><th scope="col" class="zahl">Pro Jahr</th></tr></thead>
-        <tbody><tr data-teil="kette"><th scope="row">Kette</th><td class="v-km" data-label="Wechsel">etwa alle 6.000 km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="kassette"><th scope="row">Kassette</th><td class="v-km" data-label="Wechsel">etwa alle 15.000 km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="belaege"><th scope="row">Bremsbeläge (vorn und hinten)</th><td class="v-km" data-label="Wechsel">etwa alle 3.000 km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="reifen"><th scope="row">Reifen (beide)</th><td class="v-km" data-label="Wechsel">etwa alle 6.000 km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr></tbody>
+        <tbody><tr data-teil="kette"><th scope="row">Kette</th><td class="v-km" data-label="Wechsel">etwa alle&nbsp;6.000&nbsp;km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="kassette"><th scope="row">Kassette</th><td class="v-km" data-label="Wechsel">etwa alle&nbsp;15.000&nbsp;km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="belaege"><th scope="row">Bremsbeläge (vorn und hinten)</th><td class="v-km" data-label="Wechsel">etwa alle&nbsp;3.000&nbsp;km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr><tr data-teil="reifen"><th scope="row">Reifen (beide)</th><td class="v-km" data-label="Wechsel">etwa alle&nbsp;6.000&nbsp;km</td><td class="v-zeit" data-label="Bei dir">–</td><td class="zahl v-euro" data-label="Pro Jahr">–</td></tr></tbody>
       </table></div>
       <p class="vr-summe">Teilekosten zusammen etwa <b>–</b> im Jahr.</p>
-      <p class="klein">Grobe Schätzung mit Richtwerten und Beispielpreisen (Kette 25 €, Kassette 50 €, Beläge 2 × 12 €, Reifen 2 × 30 €), ohne Werkstatt. E-Bike, Nässe und Gelände verkürzen die Abstände um Schätzfaktoren. Ab etwa 80 % lohnt sich ein Blick aufs Teil. Messen ersetzt der Rechner nicht.</p>
+      <p class="klein">Grobe Schätzung mit Richtwerten und Beispielpreisen (Kette 25&nbsp;€, Kassette 50&nbsp;€, Beläge 2&nbsp;×&nbsp;12&nbsp;€, Reifen 2&nbsp;×&nbsp;30&nbsp;€), ohne Werkstatt. <rg-nw>E-Bike,</rg-nw> Nässe und Gelände verkürzen die Abstände um Schätzfaktoren. Ab etwa&nbsp;80&nbsp;% lohnt sich ein Blick aufs Teil. Messen ersetzt der Rechner nicht.</p>
     </section>
 </main>
 <p class="einbett-quelle">Verschleißrechner von <a href="https://radgarage.app/verschleissrechner/">Radgarage</a>. Alles rund um dein Rad.</p>

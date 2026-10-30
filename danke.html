@@ -206,13 +206,13 @@ body { padding-top: env(safe-area-inset-top, 0px); }
 .danke { padding-block: 8px 40px; }
 .danke .gross { grid-column: span 12; }
 .danke .halb { grid-column: span 6; }
-.danke h1 { font-size: clamp(38px, 5vw, 60px); margin: 10px 0 12px; }
+.danke h1 { font-size: min(var(--h1), 60px); margin: 10px 0 12px; }
 .danke .actions { margin-top: 18px; }
 .danke a:not(.pill) { font-weight: 700; }
 footer { padding-bottom: 40px; }
 @media (max-width: 700px) { .danke .halb { grid-column: span 12; } }
 </style>
-<link rel="stylesheet" href="/css/rahmen.css?v=11">
+<link rel="stylesheet" href="/css/rahmen.css?v=12">
 </head>
 <body>
 <div class="wrap">
@@ -229,7 +229,7 @@ footer { padding-bottom: 40px; }
       <div class="t k4 gross">
         <div class="eyebrow">Adresse bestätigt</div>
         <h1>Danke, du bist dabei!</h1>
-        <p class="lead">Deine E-Mail-Adresse ist bestätigt und du stehst auf unserer Liste.</p>
+        <p class="lead">Deine <rg-nw>E-Mail-Adresse</rg-nw> ist bestätigt und du stehst auf unserer Liste.</p>
       </div>
       <div class="t k3 halb">
         <h3>Testzugang angefragt?</h3>
@@ -258,7 +258,7 @@ footer { padding-bottom: 40px; }
         <a href="/verschleissrechner/">Verschleißrechner</a>
         <a href="/unterhaltskosten/">Unterhaltskosten</a>
         <a href="/schaltgruppen/">Schaltgruppen</a>
-        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+        <a href="/e-bike-systeme/"><rg-nw>E-Bike-Systeme</rg-nw></a>
       </nav>
       <nav aria-label="Radgarage"><b>Radgarage</b>
         <a href="/ueber-uns/">Über uns</a>

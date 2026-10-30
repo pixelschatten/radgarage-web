@@ -35,7 +35,7 @@ def seite():
     .fb .vs-form input[type=email] {{ width: 100%; font: inherit; font-size: 17px; font-weight: 500; padding: 13px 16px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }}
     .fb .vs-form textarea {{ min-height: 150px; }}
     .fb .zaehler {{ justify-self: end; font-size: 13px; color: var(--muted); margin-top: -8px; }}
-    .fb h1 {{ font-size: clamp(38px, 5vw, 60px); margin: 8px 0 0; }}
+    .fb h1 {{ font-size: min(var(--h1), 60px); margin: 8px 0 0; }}
     @media (max-width: 900px) {{ .fb .intro, .fb .formular {{ grid-column: span 12; }} .fb .intro {{ padding: 28px 24px; }} .fb .formular {{ padding: 26px 22px; }} }}
     @media (max-width: 600px) {{ .fb .vs-form .wahl {{ grid-template-columns: 1fr; }} }}
   </style>
@@ -54,7 +54,7 @@ def seite():
       <p class="fine">Lieber per Mail? <a href="mailto:feedback@radgarage.app">feedback@radgarage.app</a></p>
     </div>
     <section class="t s1 formular" aria-labelledby="fb-titel">
-      <h2 id="fb-titel" style="font-size:30px;margin:0 0 14px">Dein Feedback</h2>
+      <h2 id="fb-titel" style="font-size:var(--h2-t);margin:0 0 14px">Dein Feedback</h2>
       <form class="vs-form fb-form" novalidate>
         <fieldset><legend>Worum geht es?</legend><div class="wahl">{wahl}</div></fieldset>
         <label class="feld"><span class="fb-frage" style="font-weight:800;color:var(--ink)">Was möchtest du uns sagen?</span>

@@ -10,7 +10,7 @@
 .t.kopf { display: block; margin-bottom: 0; }
 .t.kopf p { max-width: 40em; }
 .anl .kopf { grid-column: span 8; padding: 34px 34px 30px; }
-.anl .kopf h1 { font-size: clamp(36px, 4.8vw, 58px); margin: 10px 0 14px; }
+.anl .kopf h1 { font-size: var(--h1-seite); margin: 10px 0 14px; }
 .anl .kopf .lead { color: var(--ink2); }
 .anl .daten { grid-column: span 4; display: grid; gap: 14px; }
 .anl .daten .t { padding: 20px 24px; }
@@ -55,12 +55,12 @@
 .karten { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 .karte { display: flex; flex-direction: column; gap: 6px; text-decoration: none; min-height: 170px; transition: transform .15s ease; }
 .karte:hover { transform: translateY(-3px); }
-.karte h2, .karte h3 { font-size: 23px; line-height: 1.15; margin: 6px 0 0; hyphens: auto; overflow-wrap: break-word; }
+.karte h2, .karte h3 { font-size: 23px; line-height: 1.15; margin: 6px 0 0; overflow-wrap: break-word; }
 .karte .meta { margin-top: auto; font-size: 14px; font-weight: 700; color: var(--ink2); }
 .hinweis { font-size: 14px; color: var(--muted); max-width: 52em; margin: 6px 0 30px; }
 
 .uebersicht .kopf { grid-column: span 12; padding: 40px 36px; }
-.uebersicht .kopf h1 { font-size: clamp(40px, 5.6vw, 66px); margin: 10px 0 14px; }
+.uebersicht .kopf h1 { font-size: min(var(--h1), 66px); margin: 10px 0 14px; }
 
 @media (max-width: 900px) {
   .anl .kopf, .anl .daten, .anl .wann, .anl .werkzeug, .anl .schritte, .anl .video, .anl .tipp { grid-column: span 12; grid-row: auto; }
