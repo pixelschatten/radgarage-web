@@ -9,6 +9,7 @@ Video: Feld "video" mit der YouTube-ID füllen (der Teil nach watch?v=). Leer he
 import html
 import json
 import os
+import re
 
 SEITE = 'https://radgarage.app'
 
@@ -586,7 +587,7 @@ ICONS = ('<link rel="icon" href="/favicon.ico?v=2" sizes="32x32">\n'
          '<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">\n'
          '<link rel="manifest" href="/site.webmanifest">')
 KOPF_JS = 1  # hochzählen, wenn sich _quellen/kopf.js ändert
-CSS_VERSION = 11  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
+CSS_VERSION = 12  # hochzählen, wenn sich css/seiten.css ändert, sonst laden Browser die alte Datei
 
 UMFRAGE = 'https://tally.so/r/0VQ0JP'  # Nachfragetest, nach der Auswertung (20.11.2026) aus der Fußzeile nehmen
 
@@ -700,7 +701,7 @@ def video_kachel(a):
         return ''
     return f'''    <div class="t s1 video">
       <span class="eyebrow">Video</span>
-      <h2 style="font-size:26px;margin:6px 0 0">{e(a.get('video_titel', 'Lieber zuschauen?'))}</h2>
+      <h2 style="font-size:var(--h2-k);margin:6px 0 0">{e(a.get('video_titel', 'Lieber zuschauen?'))}</h2>
       {f'<p style="margin-top:6px">{e(a["video_text"])}</p>' if a.get('video_text') else ''}
       {player}
     </div>
@@ -769,7 +770,7 @@ def anleitung_seite(a, alle):
     )
     out.append(f'''    <section class="t s1 schritte{"" if a["video"] else " ohne-video"}" aria-labelledby="schritte-titel">
       <span class="eyebrow">Schritt für Schritt</span>
-      <h2 id="schritte-titel" style="font-size:30px;margin:6px 0 0">So geht's</h2>
+      <h2 id="schritte-titel" style="font-size:var(--h2-t);margin:6px 0 0">So geht's</h2>
       <ol class="steps">{schritte}</ol>
       {"" if a["video"] else f'<p class="klein"><a href="{e(youtube_suche(a))}" target="_blank" rel="noopener">Lieber zuschauen? Videos auf YouTube suchen</a></p>'}
     </section>
@@ -784,7 +785,7 @@ def anleitung_seite(a, alle):
         fr = ''.join(f'<details><summary>{e(q)}</summary><p>{e(x)}</p></details>' for q, x in a['fragen'])
         out.append(f'''    <section class="t s2 fragen" aria-labelledby="fragen-titel">
       <span class="eyebrow">Häufige Fragen</span>
-      <h2 id="fragen-titel" style="font-size:30px;margin:6px 0 8px">Gut zu wissen</h2>
+      <h2 id="fragen-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Gut zu wissen</h2>
       {fr}
     </section>
 ''')
@@ -799,7 +800,7 @@ def anleitung_seite(a, alle):
 ''')
     verwandt = [x for s in a['verwandt'] for x in alle if x['slug'] == s]
     out.append(f'''    <section class="t mehr" aria-labelledby="mehr-titel">
-      <h2 id="mehr-titel" style="font-size:30px;margin:14px 0 12px">Weitere Anleitungen</h2>
+      <h2 id="mehr-titel" style="font-size:var(--h2-t);margin:14px 0 12px">Weitere Anleitungen</h2>
       <div class="karten">{"".join(karte(x) for x in verwandt)}</div>
     </section>
   </article>
@@ -858,8 +859,66 @@ def uebersicht(alle):
     return ''.join(out)
 
 
+# Umbrüche am Handy (30.10.): Teilenummern, Maße und Zahl+Einheit sollen nicht mitten in der Zeile zerbrechen
+# („RD-M8100-SGS“ nicht als „RD-“ / „M8100-SGS“, „1.000 km“ nicht mit „km“ allein in der Zeile). Läuft über den
+# sichtbaren Text jeder Seite, nicht über Attribute, <head>, Skripte oder Formularfelder, und ist mehrfach anwendbar.
+# Zusammenhalten per eigenem Element <rg-nw> statt <span>: viele Regeln stylen span in Tabellen und Listen als Block.
+_UMBRUCH_TEILE = re.compile(r'(<!--.*?-->|<[^>]+>)', re.S)
+_UMBRUCH_AUSLASSEN = ('script', 'style', 'textarea', 'select', 'pre', 'code', 'svg', 'title')
+_EINHEIT = r'(?:km|mm|cm|m|kg|g|Wh|W|Nm|V|Zoll|Jahren?|Jahre|Monaten?|Monate|Wochen?|Tagen?|Std\.|Min\.|Minuten|Gänge|Gang|Zähne|Euro)(?!\w)|€|%'
+_KLEBEN = [
+    (re.compile(r'(\d) ([×x]) (?=\d)'), '\\1&nbsp;\\2&nbsp;'),                  # 12 × 142, 700 x 38C
+    (re.compile(r'(\d) (?=' + _EINHEIT + ')'), '\\1&nbsp;'),                     # 1.000 km, 80 €, 3 Jahre
+    (re.compile(r'(?<!\w)(ca\.|z\.|etwa|rund|je|bis|ab|von|alle|um) (?=\d|B\.)'), '\\1&nbsp;'),  # ca. 80, z. B., bis 2026
+    (re.compile(r'(?<![\d.])(\d{1,2}\.) (?=[A-ZÄÖÜ][a-zäöüß])'), '\\1&nbsp;'),    # (1. Generation)
+]
+_BINDESTRICH = re.compile(r'\w[-–]\w')
+
+
+def _wort_halten(wort):
+    """Kurze Wörter mit Bindestrich zusammenhalten, wenn ein Teil eine Zahl oder sehr kurz ist (10-fach, S-Works, E-Bike)."""
+    if not _BINDESTRICH.search(wort) or len(html.unescape(wort)) > 18:
+        return wort
+    teile = re.split(r'[-–]', re.sub(r'[^\w\-–]', '', wort))
+    if re.search(r'\d', wort) or any(0 < len(t) <= 3 for t in teile):
+        return f'<rg-nw>{wort}</rg-nw>'
+    return wort
+
+
+def _lange_h1(m):
+    sichtbar = html.unescape(re.sub(r'<[^>]+>', '', m.group(2))).strip()
+    return f'<h1{m.group(1)} data-lang>{m.group(2)}</h1>' if len(sichtbar) > 40 else m.group(0)
+
+
+def umbrueche(text):
+    if '<body' not in text:
+        return text
+    kopf, rumpf = text.split('<body', 1)
+    rumpf = re.sub(r'<h1((?:(?!data-lang)[^>])*)>(.*?)</h1>', _lange_h1, rumpf, flags=re.S)
+    stuecke = _UMBRUCH_TEILE.split(rumpf)  # stuecke[0] ist der Rest des <body …>-Tags, danach abwechselnd Tag und Text
+    offen = []
+    for i in range(1, len(stuecke) - 1, 2):
+        tag = stuecke[i]
+        m = re.match(r'<(/?)([a-zA-Z0-9]+)', tag)
+        if m and m.group(2).lower() in _UMBRUCH_AUSLASSEN and not tag.endswith('/>'):
+            name = m.group(2).lower()
+            if not m.group(1):
+                offen.append(name)
+            elif name in offen:
+                offen.remove(name)
+        t = stuecke[i + 1]
+        if offen or tag == '<rg-nw>' or not t.strip():
+            continue
+        for muster, ersatz in _KLEBEN:
+            t = muster.sub(ersatz, t)
+        stuecke[i + 1] = re.sub(r'[^\s<>]+', lambda w: _wort_halten(w.group(0)), t)
+    return kopf + '<body' + ''.join(stuecke)
+
+
 def schreiben(pfad, text):
     voll = os.path.join(WURZEL, pfad)
     os.makedirs(os.path.dirname(voll), exist_ok=True)
+    if pfad.endswith('.html'):
+        text = umbrueche(text)
     with open(voll, 'w', encoding='utf-8') as f:
         f.write(text)

@@ -20,7 +20,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=11">
+<link rel="stylesheet" href="/css/seiten.css?v=12">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Wissen", "item": "https://radgarage.app/wissen/"}, {"@type": "ListItem", "position": 3, "name": "Rechner einbetten", "item": "https://radgarage.app/einbetten/"}]}</script>
 </head>
@@ -50,7 +50,7 @@
     </div>
     <section class="t s1 voll einbett-karte" aria-labelledby="eb-verschleissrechner">
       <span class="eyebrow">Rechner 1</span>
-      <h2 id="eb-verschleissrechner" style="font-size:30px;margin:6px 0 4px">Verschleißrechner</h2>
+      <h2 id="eb-verschleissrechner" style="font-size:var(--h2-t);margin:6px 0 4px">Verschleißrechner</h2>
       <p>Kilometer und Fahrprofil einstellen, der Rechner zeigt, wann Kette, Kassette, Beläge und Reifen fällig sind und was das im Jahr kostet. <a href="/verschleissrechner/">Zur Seite</a></p>
       <iframe class="einbett-vorschau" src="/einbetten/verschleissrechner/" title="Vorschau: Verschleißrechner" loading="lazy" style="height:900px"></iframe>
       <label class="schnipsel-label" for="code-verschleissrechner">Code zum Einfügen</label>
@@ -61,7 +61,7 @@
     </section>
     <section class="t k5 voll einbett-karte" aria-labelledby="eb-reifengroessen">
       <span class="eyebrow">Rechner 2</span>
-      <h2 id="eb-reifengroessen" style="font-size:30px;margin:6px 0 4px">Reifengrößen-Rechner</h2>
+      <h2 id="eb-reifengroessen" style="font-size:var(--h2-t);margin:6px 0 4px">Reifengrößen-Rechner</h2>
       <p>Größe vom Reifen abtippen, der Rechner zeigt die ETRTO-Größe, die Felge und passende Schläuche. <a href="/reifengroessen/">Zur Seite</a></p>
       <iframe class="einbett-vorschau" src="/einbetten/reifengroessen/" title="Vorschau: Reifengrößen-Rechner" loading="lazy" style="height:560px"></iframe>
       <label class="schnipsel-label" for="code-reifengroessen">Code zum Einfügen</label>
@@ -72,7 +72,7 @@
     </section>
     <section class="t k4 voll text-abschnitt" aria-labelledby="regeln-titel">
       <span class="eyebrow">Gut zu wissen</span>
-      <h2 id="regeln-titel" style="font-size:30px;margin:6px 0 8px">So funktioniert es</h2>
+      <h2 id="regeln-titel" style="font-size:var(--h2-t);margin:6px 0 8px">So funktioniert es</h2>
       <ul class="punkte">
         <li><b>Kostenlos und ohne Anmeldung.</b> Du brauchst kein Konto und musst uns nicht fragen.</li>
         <li><b>Höhe passt sich an.</b> Das kleine Skript im Code stellt die Höhe automatisch ein. Lässt dein Baukasten keine Skripte zu, funktioniert der Rechner trotzdem, dann mit fester Höhe.</li>
@@ -82,9 +82,9 @@
     </section>
     <section class="t s2 voll text-abschnitt" aria-labelledby="ds-titel">
       <span class="eyebrow">Datenschutz</span>
-      <h2 id="ds-titel" style="font-size:30px;margin:6px 0 8px">Was du in deine Datenschutzerklärung schreiben kannst</h2>
+      <h2 id="ds-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Was du in deine Datenschutzerklärung schreiben kannst</h2>
       <p>Der Rechner setzt keine Cookies, zeigt keine Werbung und rechnet nur im Browser. Beim Laden verbindet sich der Browser deiner Besucher aber mit radgarage.app (GitHub Pages), und wir zählen den Aufruf ohne Cookies und ohne Kennung als „eingebettet“. Ein Vorschlag für deine Datenschutzerklärung, bitte selbst prüfen:</p>
-      <p class="zitat">„Auf dieser Seite binden wir einen Rechner von Radgarage (radgarage.app) ein. Beim Aufruf lädt Ihr Browser den Rechner von radgarage.app; dabei wird technisch Ihre IP-Adresse an den Hoster GitHub Pages (GitHub Inc., USA) übertragen. Die Radgarage zählt den Aufruf ohne Cookies und ohne Personenbezug. Die Einbindung erfolgt auf Grundlage unseres berechtigten Interesses an einem nützlichen Angebot (Art. 6 Abs. 1 lit. f DSGVO). Details: radgarage.app/datenschutz.html“</p>
+      <p class="zitat">„Auf dieser Seite binden wir einen Rechner von Radgarage (radgarage.app) ein. Beim Aufruf lädt Ihr Browser den Rechner von radgarage.app; dabei wird technisch Ihre <rg-nw>IP-Adresse</rg-nw> an den Hoster GitHub Pages (GitHub Inc., USA) übertragen. Die Radgarage zählt den Aufruf ohne Cookies und ohne Personenbezug. Die Einbindung erfolgt auf Grundlage unseres berechtigten Interesses an einem nützlichen Angebot (Art. 6 Abs. 1 lit. f DSGVO). Details: radgarage.app/datenschutz.html“</p>
     </section>
     <aside class="t k1 app">
       <div>
@@ -109,7 +109,7 @@
         <a href="/verschleissrechner/">Verschleißrechner</a>
         <a href="/unterhaltskosten/">Unterhaltskosten</a>
         <a href="/schaltgruppen/">Schaltgruppen</a>
-        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+        <a href="/e-bike-systeme/"><rg-nw>E-Bike-Systeme</rg-nw></a>
       </nav>
       <nav aria-label="Radgarage"><b>Radgarage</b>
         <a href="/ueber-uns/">Über uns</a>

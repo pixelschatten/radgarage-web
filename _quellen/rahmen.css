@@ -1,5 +1,26 @@
 /* Rahmen aller Seiten: Kopf mit Hauptmenü und Suche, Fußzeile in Spalten. Steckt in css/seiten.css und als
    css/rahmen.css in den von Hand gepflegten Seiten (Startseite, Rechtstexte), die ihr eigenes CSS mitbringen. */
+/* Schrift (30.10.): eine Größenskala für alle Seiten, am Handy fließend kleiner, damit Überschriften nicht in
+   sechs Zeilen zerfallen. Überschriften und kurze Texte umbrechen ausgewogen, Fließtext ohne einzelnes Wort am Ende.
+   rg-nw hält Teilenummern zusammen (setzt anleitungen.umbrueche beim Bauen), h1[data-lang] sind Titel über 40 Zeichen. */
+:root {
+  --h1: clamp(40px, 5.6vw, 70px); --h1-seite: clamp(36px, 4.8vw, 58px); --h1-recht: clamp(32px, 5vw, 44px);
+  --h2: clamp(30px, 3.8vw, 46px); --h2-t: 30px; --h2-k: 26px; --lead: 19px;
+}
+@media (max-width: 600px) {
+  :root {
+    --h1: clamp(30px, 3.5vw + 20px, 36px); --h1-seite: clamp(29px, 3vw + 20px, 34px); --h1-recht: clamp(28px, 2vw + 22px, 32px);
+    --h2: clamp(25px, 2vw + 17.5px, 28px); --h2-t: var(--h2); --h2-k: clamp(22px, 1vw + 18.5px, 24px); --lead: 18px;
+  }
+  h1[data-lang] { --h1: clamp(26px, 2vw + 19px, 29px); --h1-seite: var(--h1); }
+}
+h1 { font-size: var(--h1); }
+h2 { font-size: var(--h2); }
+.lead { font-size: var(--lead); }
+h1, h2, h3, h4, summary, figcaption, legend, dt, th, .eyebrow, .pill, .wert { text-wrap: balance; }
+p, li, dd, td, label, blockquote { text-wrap: pretty; }
+rg-nw { white-space: nowrap; }
+
 header { position: relative; }
 .kopfmenue { display: contents; }
 .kopfmenue > .pill { display: none; }
@@ -74,12 +95,13 @@ footer.fuss p { margin: 0; font-size: 14px; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
 @media (max-width: 600px) { .suche input[type=search] { font-size: 17px; padding: 14px 16px 14px 48px; background-position: 16px 50%; } }
 /* Rechtstexte: Überschrift als H1, Inhaltsverzeichnis der Datenschutzerklärung */
-.legal-page h1 { font-size: clamp(32px, 5vw, 44px); line-height: 1.05; margin: 8px 0 16px; }
+.legal-page h1 { font-size: var(--h1-recht); line-height: 1.05; margin: 8px 0 16px; }
 .inhaltsliste { background: var(--surface); border-radius: 22px; padding: 18px 22px; margin: 0 0 22px; }
 .inhaltsliste b { display: block; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
 .inhaltsliste ol { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 28px; font-size: 15px; }
 .inhaltsliste li { break-inside: avoid; padding: 3px 0; }
 .inhaltsliste a { color: var(--text); font-weight: 600; }
 .legal-page h3[id] { scroll-margin-top: 16px; }
-/* Lange Wörter (Datenschutzerklärung, Verschleißrechner) in großen Überschriften am Handy trennen statt überlaufen lassen */
-@media (max-width: 600px) { h1, h2 { hyphens: auto; -webkit-hyphens: auto; hyphenate-limit-chars: 12 5 5; overflow-wrap: break-word; } }
+/* Überschriften am Handy nicht automatisch trennen: zusammen mit dem ausgewogenen Umbruch trennt der Browser sonst
+   auch Wörter, die in eine Zeile passen („Kettenver-schleiß“). Nur ein Wort, das gar nicht passt, bricht um. */
+@media (max-width: 600px) { h1, h2 { hyphens: manual; -webkit-hyphens: manual; overflow-wrap: break-word; } }

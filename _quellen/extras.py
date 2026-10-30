@@ -93,6 +93,7 @@ def kopf_angleichen(html, pfad):
         kopfteil = re.sub(r'\n\s*<!--kopf-knopf-->.*?<!--/kopf-knopf-->', '', kopfteil, flags=re.S)
     neu = re.sub(r'[ \t]*<header>.*?</header>\n', lambda m: kopfteil, html, count=1, flags=re.S)
     neu = re.sub(r'<link rel="stylesheet" href="/css/rahmen\.css[^"]*">\n?', '', neu)
+    neu = re.sub(r'/css/seiten\.css\?v=\d+', f'/css/seiten.css?v={CSS_VERSION}', neu)
     if '/css/seiten.css' not in neu:
         neu = neu.replace('</head>', f'<link rel="stylesheet" href="/css/rahmen.css?v={CSS_VERSION}">\n</head>', 1)
     return neu

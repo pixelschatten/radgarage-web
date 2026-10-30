@@ -20,7 +20,7 @@
 <link rel="manifest" href="/site.webmanifest">
 <link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/css/seiten.css?v=11">
+<link rel="stylesheet" href="/css/seiten.css?v=12">
 <meta name="theme-color" content="#F2EDE2">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Radgarage", "item": "https://radgarage.app/"}, {"@type": "ListItem", "position": 2, "name": "Feedback", "item": "https://radgarage.app/feedback/"}]}</script>
 </head>
@@ -46,7 +46,7 @@
     .fb .vs-form input[type=email] { width: 100%; font: inherit; font-size: 17px; font-weight: 500; padding: 13px 16px; border-radius: 18px; border: 2px solid var(--line); background: var(--bg); color: var(--text); }
     .fb .vs-form textarea { min-height: 150px; }
     .fb .zaehler { justify-self: end; font-size: 13px; color: var(--muted); margin-top: -8px; }
-    .fb h1 { font-size: clamp(38px, 5vw, 60px); margin: 8px 0 0; }
+    .fb h1 { font-size: min(var(--h1), 60px); margin: 8px 0 0; }
     @media (max-width: 900px) { .fb .intro, .fb .formular { grid-column: span 12; } .fb .intro { padding: 28px 24px; } .fb .formular { padding: 26px 22px; } }
     @media (max-width: 600px) { .fb .vs-form .wahl { grid-template-columns: 1fr; } }
   </style>
@@ -60,12 +60,12 @@
       <ol class="steps">
         <li><span><strong>Du schreibst</strong>, ganz ohne Anmeldung.</span></li>
         <li><span><strong>Wir lesen alles</strong> und sammeln, was oft gewünscht wird.</span></li>
-        <li><span><strong>Mit E-Mail-Adresse</strong> können wir dir antworten oder Bescheid geben, wenn es umgesetzt ist.</span></li>
+        <li><span><strong>Mit <rg-nw>E-Mail-Adresse</rg-nw></strong> können wir dir antworten oder Bescheid geben, wenn es umgesetzt ist.</span></li>
       </ol>
       <p class="fine">Lieber per Mail? <a href="mailto:feedback@radgarage.app">feedback@radgarage.app</a></p>
     </div>
     <section class="t s1 formular" aria-labelledby="fb-titel">
-      <h2 id="fb-titel" style="font-size:30px;margin:0 0 14px">Dein Feedback</h2>
+      <h2 id="fb-titel" style="font-size:var(--h2-t);margin:0 0 14px">Dein Feedback</h2>
       <form class="vs-form fb-form" novalidate>
         <fieldset><legend>Worum geht es?</legend><div class="wahl"><label><input type="radio" name="kategorie" value="verbesserung" required><span>Verbesserung<small>Was kann besser werden?</small></span></label><label><input type="radio" name="kategorie" value="funktion" required><span>Fehlende Funktion<small>Was fehlt dir ganz?</small></span></label><label><input type="radio" name="kategorie" value="katalog" required><span>Katalog-Lücke<small>Rad oder Teil fehlt</small></span></label><label><input type="radio" name="kategorie" value="sonstiges" required><span>Sonstiges<small>Lob, Kritik, Ideen</small></span></label></div></fieldset>
         <label class="feld"><span class="fb-frage" style="font-weight:800;color:var(--ink)">Was möchtest du uns sagen?</span>
@@ -73,12 +73,12 @@
         <span class="zaehler" aria-hidden="true">0 / 3000</span>
         <label class="feld">Wer bist du? <span>(freiwillig)</span>
           <select name="wer"><option value="">Bitte wählen</option><option value="interessent">Ich interessiere mich für die App</option><option value="nutzer">Ich nutze die App</option><option value="tester">Ich teste die App</option><option value="sonstige">Etwas anderes</option></select></label>
-        <label class="feld">E-Mail-Adresse <span>(freiwillig, nur damit wir dir antworten können)</span>
+        <label class="feld"><rg-nw>E-Mail-Adresse</rg-nw> <span>(freiwillig, nur damit wir dir antworten können)</span>
           <input type="email" name="email" maxlength="200" autocomplete="email" inputmode="email"></label>
         <label class="falle" aria-hidden="true">Bitte leer lassen <input type="text" name="webseite" tabindex="-1" autocomplete="off"></label>
         <div class="actions"><button class="pill" type="submit">Feedback senden</button></div>
         <p class="msg" role="status" hidden></p>
-        <p class="klein">Wir speichern dein Feedback und, falls angegeben, deine E-Mail-Adresse. Sie wird nicht veröffentlicht und nicht für Werbung genutzt. Mehr in der <a href="/datenschutz.html#feedback">Datenschutzerklärung</a>.</p>
+        <p class="klein">Wir speichern dein Feedback und, falls angegeben, deine <rg-nw>E-Mail-Adresse.</rg-nw> Sie wird nicht veröffentlicht und nicht für Werbung genutzt. Mehr in der <a href="/datenschutz.html#feedback">Datenschutzerklärung</a>.</p>
       </form>
     </section>
   </div>
@@ -97,7 +97,7 @@
         <a href="/verschleissrechner/">Verschleißrechner</a>
         <a href="/unterhaltskosten/">Unterhaltskosten</a>
         <a href="/schaltgruppen/">Schaltgruppen</a>
-        <a href="/e-bike-systeme/">E-Bike-Systeme</a>
+        <a href="/e-bike-systeme/"><rg-nw>E-Bike-Systeme</rg-nw></a>
       </nav>
       <nav aria-label="Radgarage"><b>Radgarage</b>
         <a href="/ueber-uns/">Über uns</a>

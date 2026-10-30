@@ -12,7 +12,7 @@ ORGANISATION = {'@type': 'Organization', '@id': f'{SEITE}/#org', 'name': 'Radgar
 def _abschnitt(farbe, eyebrow, titel, inhalt, kennung):
     return f'''    <section class="t {farbe} voll text-abschnitt" aria-labelledby="{kennung}">
       <span class="eyebrow">{e(eyebrow)}</span>
-      <h2 id="{kennung}" style="font-size:30px;margin:6px 0 8px">{e(titel)}</h2>
+      <h2 id="{kennung}" style="font-size:var(--h2-t);margin:6px 0 8px">{e(titel)}</h2>
       {inhalt}
     </section>
 '''

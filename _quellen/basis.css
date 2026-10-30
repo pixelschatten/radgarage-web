@@ -65,8 +65,8 @@ header { display: flex; align-items: center; justify-content: space-between; gap
 /* Hero */
 .hero { padding-block: 8px 14px; }
 .hero .intro { grid-column: span 7; grid-row: span 2; padding: 36px 36px 32px; display: flex; flex-direction: column; justify-content: space-between; gap: 22px; }
-h1 { font-size: clamp(40px, 5.6vw, 70px); line-height: 1; margin: 12px 0 16px; text-wrap: balance; }
-.lead { font-size: 19px; max-width: 30em; }
+h1 { font-size: var(--h1); line-height: 1; margin: 12px 0 16px; text-wrap: balance; }
+.lead { font-size: var(--lead); max-width: 30em; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .hero .shot { grid-column: span 5; grid-row: span 3; display: flex; align-items: flex-end; justify-content: center; padding: 28px 28px 0; min-height: 520px; }
 .hero .plaetze { grid-column: span 4; }
@@ -79,7 +79,7 @@ section { scroll-margin-top: 16px; }
 .anmelden { padding-block: 0 14px; }
 .anmelden .test { grid-column: span 5; display: flex; flex-direction: column; gap: 14px; }
 .anmelden .formular { grid-column: span 7; padding: 30px 32px; }
-h2 { font-size: clamp(30px, 3.8vw, 46px); line-height: 1.04; margin: 6px 0 12px; text-wrap: balance; }
+h2 { font-size: var(--h2); line-height: 1.04; margin: 6px 0 12px; text-wrap: balance; }
 h3 { font-size: 21px; line-height: 1.2; margin: 0 0 6px; }
 .steps { list-style: none; counter-reset: s; padding: 0; margin: 4px 0 0; display: grid; gap: 12px; }
 .steps li { counter-increment: s; display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; color: var(--ink2); }
@@ -188,7 +188,7 @@ footer a { color: var(--text); font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .dock { transition: none; } }
 body { padding-top: env(safe-area-inset-top, 0px); }
 .legal-page { padding-block: 16px 48px; max-width: 46em; font-size: 16px; }
-.legal-page h2 { font-size: clamp(32px, 5vw, 44px); margin: 8px 0 16px; }
+.legal-page h2 { font-size: var(--h1-recht); margin: 8px 0 16px; }
 .legal-page h3 { font-size: 20px; margin: 24px 0 6px; }
 .legal-page p { margin: 0 0 10px; }
 .legal-page .fine { margin-top: 16px; }

@@ -84,7 +84,7 @@ def reifen_rechner(js_daten, farbe='k5'):
     """Der Rechner-Block, gleich auf /reifengroessen/ und in der Version zum Einbetten."""
     return f'''    <section class="t {farbe} voll" aria-labelledby="rechner-titel">
       <span class="eyebrow">Rechner</span>
-      <h2 id="rechner-titel" style="font-size:30px;margin:6px 0 4px">Welche Größe ist das?</h2>
+      <h2 id="rechner-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Welche Größe ist das?</h2>
       <p>Tipp ab, was auf deinem Reifen steht, zum Beispiel <b>28 x 1.75</b>, <b>700 x 32C</b>, <b>29 x 2.4</b> oder <b>55-622</b>.</p>
       <form class="werkzeug-form reifen-rechner" action="#" data-daten='{e(json.dumps(js_daten, ensure_ascii=False, separators=(",", ":")))}'>
         <label for="reifen-eingabe">Größe auf dem Reifen</label>
@@ -140,7 +140,7 @@ def reifen_seite(alle):
     </div>
 {reifen_rechner(js_daten)}    <section class="t s1 voll text-abschnitt" aria-labelledby="lesen-titel">
       <span class="eyebrow">So liest du die Größe</span>
-      <h2 id="lesen-titel" style="font-size:30px;margin:6px 0 8px">Drei Angaben, eine Größe</h2>
+      <h2 id="lesen-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Drei Angaben, eine Größe</h2>
       <ul class="punkte">
         <li><b>ETRTO, z. B. 55-622:</b> 55 mm Reifenbreite, 622 mm Felgendurchmesser am Reifensitz. Eindeutig und am besten zum Vergleichen.</li>
         <li><b>Zoll, z. B. 28 x 2.15:</b> ungefährer Außendurchmesser und Breite in Zoll. 2.15 Zoll sind etwa 55 mm. Achtung: „28 Zoll“ und „29 Zoll“ meinen dieselbe Felge.</li>
@@ -149,24 +149,24 @@ def reifen_seite(alle):
     </section>
     <section class="t s1 voll alle" aria-labelledby="tabelle-titel">
       <span class="eyebrow">Aus dem Katalog</span>
-      <h2 id="tabelle-titel" style="font-size:30px;margin:6px 0 4px">Gängige Reifengrößen</h2>
+      <h2 id="tabelle-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Gängige Reifengrößen</h2>
       <p>Welche Größen an den Rädern im Katalog ab Werk montiert sind, mit Beispielreifen. „ca.“ heißt: aus einer Zoll-Breite umgerechnet.</p>
       {"".join(abschnitte)}
     </section>
     <section class="t k3 voll alle" aria-labelledby="schlauch-titel">
       <span class="eyebrow">Schlauch</span>
-      <h2 id="schlauch-titel" style="font-size:30px;margin:6px 0 4px">Welcher Schlauch passt?</h2>
+      <h2 id="schlauch-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Welcher Schlauch passt?</h2>
       <p>Ein Schlauch passt, wenn der Felgendurchmesser gleich ist und die Reifenbreite im Bereich auf der Packung liegt. Ein Schlauch für 40 bis 62 mm passt also in einen 55-622-Reifen. Dazu muss das Ventil zur Felge passen, bei hohen Felgen auch die Ventillänge.</p>
       <table class="teiltabelle"><tbody>{schlauch_zeilen}</tbody></table>
     </section>
     <section class="t s2 fragen" aria-labelledby="fragen-titel">
       <span class="eyebrow">Häufige Fragen</span>
-      <h2 id="fragen-titel" style="font-size:30px;margin:6px 0 8px">Gut zu wissen</h2>
+      <h2 id="fragen-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Gut zu wissen</h2>
       {_faq(fragen)}
     </section>
     <nav class="t s2 voll rad-anleitungen" aria-label="Passende Anleitungen">
       <span class="eyebrow">Selbst machen</span>
-      <h2 style="font-size:26px;margin:6px 0 10px">Passende Anleitungen</h2>
+      <h2 style="font-size:var(--h2-k);margin:6px 0 10px">Passende Anleitungen</h2>
       <div class="chips">{_chips(['reifen-wechseln', 'schlauch-wechseln', 'fruehjahrscheck'])}<a href="/teile/reifen/">Alle Reifen im Katalog</a><a href="/raeder/">Reifengröße deines Rads</a></div>
     </nav>
   </article>
@@ -198,7 +198,7 @@ def verschleiss_rechner():
         for k, n, km, _ in TEILE_RECHNER)
     return f'''    <section class="t k2 voll verschleiss-rechner" aria-labelledby="vr-titel" data-teile='{e(daten)}'>
       <span class="eyebrow">Rechner</span>
-      <h2 id="vr-titel" style="font-size:30px;margin:6px 0 10px">Dein Fahrprofil</h2>
+      <h2 id="vr-titel" style="font-size:var(--h2-t);margin:6px 0 10px">Dein Fahrprofil</h2>
       <form class="werkzeug-form" action="#">
         <label for="vr-km">Kilometer im Jahr: <output for="vr-km" class="vr-km-wert">3.000 km</output></label>
         <input type="range" id="vr-km" min="500" max="20000" step="500" value="3000">
@@ -242,7 +242,7 @@ def verschleiss_seite():
     </div>
 {verschleiss_rechner()}    <section class="t s2 fragen" aria-labelledby="fragen-titel">
       <span class="eyebrow">Häufige Fragen</span>
-      <h2 id="fragen-titel" style="font-size:30px;margin:6px 0 8px">Wann ist was fällig?</h2>
+      <h2 id="fragen-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Wann ist was fällig?</h2>
       {_faq(fragen)}
     </section>
     <aside class="t k4 app">
@@ -255,7 +255,7 @@ def verschleiss_seite():
     </aside>
     <nav class="t s2 voll rad-anleitungen" aria-label="Passende Anleitungen">
       <span class="eyebrow">Selbst machen</span>
-      <h2 style="font-size:26px;margin:6px 0 10px">Passende Anleitungen</h2>
+      <h2 style="font-size:var(--h2-k);margin:6px 0 10px">Passende Anleitungen</h2>
       <div class="chips">{_chips(['kettenverschleiss-messen', 'kette-wechseln', 'bremsbelaege-wechseln', 'reifen-wechseln', 'kassette-wechseln'])}</div>
     </nav>
   </article>
@@ -335,7 +335,7 @@ def einbetten_uebersicht():
         farbe = ['s1', 'k5'][i % 2]
         out.append(f'''    <section class="t {farbe} voll einbett-karte" aria-labelledby="eb-{ordner}">
       <span class="eyebrow">Rechner {i + 1}</span>
-      <h2 id="eb-{ordner}" style="font-size:30px;margin:6px 0 4px">{e(name)}</h2>
+      <h2 id="eb-{ordner}" style="font-size:var(--h2-t);margin:6px 0 4px">{e(name)}</h2>
       <p>{e(satz)} <a href="{ziel}">Zur Seite</a></p>
       <iframe class="einbett-vorschau" src="/einbetten/{ordner}/" title="Vorschau: {e(name)}" loading="lazy" style="height:{hoehe}px"></iframe>
       <label class="schnipsel-label" for="code-{ordner}">Code zum Einfügen</label>
@@ -345,7 +345,7 @@ def einbetten_uebersicht():
 ''')
     out.append('''    <section class="t k4 voll text-abschnitt" aria-labelledby="regeln-titel">
       <span class="eyebrow">Gut zu wissen</span>
-      <h2 id="regeln-titel" style="font-size:30px;margin:6px 0 8px">So funktioniert es</h2>
+      <h2 id="regeln-titel" style="font-size:var(--h2-t);margin:6px 0 8px">So funktioniert es</h2>
       <ul class="punkte">
         <li><b>Kostenlos und ohne Anmeldung.</b> Du brauchst kein Konto und musst uns nicht fragen.</li>
         <li><b>Höhe passt sich an.</b> Das kleine Skript im Code stellt die Höhe automatisch ein. Lässt dein Baukasten keine Skripte zu, funktioniert der Rechner trotzdem, dann mit fester Höhe.</li>
@@ -355,7 +355,7 @@ def einbetten_uebersicht():
     </section>
     <section class="t s2 voll text-abschnitt" aria-labelledby="ds-titel">
       <span class="eyebrow">Datenschutz</span>
-      <h2 id="ds-titel" style="font-size:30px;margin:6px 0 8px">Was du in deine Datenschutzerklärung schreiben kannst</h2>
+      <h2 id="ds-titel" style="font-size:var(--h2-t);margin:6px 0 8px">Was du in deine Datenschutzerklärung schreiben kannst</h2>
       <p>Der Rechner setzt keine Cookies, zeigt keine Werbung und rechnet nur im Browser. Beim Laden verbindet sich der Browser deiner Besucher aber mit radgarage.app (GitHub Pages), und wir zählen den Aufruf ohne Cookies und ohne Kennung als „eingebettet“. Ein Vorschlag für deine Datenschutzerklärung, bitte selbst prüfen:</p>
       <p class="zitat">„Auf dieser Seite binden wir einen Rechner von Radgarage (radgarage.app) ein. Beim Aufruf lädt Ihr Browser den Rechner von radgarage.app; dabei wird technisch Ihre IP-Adresse an den Hoster GitHub Pages (GitHub Inc., USA) übertragen. Die Radgarage zählt den Aufruf ohne Cookies und ohne Personenbezug. Die Einbindung erfolgt auf Grundlage unseres berechtigten Interesses an einem nützlichen Angebot (Art. 6 Abs. 1 lit. f DSGVO). Details: radgarage.app/datenschutz.html“</p>
     </section>

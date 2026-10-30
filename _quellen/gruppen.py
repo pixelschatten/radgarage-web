@@ -123,7 +123,7 @@ def gruppe_seite(pfad, raeder, alle_gruppen):
 ''')
     out.append(f'''    <section class="t s1 voll" aria-labelledby="vers-titel">
       <span class="eyebrow">Verschleißteile</span>
-      <h2 id="vers-titel" style="font-size:30px;margin:6px 0 4px">Kette, Kassette und Beläge an Rädern mit {e(name)}</h2>
+      <h2 id="vers-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Kette, Kassette und Beläge an Rädern mit {e(name)}</h2>
       <p>{regel}</p>
       {_tabelle(raeder, ['Kette', 'Riemen', 'Kassette', 'Bremsbelag'], 5)}
       {_ersatz_satz(raeder, 'Kette')}{_ersatz_satz(raeder, 'Kassette')}
@@ -132,20 +132,20 @@ def gruppe_seite(pfad, raeder, alle_gruppen):
 ''')
     out.append(f'''    <section class="t k4 voll" aria-labelledby="schalt-titel">
       <span class="eyebrow">Schaltung</span>
-      <h2 id="schalt-titel" style="font-size:30px;margin:6px 0 4px">Schaltwerk, Schalthebel und Kurbel</h2>
+      <h2 id="schalt-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Schaltwerk, Schalthebel und Kurbel</h2>
       {_tabelle(raeder, ['Schaltwerk', 'Schalthebel', 'Umwerfer', 'Kurbel', 'Akku'], 4, schaltakku=True)}
     </section>
 ''')
     out.append(f'''    <nav class="t s2 voll rad-anleitungen" aria-label="Passende Anleitungen">
       <span class="eyebrow">Selbst machen</span>
-      <h2 style="font-size:26px;margin:6px 0 10px">Passende Anleitungen</h2>
+      <h2 style="font-size:var(--h2-k);margin:6px 0 10px">Passende Anleitungen</h2>
       {_anleitungs_chips(['kettenverschleiss-messen', 'kette-wechseln', 'kette-reinigen-oelen', 'kassette-wechseln',
                           'schaltung-einstellen'] if a != 'Nabenschaltung' else ['kette-reinigen-oelen', 'reifen-wechseln'])}
     </nav>
 ''')
     out.append(f'''    <section class="t s1 voll" aria-labelledby="raeder-titel">
       <span class="eyebrow">Verbaut an</span>
-      <h2 id="raeder-titel" style="font-size:30px;margin:6px 0 4px">Räder mit {e(name)}</h2>
+      <h2 id="raeder-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Räder mit {e(name)}</h2>
       {radliste(raeder)}
     </section>
 ''')
@@ -153,7 +153,7 @@ def gruppe_seite(pfad, raeder, alle_gruppen):
     if verwandt:
         chips = ''.join(f'<a href="{p}">{e(rs[0]["gruppe"])}</a>' for p, rs in verwandt)
         out.append(f'''    <nav class="t mehr voll" aria-label="Weitere Schaltgruppen">
-      <h2 style="font-size:26px;margin:14px 0 10px">Weitere Gruppen von {e(marke)}</h2>
+      <h2 style="font-size:var(--h2-k);margin:14px 0 10px">Weitere Gruppen von {e(marke)}</h2>
       <div class="chips">{chips}</div>
     </nav>
 ''')
@@ -254,7 +254,7 @@ def system_seite(pfad, raeder):
     # Beide Tabellen stehen im HTML, der Umschalter blendet nur eine aus (ohne :has-Unterstützung sind beide zu sehen)
     out.append(f'''    <section class="t s1 voll paar-umschalter" aria-labelledby="motor-titel">
       <span class="eyebrow">Motor und Akku</span>
-      <h2 id="motor-titel" style="font-size:30px;margin:6px 0 4px">Welcher Akku zu welchem Motor?</h2>
+      <h2 id="motor-titel" style="font-size:var(--h2-t);margin:6px 0 4px">Welcher Akku zu welchem Motor?</h2>
       <p>Jeder Motor von {e(name)} im Katalog mit den Akkus, die an denselben Rädern verbaut sind, und andersherum. Die Zahl sagt, an wie vielen Rädern das Paar vorkommt.</p>
       <div class="umschalter" role="radiogroup" aria-label="Wovon gehst du aus?">
         <input type="radio" name="paar" id="von-motor" checked><label for="von-motor">Ich kenne meinen Motor</label>
@@ -273,7 +273,7 @@ def system_seite(pfad, raeder):
 
     out.append(f'''    <section class="t s1 voll" aria-labelledby="raeder-titel">
       <span class="eyebrow">E-Bikes</span>
-      <h2 id="raeder-titel" style="font-size:30px;margin:6px 0 4px">E-Bikes mit {e(name)}</h2>
+      <h2 id="raeder-titel" style="font-size:var(--h2-t);margin:6px 0 4px">E-Bikes mit {e(name)}</h2>
       {radliste(raeder)}
     </section>
   </article>

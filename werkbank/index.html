@@ -56,6 +56,10 @@ body {
 h1, h2, h3, .logo { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; }
 h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.05; margin: 4px 0 10px; }
 h3 { font-size: 19px; line-height: 1.2; margin: 0 0 6px; }
+/* Umbrüche wie auf radgarage.app (30.10.): Überschriften und kurze Texte ausgewogen, Fließtext ohne einzelnes Wort am Ende */
+h1, h2, h3, h4, summary, legend, dt, th, label, .eyebrow, .pill { text-wrap: balance; }
+p, li, dd, td { text-wrap: pretty; }
+@media (max-width: 420px) { .kachel .eyebrow { letter-spacing: .06em; overflow-wrap: anywhere; } }
 p { margin: 0 0 10px; }
 a { color: inherit; }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
