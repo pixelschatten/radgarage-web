@@ -343,7 +343,8 @@ $('#kat-neu').addEventListener('click', () => katalogLaden(true));
 // ----- E-Mail an ein Konto oder an die Warteliste (Bento-Vorlage auf dem Server, crm_mail_senden) -----
 // Wer auf der Warteliste steht, bekommt den Abmeldelink automatisch unter die Mail. Andere Adressen gehen nicht.
 
-async function mailEditor(vorher = null) {
+// Mit vorlage (Titel einer Vorlage) sind Betreff und Text schon ausgefüllt, nachher läuft, wenn Brevo die Mail angenommen hat.
+async function mailEditor(vorher = null, { vorlage = null, nachher = null } = {}) {
   if (!konten.length) { try { konten = (await rpc('konten_liste')) || []; } catch { /* ohne Vorschläge weiter */ } }
   let warteliste = [];
   try { warteliste = ((await rpc('crm_warteliste', { p_art: 'alle', p_suche: null })) || {}).kontakte || []; } catch { /* nur Konten */ }
@@ -418,6 +419,7 @@ async function mailEditor(vorher = null) {
       }
       if (st && st.status && st.status >= 300) { meldung(msg, `Brevo hat die Mail abgelehnt (${st.status}). ${st.fehler || ''}`, true); senden.disabled = false; return; }
       dialogZu();
+      if (nachher) await Promise.resolve(nachher()).catch(() => null);
       const fertig = st && st.status ? `Mail an ${r.an} ist raus.` : `Mail an ${r.an} ist unterwegs.`;
       meldung($('#msg-konten'), fertig);
       if (darf('konten_betreuen')) { await ladePostfach(); meldung($('#msg-postfach'), fertig); }
@@ -431,7 +433,16 @@ async function mailEditor(vorher = null) {
   // Vorlagen landen zwischen Anrede und Signatur
   const pos = text.value.indexOf('\n\n') + 2;
   text.setSelectionRange(pos, pos);
-  (vorher ? betreff : an).focus();
+  const v = vorlage && ((await ladeBausteine()) || []).find((b) => b.titel === vorlage);
+  if (v) {
+    text.setRangeText(mitVorname(v.text, ''), pos, pos, 'start');
+    if (v.betreff) betreff.value = mitVorname(v.betreff, '');
+    text.scrollTop = 0;
+    senden.focus();
+  } else {
+    if (vorlage) meldung(msg, `Die Vorlage „${vorlage}“ fehlt. Leg sie unter CRM → Vorlagen an oder schreib frei.`, true);
+    (vorher ? betreff : an).focus();
+  }
 }
 $('#mail-neu').addEventListener('click', () => mailEditor());
 

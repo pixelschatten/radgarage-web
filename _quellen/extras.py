@@ -14,7 +14,7 @@ from teile import KATEGORIEN
 
 # Seiten, die nicht aus dem Generator kommen. bauen.py setzt dort Fußzeile und Symbole ein.
 HANDSEITEN = ['index.html', 'danke.html', 'datenschutz.html', 'impressum.html', 'konto-loeschen.html', 'abmelden/index.html']
-OHNE_KNOPF = {'danke.html', 'abmelden/index.html'}  # Seiten nach der Anmeldung: kein „Testzugang sichern“ im Kopf
+OHNE_KNOPF = {'danke.html', 'abmelden/index.html'}  # Seiten nach der Anmeldung: kein „Testzugang anfordern“ im Kopf
 
 
 def _norm(s):

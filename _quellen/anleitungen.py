@@ -13,7 +13,7 @@ import os
 SEITE = 'https://radgarage.app'
 
 # Store-Start: Sobald die App im App Store und bei Google Play ist, die App-Store-Nummer eintragen und STORE_LIVE auf True
-# setzen, dann python3 _quellen/bauen.py. Danach zeigt jede Seite oben „App laden“ statt „Testzugang sichern“, iPhones
+# setzen, dann python3 _quellen/bauen.py. Danach zeigt jede Seite oben „App laden“ statt „Testzugang anfordern“, iPhones
 # bekommen den Smart App Banner von Safari, und die Startseite meldet die App als SoftwareApplication (ohne Bewertungen,
 # solange es keine echten gibt). Checkliste: Projektdateien seo/store-start-checkliste.md.
 APP_STORE_ID = ''              # Zahl aus der App-Store-Adresse apps.apple.com/de/app/radgarage/id<Zahl>
@@ -526,7 +526,7 @@ def kopfzeile(pfad):
 def kopf_knopf():
     if STORE_LIVE:
         return '<a class="pill" href="/#app">App laden</a>'
-    return '<a class="pill" href="/#anmelden">Testzugang sichern</a>'
+    return '<a class="pill" href="/#anmelden">Testzugang anfordern</a>'
 
 
 def store_meta():
@@ -794,7 +794,7 @@ def anleitung_seite(a, alle):
         <h2 style="margin:6px 0 8px">Welches Teil passt an dein Rad?</h2>
         <p>{e(a["app"])}</p>
       </div>
-      <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
+      <div class="actions"><a class="pill" href="/#anmelden">Testzugang anfordern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
     </aside>
 ''')
     verwandt = [x for s in a['verwandt'] for x in alle if x['slug'] == s]
@@ -848,7 +848,7 @@ def uebersicht(alle):
         <h2 style="margin:6px 0 8px">Wann ist was fällig?</h2>
         <p>Die Radgarage kennt die Teile an deinem Fahrrad, zählt die Kilometer mit und sagt dir, wann du prüfen oder tauschen solltest. Die Anleitungen hast du in der App gleich dabei.</p>
       </div>
-      <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a></div>
+      <div class="actions"><a class="pill" href="/#anmelden">Testzugang anfordern</a></div>
     </aside>
   </div>
   <p class="hinweis">Die Anleitungen ersetzen nicht die Anleitung des Herstellers. Arbeiten an Bremsen und Lenkung sind sicherheitsrelevant: Wenn du unsicher bist, lass sie von einer Fachwerkstatt machen.</p>

@@ -194,7 +194,7 @@ def teil_seite(t, raeder, verbaut, paare=None):
         <h2 style="margin:6px 0 8px">Nie wieder das falsche Teil bestellen</h2>
         <p>Leg dein Rad in der Radgarage an und alle verbauten Teile sind sofort da. Die App zählt die Kilometer mit, erinnert dich an den Wechsel und zeigt passenden Ersatz mit Preisen aus mehreren Shops.</p>
       </div>
-      <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
+      <div class="actions"><a class="pill" href="/#anmelden">Testzugang anfordern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
     </aside>
   </article>
   <p class="hinweis">Angaben nach Herstellerdaten und Testberichten. „Passt auch“ heißt: gleiche Einbaumaße und Norm nach unserem Katalog. Prüf vor dem Kauf trotzdem die Angaben des Herstellers. Shop-Links sind Suchlinks, keine Partnerlinks. Fehler entdeckt? Schreib uns an <a href="mailto:kontakt@radgarage.app">kontakt@radgarage.app</a>.</p>

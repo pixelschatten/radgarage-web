@@ -251,7 +251,7 @@ def verschleiss_seite():
         <h2 style="margin:6px 0 8px">Genauer geht es mit deinem Modell</h2>
         <p>Auf jeder Radseite rechnet die Radgarage mit den Teilen, die an deinem Rad verbaut sind. In der App zählt sie deine echten Kilometer mit und erinnert dich ans Prüfen.</p>
       </div>
-      <div class="actions"><a class="pill" href="/raeder/">Rad suchen</a><a class="pill ghost" href="/#anmelden">Testplatz sichern</a></div>
+      <div class="actions"><a class="pill" href="/raeder/">Rad suchen</a><a class="pill ghost" href="/#anmelden">Testzugang anfordern</a></div>
     </aside>
     <nav class="t s2 voll rad-anleitungen" aria-label="Passende Anleitungen">
       <span class="eyebrow">Selbst machen</span>

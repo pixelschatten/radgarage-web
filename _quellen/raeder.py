@@ -542,7 +542,7 @@ def rad_seite(r, alle):
           <span class="eyebrow">Die App zum Rad</span>
           <h2>Dein {e(r["modell"])} in der Radgarage</h2>
           <p>Alle Teile sind sofort da. Die App zählt deine Kilometer und sagt dir, wann Kette, Beläge und Reifen fällig sind.</p>
-          <div class="actions"><a class="pill" href="/#anmelden">Testplatz sichern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
+          <div class="actions"><a class="pill" href="/#anmelden">Testzugang anfordern</a><a class="pill ghost" href="/">Mehr zur App</a></div>
         </aside>'''
     marken = ''.join(f'<a href="#{i}">{e(t)}</a>' for i, t in sprung)
     out.append(f'''    <nav class="sprung" aria-label="Auf dieser Seite">{marken}</nav>
