@@ -355,7 +355,6 @@ function zeichneFaktoren(faktoren) {
     const li = document.createElement('li');
     const links = document.createElement('div');
     const name = Object.assign(document.createElement('div'), { className: 'name', textContent: f.friendly_name || 'Authenticator' });
-    if (f.standard) name.append(' ', Object.assign(document.createElement('span'), { className: 'marke neu', textContent: 'Standard', title: 'Steht beim Anmelden oben und ist vorausgewählt' }));
     links.append(name,
       Object.assign(document.createElement('div'), { className: 'neben', textContent: `Eingetragen am ${new Date(f.created_at).toLocaleDateString('de-DE')}` }));
     const umb = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Umbenennen' });
@@ -388,16 +387,6 @@ function zeichneFaktoren(faktoren) {
     });
     const akt = document.createElement('div');
     akt.className = 'aktionen';
-    if (faktoren.length > 1 && !f.standard) {
-      const st = Object.assign(document.createElement('button'), { type: 'button', className: 'pill ghost klein', textContent: 'Als Standard', title: 'Beim Anmelden oben und vorausgewählt' });
-      st.addEventListener('click', async () => {
-        st.disabled = true;
-        const { error } = await sb.auth.updateUser({ data: { zwei_faktor_standard: f.id } });
-        if (error) { window.alert(fehlerText(error)); st.disabled = false; return; }
-        ladeSicherheit();
-      });
-      akt.append(st);
-    }
     akt.append(umb, b);
     li.append(links, akt);
     return li;
@@ -428,7 +417,7 @@ $('#f-faktor-neu-code').addEventListener('submit', (ev) => {
   ev.preventDefault();
   const f = ev.target;
   mitKnopf(f, async () => {
-    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: neuerFaktor, code: f.code.value.trim() });
+    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: neuerFaktor, code: codeZiffern(f.code) });
     if (error) throw error;
     neuerFaktorZu(false);
     ladeSicherheit();

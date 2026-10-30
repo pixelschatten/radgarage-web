@@ -152,8 +152,9 @@ const RECHTE_TEXT = [
 ];
 // Welche Rollen jemand vergeben darf
 const vergebbar = () => (rolle === 'superadmin' ? ['helfer', 'support', 'admin'] : darf('rollen') ? ['helfer'] : []);
-let faktorId = null;
-// Bevorzugter Authenticator (Konto → Zweiter Faktor → Als Standard), in user_metadata, damit er in jedem Browser gilt
+let faktorId = null; // beim Einrichten
+let faktorIds = []; // beim Anmelden: alle bestätigten Geräte
+// Bevorzugter Authenticator (früher „Als Standard“ im Konto-Tab), in user_metadata; wird beim Anmelden zuerst geprüft
 const standardFaktor = (user) => (user && user.user_metadata && user.user_metadata.zwei_faktor_standard) || null;
 const standardZuerst = (liste, user) => {
   const id = standardFaktor(user);
@@ -358,10 +359,8 @@ async function weiter() {
   if (e2) throw e2;
   const bestaetigt = standardZuerst(faktoren.totp.filter((f) => f.status === 'verified'), session && session.user);
   if (bestaetigt.length) {
-    faktorId = bestaetigt[0].id;
+    faktorIds = bestaetigt.map((f) => f.id);
     $('#f-faktor').reset();
-    $('#faktor-wahl').replaceChildren(...bestaetigt.map((f) => new Option(f.friendly_name || 'Authenticator', f.id)));
-    $('#faktor-wahl-feld').hidden = bestaetigt.length < 2;
     $('#notfall').open = false;
     $('#f-notfall').reset();
     return zeige('s-faktor');
@@ -387,11 +386,25 @@ function qrBild(link) {
   return i < 0 ? link : 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(link.slice(i));
 }
 
+// Ziffern aus dem Codefeld, eingefügte Codes wie „123 456“ inklusive
+const codeZiffern = (feld) => feld.value.replace(/\D/g, '');
+
 async function faktorPruefen(form) {
-  if (form.faktor && form.faktor.value) faktorId = form.faktor.value;
-  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: faktorId, code: form.code.value.trim() });
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: faktorId, code: codeZiffern(form.code) });
   if (error) throw error;
   await werkbank();
+}
+
+// Beim Anmelden gilt der Code jedes eingetragenen Geräts, Standard zuerst
+async function codeAnmelden(form) {
+  const code = codeZiffern(form.code);
+  if (code.length !== 6) throw new Error('Der Code hat 6 Ziffern.');
+  for (const id of faktorIds) {
+    const { error } = await sb.auth.mfa.challengeAndVerify({ factorId: id, code });
+    if (!error) return werkbank();
+    if (error.code !== 'mfa_verification_failed') throw error;
+  }
+  throw new Error('Der Code stimmt nicht. Nimm den aktuellen aus einer deiner Authenticator-Apps.');
 }
 $('#f-einrichten').addEventListener('submit', (ev) => {
   ev.preventDefault();
@@ -404,7 +417,7 @@ $('#f-einrichten').addEventListener('submit', (ev) => {
     if (name && name !== 'Authenticator-App') await rpc('faktor_umbenennen', { p_faktor: id, p_name: name }).catch(() => {});
   });
 });
-$('#f-faktor').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => faktorPruefen(ev.target)); });
+$('#f-faktor').addEventListener('submit', (ev) => { ev.preventDefault(); mitKnopf(ev.target, () => codeAnmelden(ev.target)); });
 
 // Notfall: Wiederherstellungscode löscht die Faktoren, danach neu einrichten
 $('#f-notfall').addEventListener('submit', (ev) => {
