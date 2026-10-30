@@ -1286,6 +1286,10 @@ let wlArt = 'alle';
 let wlSucheZeit = null;
 const WL_STATUS = [['tester:iPhone', 'Tester · iPhone'], ['tester:Android', 'Tester · Android'], ['tester:', 'Tester · Handy offen'], ['bescheid:', 'Nur Bescheid sagen']];
 const wlStatusWert = (x) => (x.testzugang ? `tester:${x.plattform || ''}` : 'bescheid:');
+// iPhone-Tester bekommen den Zugang direkt per Mail (Vorlage mit TestFlight-Link), danach trägt das Schlagwort ein, wer ihn hat.
+// Android bleibt Warteliste, bis der Test bei Google Play läuft.
+const ZUGANG_VORLAGE = 'Testzugang iPhone';
+const ZUGANG_WORT = 'zugang-geschickt';
 
 // Antwort von Brevo abwarten (pg_net schickt erst nach dem Speichern)
 async function brevoAntwort(anfrage) {
@@ -1308,8 +1312,8 @@ async function ladeWarteliste() {
   const voll = z.tester >= d.plaetze;
   $('#wl-kacheln').replaceChildren(
     kachelSt(voll ? 'k2' : 'k4', 'Testplätze', `${zahlDe(z.tester)} / ${zahlDe(d.plaetze)}`, voll ? 'Alle Plätze vergeben' : `${zahlDe(d.plaetze - z.tester)} frei`),
-    kachelSt('k5', 'iPhone', zahlDe(z.iphone), 'Tester über TestFlight'),
-    kachelSt('k2', 'Android', zahlDe(z.android), `Tester über die Testversion${z.ohne_plattform ? `, ${zahlDe(z.ohne_plattform)} ohne Angabe` : ''}`),
+    kachelSt('k5', 'iPhone', zahlDe(z.iphone), 'Zugang per Mail über TestFlight'),
+    kachelSt('k2', 'Android', zahlDe(z.android), `Warteliste bis Google Play${z.ohne_plattform ? `, ${zahlDe(z.ohne_plattform)} ohne Angabe` : ''}`),
     kachelSt('k1', 'Nur Bescheid', zahlDe(z.nur_bescheid), 'Mail, wenn die App im Store ist'));
   const liste = $('#wl-liste');
   liste.replaceChildren(...d.kontakte.map(wartelisteZeile));
@@ -1352,7 +1356,14 @@ function wartelisteZeile(x) {
       x.manuell ? mk('span', { className: 'wv', textContent: 'von Hand', title: `Zustimmung: ${x.manuell}` }) : null,
       ...(x.schlagworte || []).map((w) => mk('span', { textContent: `#${w}` })))));
   person.addEventListener('click', () => personDialog(x.email));
-  return mk('div', { className: 'wl-zeile' }, person, mk('div', { className: 'wl-aktionen' }, wahl, weg));
+  const geschickt = (x.schlagworte || []).some((w) => w.toLowerCase() === ZUGANG_WORT);
+  const zugang = x.testzugang && x.plattform === 'iPhone'
+    ? mk('button', { type: 'button', className: `pill mini${geschickt ? ' ghost' : ''}`, textContent: geschickt ? 'Nochmal schicken' : 'Zugang schicken',
+      title: `Mail mit TestFlight-Link und Anleitung (Vorlage „${ZUGANG_VORLAGE}“)${geschickt ? `, schon geschickt (#${ZUGANG_WORT})` : ''}`,
+      onclick: () => mailEditor({ email: x.email }, { vorlage: ZUGANG_VORLAGE,
+        nachher: () => rpc('crm_schlagwort_viele', { p_emails: [x.email], p_wort: ZUGANG_WORT, p_entfernen: false }).then(() => ladeWarteliste()) }) })
+    : null;
+  return mk('div', { className: 'wl-zeile' }, person, mk('div', { className: 'wl-aktionen' }, zugang, wahl, weg));
 }
 
 function wartelisteHinzufuegen() {
