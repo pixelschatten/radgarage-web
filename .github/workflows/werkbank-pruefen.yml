@@ -4,10 +4,10 @@ name: Werkbank prüfen
 
 on:
   pull_request:
-    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js']
+    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js', '_quellen/csp_pruefen.py']
   push:
     branches: [main]
-    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js']
+    paths: ['werkbank/**', '_werkzeuge/werkbank-pruefen.js', '_quellen/csp_pruefen.py']
 
 permissions:
   contents: read
@@ -27,3 +27,5 @@ jobs:
         run: |
           npm i --no-save --silent acorn@8 acorn-walk@8
           node _werkzeuge/werkbank-pruefen.js
+      - name: Schutzregeln (Prüfwert des Design-Skripts)
+        run: python3 _quellen/csp_pruefen.py

@@ -544,13 +544,19 @@ def app_schema():
            'description': 'App und Teilekatalog für Fahrräder: verbaute Teile, passender Ersatz, Verschleiß und Wartung.',
            'offers': {'@type': 'Offer', 'price': '0', 'priceCurrency': 'EUR'},
            'publisher': {'@id': SEITE + '/#org'}, 'sameAs': [u for u in (APP_STORE_URL, PLAY_URL) if u]}
-    return f'<script type="application/ld+json">{json.dumps(app, ensure_ascii=False)}</script>'
+    return f'<script type="application/ld+json">{ld_json(app)}</script>'
+
+
+def ld_json(daten):
+    """JSON für <script type="application/ld+json">. „<“ wird als \\u003c geschrieben, damit ein „</script>“ in Texten aus
+    dem Katalog den Block nicht vorzeitig schließt (Revision 31.10.2026, F2). Für Suchmaschinen ist das gleichwertig."""
+    return json.dumps(daten, ensure_ascii=False).replace('<', '\\u003c')
 
 
 def kopf(titel, beschreibung, pfad, schema, bild='https://radgarage.app/img/werkstatt.jpg', robots=False):
     url = SEITE + pfad
     daten = '\n'.join(
-        f'<script type="application/ld+json">{json.dumps(s, ensure_ascii=False)}</script>' for s in schema
+        f'<script type="application/ld+json">{ld_json(s)}</script>' for s in schema
     )
     return f'''<!doctype html>
 <html lang="de">
