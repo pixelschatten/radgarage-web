@@ -465,7 +465,9 @@ async function ladeBetrieb() {
     feld('Brevo u. a., 24 Std.', a.fehler_24h ? `${zahlDe(a.fehler_24h)} Fehler` : 'keine Fehler', `${zahlDe(a.gesamt_24h)} Mails und Abrufe`),
     feld('Werkbank-Mails heute', `${zahlDe(b.mails.heute)} / ${zahlDe(b.mails.grenze)}`, 'Grenze für Sammelmails', b.mails.heute / b.mails.grenze),
     feld('Datenbank', groesse(b.datenbank.bytes), `von ${groesse(b.datenbank.grenze)} im Gratis-Plan`, b.datenbank.bytes / b.datenbank.grenze),
-    feld('Postfach', vorZeit(b.postfach.letzter_eingang), 'letzte eingegangene Mail'));
+    feld('Postfach', vorZeit(b.postfach.letzter_eingang), 'letzte eingegangene Mail'),
+    // Angebundene Dienste (dienst_protokoll), je eine Kachel mit fertigem Text vom Server
+    ...(b.dienste || []).map((d) => feld(d.titel, d.wert, d.unter)));
   if (s && s.lauf) {
     const f = $('#be-gitter').firstElementChild;
     f.append(Object.assign(document.createElement('a'), { href: s.lauf, target: '_blank', rel: 'noopener', className: 'fine', textContent: 'Lauf ansehen' }));
@@ -486,6 +488,7 @@ async function ladeBetrieb() {
   // Offene Fehler der letzten 7 Tage, je mit „Erledigt“ (zählt dann nicht mehr für die Ampel)
   const fehler = a.letzte_fehler || [];
   const box = $('#be-fehler');
+  dienstFehler(b.dienst_fehler || []);
   if (!fehler.length) { box.textContent = 'Keine offenen Fehler bei Anfragen nach außen (Brevo und andere) in den letzten 7 Tagen.'; return; }
   box.replaceChildren('Letzte Fehler bei Anfragen nach außen (meist Brevo):');
   for (const f of fehler) {
@@ -509,6 +512,33 @@ async function ladeBetrieb() {
       });
       zeile.append(knopf);
     }
+    box.append(zeile);
+  }
+}
+// Fehler angebundener Dienste (betrieb_dienst_fehler_erledigt), gleiche Form wie die Anfragen nach außen
+function dienstFehler(liste) {
+  const box = $('#be-dienst-fehler');
+  if (!liste.length) { box.textContent = 'Keine offenen Fehler bei angebundenen Diensten in den letzten 7 Tagen.'; return; }
+  box.replaceChildren('Letzte Fehler bei angebundenen Diensten:');
+  for (const f of liste) {
+    const zeile = Object.assign(document.createElement('span'), { className: 'be-fehler-zeile' });
+    const text = `${f.dienst ? f.dienst[0].toUpperCase() + f.dienst.slice(1) : ''}, ${f.art}${f.fehler ? ': ' + f.fehler.slice(0, 160) : ''}`;
+    zeile.append(document.createElement('br'), `${new Date(f.wann).toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'short' })} (${text}) `);
+    if (f.fehler && f.fehler.length > 160) zeile.title = f.fehler;
+    const knopf = Object.assign(document.createElement('button'), { type: 'button', className: 'knopf-weich', textContent: 'Erledigt' });
+    knopf.title = 'Fehler ist geklärt: zählt nicht mehr für die Ampel';
+    knopf.addEventListener('click', async () => {
+      knopf.disabled = true;
+      try {
+        await rpc('betrieb_dienst_fehler_erledigt', { p_id: f.id });
+        await ladeBetrieb();
+        meldung($('#msg-betrieb'), 'Fehler als erledigt markiert.');
+      } catch (e) {
+        knopf.disabled = false;
+        meldung($('#msg-betrieb'), fehlerText(e), true);
+      }
+    });
+    zeile.append(knopf);
     box.append(zeile);
   }
 }
