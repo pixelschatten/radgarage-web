@@ -462,11 +462,13 @@ label .kopf { display: flex; justify-content: space-between; align-items: baseli
 .notfall { margin-top: 16px; }
 .notfall summary, #faktor-neu-box summary { cursor: pointer; font-weight: 700; }
 @media print { body:not(.druck-statistik) * { visibility: hidden; } #codes-anzeige, #codes-anzeige * { visibility: visible; } #codes-anzeige { position: absolute; inset: 0; } #codes-anzeige .aktionen { display: none; } }
-.helfer-box summary { cursor: pointer; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; list-style: none; }
-.helfer-box summary::-webkit-details-marker { display: none; }
-.helfer-box summary h3 { margin: 0; }
-.helfer-box summary::after { content: "+"; margin-left: auto; font-size: 22px; font-weight: 700; line-height: 1; }
-.helfer-box[open] summary::after { content: "–"; }
+.helfer-box > summary, .klapp-box > summary { cursor: pointer; display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; list-style: none; }
+.helfer-box > summary::-webkit-details-marker, .klapp-box > summary::-webkit-details-marker { display: none; }
+.helfer-box > summary h3, .klapp-box > summary h3 { margin: 0; }
+.helfer-box > summary::after, .klapp-box > summary::after { content: "+"; margin-left: auto; font-size: 22px; font-weight: 700; line-height: 1; }
+.helfer-box[open] > summary::after, .klapp-box[open] > summary::after { content: "–"; }
+.klapp-box > summary .st-status:empty { display: none; }
+.klapp-box:not([open]) { padding-top: 20px; padding-bottom: 20px; }
 .pill.gefahr { background: var(--warn); border-color: var(--warn); color: var(--bg); }
 .trenner { border-top: 2px solid var(--line); margin: 16px 0 10px; padding-top: 12px; }
 td.wann { white-space: nowrap; color: var(--muted); font-size: 14px; }
@@ -1312,11 +1314,9 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
         </div>
         <div class="kacheln ganz" id="ue-kacheln"></div>
         <div class="msg ganz" role="status" id="msg-uebersicht"></div>
-        <div class="t k4 ganz" id="fuellrunde">
-          <div class="as-kopf">
-            <h3>Tägliche Füllrunde</h3>
-            <span class="st-status" id="fr-wann"></span>
-          </div>
+        <!-- Füllrunde standardmäßig zu, damit oben nur die vier Hauptkacheln stehen; lädt erst beim Aufklappen -->
+        <details class="t k4 ganz klapp-box" id="fuellrunde">
+          <summary><h3>Tägliche Füllrunde</h3><span class="st-status" id="fr-wann"></span></summary>
           <div class="fr-zahlen" id="fr-zahlen"></div>
           <p class="fr-bericht" id="fr-bericht"></p>
           <div class="fr-weiter" id="fr-weiter" hidden><span class="eyebrow">Nächster Lauf</span><div class="fr-pillen" id="fr-pillen"></div></div>
@@ -1326,7 +1326,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
             <div><p class="eyebrow">Diese Woche je Marke</p><div class="plot" id="fr-marken"></div></div>
           </div>
           <div class="msg" role="status" id="msg-fuellrunde"></div>
-        </div>
+        </details>
         <div class="t k3" id="nachfrage">
           <h3>Gesucht, aber nicht im Katalog <span class="opt" id="nf-zahl"></span></h3>
           <p class="fine">Was in der App bei „Rad hinzufügen“ ohne Treffer gesucht wurde, letzte 90 Tage, häufigste zuerst. Nur der Begriff, nie wer ihn gesucht hat.</p>
@@ -1970,7 +1970,7 @@ nav.tabs .zahl { display: inline-block; min-width: 22px; padding: 0 6px; margin-
 <script src="js/04-postfach-crm.js?v=2026-10-30-testzugang"></script>
 <script src="js/05-vorschlaege-teile.js?v=2026-10-29-baustellen"></script>
 <script src="js/06-bearbeiten.js?v=2026-10-29-baustellen"></script>
-<script src="js/07-uebersicht.js?v=2026-10-31-dienste"></script>
+<script src="js/07-uebersicht.js?v=2026-10-31-fuellrunde-klapp"></script>
 <script src="js/08-konten.js?v=2026-10-30-2fa"></script>
 <script src="js/09-katalog.js?v=2026-10-30-testzugang"></script>
 <script src="js/10-statistik.js?v=2026-10-29-baustellen"></script>

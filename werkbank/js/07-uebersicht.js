@@ -63,7 +63,8 @@ async function ladeUebersicht() {
     meldung($('#msg-uebersicht'), fehlerText(e), true);
   }
   ladeBetrieb();
-  ladeFuellrunde();
+  // Füllrunde ist eingeklappt und lädt erst beim Aufklappen (oder hier, wenn sie schon offen ist)
+  if ($('#fuellrunde').open) ladeFuellrunde();
   // Weiter unten erst, wenn man hinscrollt (am Handy steht das meiste außerhalb des Bildschirms)
   beiSicht('#nachfrage', ladeNachfrage);
   beiSicht('#qualitaet', ladeQualitaet);
@@ -945,6 +946,8 @@ function frStationen(text) {
   return teile.map((t) => t.trim().replace(/^(danach|dann|und)\s+/i, '').replace(/\.$/, '')).filter(Boolean)
     .map((t) => t.charAt(0).toUpperCase() + t.slice(1));
 }
+
+$('#fuellrunde').addEventListener('toggle', () => { if ($('#fuellrunde').open) ladeFuellrunde(); });
 
 async function ladeFuellrunde() {
   const msg = $('#msg-fuellrunde');
