@@ -18,7 +18,7 @@ WURZEL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HOST = 'radgarage.app'
 SCHLUESSEL = 'dfe499f7da4718649072a948343bc571'
 ZIEL = 'https://api.indexnow.org/indexnow'
-NICHT = ('werkbank/', 'feedback/', 'abmelden/', '_', 'danke.html', '404.html', 'img/', 'css/', 'js/', 'fonts/')
+NICHT = ('werkbank/', 'feedback/', 'abmelden/', 'einladung/', '_', 'danke.html', '404.html', 'img/', 'css/', 'js/', 'fonts/')
 
 
 def url_zu(datei):

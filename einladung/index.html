@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Einladung in eine Crew · Radgarage</title>
+<meta name="robots" content="noindex">
+<link rel="preload" href="/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/bricolage-latin-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/seiten.css?v=12">
+<meta name="theme-color" content="#F2EDE2">
+<link rel="icon" href="/favicon.ico?v=2" sizes="32x32">
+<link rel="icon" href="/img/favicon-96.png?v=2" type="image/png" sizes="96x96">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png?v=2">
+<link rel="manifest" href="/site.webmanifest">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a href="/" class="logo">Radgarage</a>
+    <div class="kopfmenue" id="kopfmenue">
+      <nav class="kopfnav" aria-label="Hauptmenü"><a href="/raeder/">Räder</a><a href="/teile/">Ersatzteile</a><a href="/anleitungen/">Anleitungen</a><a href="/wissen/">Wissen</a></nav>
+    </div>
+    <details class="kopfsuche"><summary aria-label="Rad oder Teil suchen"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></summary><div class="kopfsuche-feld"><form class="suche" role="search" data-art="alles" action="#"><label class="sr" for="suche-kopf">Rad oder Teil suchen</label><input type="search" id="suche-kopf" placeholder="z. B. Topstone oder CN-M8100" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suche-kopf-liste"><ul class="treffer" id="suche-kopf-liste" role="listbox" aria-label="Vorschläge" hidden></ul><p class="suche-info" role="status" aria-live="polite"></p></form><script src="/js/suche.js?v=2" defer></script></div></details>
+    <button class="burger" type="button" aria-expanded="false" aria-controls="kopfmenue" aria-label="Menü öffnen"><span></span><span></span><span></span></button><script src="/js/kopf.js?v=1" defer></script>
+  </header>
+  <main>
+    <section class="legal legal-page" id="einladung">
+      <h1>Du bist eingeladen</h1>
+      <p>Jemand lädt dich in eine Crew in der Radgarage-App ein. Dort plant ihr gemeinsame Ausfahrten, sagt zu und seht, wer dabei ist.</p>
+      <p id="ei-code-zeile" hidden>Code: <strong id="ei-code"></strong></p>
+      <p><a class="pill" id="ei-knopf" href="radgarage://einladung">In Radgarage öffnen</a></p>
+      <p class="msg" role="status" id="ei-msg" hidden></p>
+      <p class="fine">Öffnet sich nichts? Dann ist Radgarage auf diesem Gerät noch nicht installiert. Öffne die App und gib den Code bei Group Ride unter „Mit Code beitreten“ ein. Mehr zur App auf der <a href="/">Startseite</a>.</p>
+    </section>
+    <p><a class="back" href="/">Zurück zur Startseite</a></p>
+  </main>
+  <footer class="fuss">
+    <div class="fuss-spalten">
+      <nav aria-label="Katalog"><b>Katalog</b>
+        <a href="/raeder/">Räder</a>
+        <a href="/teile/">Ersatzteile</a>
+        <a href="/anleitungen/">Anleitungen</a>
+      </nav>
+      <nav aria-label="Wissen"><b>Wissen</b>
+        <a href="/reifengroessen/">Reifengrößen</a>
+        <a href="/verschleissrechner/">Verschleißrechner</a>
+        <a href="/unterhaltskosten/">Unterhaltskosten</a>
+        <a href="/schaltgruppen/">Schaltgruppen</a>
+        <a href="/e-bike-systeme/"><rg-nw>E-Bike-Systeme</rg-nw></a>
+      </nav>
+      <nav aria-label="Radgarage"><b>Radgarage</b>
+        <a href="/ueber-uns/">Über uns</a>
+        <a href="/so-pruefen-wir/">So prüfen wir</a>
+        <a href="/fuer-vereine/">Für Vereine</a>
+        <a href="/feedback/">Feedback</a>
+        <a href="mailto:kontakt@radgarage.app">Für Partner</a>
+        <a href="https://tally.so/r/0VQ0JP" target="_blank" rel="noopener">Zur Umfrage</a>
+      </nav>
+      <nav aria-label="Rechtliches"><b>Rechtliches</b>
+        <a href="/impressum.html">Impressum</a>
+        <a href="/datenschutz.html">Datenschutz</a>
+        <a href="/konto-loeschen.html">Konto löschen</a>
+      </nav>
+    </div>
+    <p>Gerade in Entwicklung. Gemacht aus Leidenschaft fürs Rad.</p>
+    <script src="/js/zaehler.js?v=1" defer></script>
+  </footer>
+</div>
+<script>
+  // Einladungslink einer Crew aus der App (einladungsLink in src/data/group-ride.ts): radgarage.app/einladung/?code=XXXXXXXX.
+  // Die Seite schickt nichts an einen Server; der Knopf öffnet die App mit radgarage://einladung?code=…
+  (() => {
+    const code = (new URLSearchParams(location.search).get('code') || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+    const knopf = document.getElementById('ei-knopf');
+    if (code.length !== 8) {
+      knopf.remove();
+      const msg = document.getElementById('ei-msg');
+      msg.hidden = false;
+      msg.textContent = 'Dieser Link ist unvollständig. Frag nach dem Code der Crew.';
+      msg.classList.add('fehler');
+      return;
+    }
+    document.getElementById('ei-code').textContent = code.slice(0, 4) + '-' + code.slice(4);
+    document.getElementById('ei-code-zeile').hidden = false;
+    knopf.href = 'radgarage://einladung?code=' + encodeURIComponent(code);
+  })();
+</script>
+</body>
+</html>
